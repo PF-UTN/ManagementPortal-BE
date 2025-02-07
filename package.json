@@ -5,7 +5,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "start": "node --env-file .env ./dist/index.js",
+    "start": "node --env-file .env ./dist/src/index.js",
     "dev": "npm run build && npm run start"
   },
   "repository": {
@@ -21,9 +21,13 @@
   "homepage": "https://github.com/PF-UTN/ManagementPortal-BE#readme",
   "description": "",
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
     "typescript": "^5.7.3"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
     "ts-jest": "^29.2.5"
   }
