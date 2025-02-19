@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
-import { AuthenticationService } from '../domain/service/authentication.service';
+import { AuthenticationServiceModule } from 'src/domain/service/authentication/authentication.service.module';
 import { AuthenticationController } from './authentication.controller';
-import { UserRepository } from 'src/libs/repository/user.repository';
-import { PrismaService } from 'src/prisma.service';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
 
+const commandHandlers = [SignUpCommandHandler];
+
 @Module({
+  imports: [AuthenticationServiceModule],
   controllers: [AuthenticationController],
-  providers: [
-    AuthenticationService,
-    SignUpCommandHandler,
-    UserRepository,
-    PrismaService,
-  ],
+  providers: [...commandHandlers],
 })
 export class AuthenticationModule {}
