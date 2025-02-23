@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     name: Build Backend App
     runs-on: ubuntu-latest
     permissions:
@@ -29,10 +29,6 @@ jobs:
       - name: Build Backend Project
         run: npm run build
 
-  test:
-    name: Run Jest Tests
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
