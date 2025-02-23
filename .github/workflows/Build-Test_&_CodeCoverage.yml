@@ -1,4 +1,4 @@
-name: MP-BE CI/CD (Build & Test)
+name: Build - Test & CodeCoverage
 
 on:
   pull_request:
@@ -8,6 +8,11 @@ jobs:
   build:
     name: Build Backend App
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      pull-requests: read
+      checks: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -39,6 +44,22 @@ jobs:
 
       - name: Install Dependencies
         run: npm ci
-
+      
       - name: Run Unit Tests with Jest
-        run: npm run test -- --ci --runInBand
+        run: npm run test:ci
+      
+      - name: Run Eslint
+        run: npm run eslint:ci
+        continue-on-error: true
+      
+      - name: Annotate Code Linting Results
+        uses: ataylorme/eslint-annotate-action@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          report-json: 'lint/eslint_report.json'
+        continue-on-error: true
+          
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
