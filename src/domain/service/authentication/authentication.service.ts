@@ -7,7 +7,7 @@ import { UserCreationDto } from '../../../controllers/authentication/dto/user-cr
 export class AuthenticationService {
   constructor(private userService: UserService) {}
 
-  async signUp(signUpDto: UserCreationDto): Promise<User> {
-    return await this.userService.createUser(signUpDto);
+  async signUp(userCreationDto: UserCreationDto): Promise<User> {
+    return await this.userService.createUser(userCreationDto);
   }
 }

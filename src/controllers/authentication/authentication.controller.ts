@@ -11,7 +11,7 @@ export class AuthenticationController {
   @Post('signup')
   @ApiOperation({ summary: 'User signup', description: 'Registers a new user' })
   @ApiBody({ type: UserCreationDto })
-  async signUp(@Body() signUpDto: UserCreationDto) {
-    return this.commandBus.execute(new SignUpCommand(signUpDto));
+  async signUp(@Body() userCreationDto: UserCreationDto) {
+    return this.commandBus.execute(new SignUpCommand(userCreationDto));
   }
 }
