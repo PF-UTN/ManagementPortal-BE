@@ -4,9 +4,9 @@ import { UserService } from '../../../domain/service/user/user.service'
 
 @CommandHandler(SignUpCommand)
 export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
-  constructor(private userService: UserService) {}
+  constructor(private service: UserService) {}
 
   async execute(command: SignUpCommand) {
-    return this.userService.createUser(command.userCreationDto);
+    return this.service.createUser(command.userCreationDto);
   }
 }
