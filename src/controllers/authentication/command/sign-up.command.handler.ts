@@ -1,12 +1,12 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { SignUpCommand } from './sign-up.command';
-import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
+import { UserService } from '../../../domain/service/user/user.service'
 
 @CommandHandler(SignUpCommand)
 export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
-  constructor(private service: AuthenticationService) {}
+  constructor(private userService: UserService) {}
 
   async execute(command: SignUpCommand) {
-    return this.service.signUp(command.userCreationDto);
+    return this.userService.createUser(command.userCreationDto);
   }
 }
