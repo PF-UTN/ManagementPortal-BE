@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthenticationModule } from './authentication/authentication.module';
 import { ConfigModule } from '@nestjs/config';
+import { AuthenticationModule } from './controllers/authentication/authentication.module';
 
 @Module({
   imports: [
@@ -11,10 +9,10 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `${process.env.NODE_ENV ? '.' + process.env.NODE_ENV : ''}.env`,
-    }), 
-    AuthenticationModule
+    }),
+    AuthenticationModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}

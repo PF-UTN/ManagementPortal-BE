@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus } from '@nestjs/cqrs';
-import { AuthenticationServiceModule } from '../domain/service/authentication/authentication.service.module';
+import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { AuthenticationController } from './authentication.controller';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
 
