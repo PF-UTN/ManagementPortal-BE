@@ -6,12 +6,12 @@ import { SignUpCommand } from './command/sign-up.command';
 
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private commandBus: CommandBus) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('signup')
   @ApiOperation({ summary: 'User signup', description: 'Registers a new user' })
   @ApiBody({ type: UserCreationDto })
-  async signUp(@Body() signUpDto: UserCreationDto) {
-    return this.commandBus.execute(new SignUpCommand(signUpDto));
+  async signUp(@Body() userCreationDto: UserCreationDto) {
+    return this.commandBus.execute(new SignUpCommand(userCreationDto));
   }
 }

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus } from '@nestjs/cqrs';
-import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { AuthenticationController } from './authentication.controller';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
+import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -11,7 +11,7 @@ describe('AuthenticationController', () => {
     const commandHandlers = [SignUpCommandHandler];
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AuthenticationServiceModule],
+      imports: [UserServiceModule],
       controllers: [AuthenticationController],
       providers: [...commandHandlers, CommandBus],
     }).compile();
