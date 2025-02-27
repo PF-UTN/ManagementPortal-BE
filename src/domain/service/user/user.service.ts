@@ -6,7 +6,7 @@ import { UserRepository } from '@mp/repository';
 
 @Injectable()
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
   async createUser(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User(
@@ -19,5 +19,9 @@ export class UserService {
 
     const newUser = await this.userRepository.createUser(user);
     return newUser;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userRepository.findByEmail(email);
   }
 }
