@@ -1,0 +1,19 @@
+name: Validate PR Title with Jira Ticket
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  validate-jira-ticket:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title for Jira ticket
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ ! "$PR_TITLE" =~ [A-Z]+-[0-9]+ ]]; then
+            echo "❌ El título del PR debe contener un ID de Jira (Ej: PROY-123)."
+            exit 1
+          fi
+          echo "✅ PR validado con un ID de Jira."
