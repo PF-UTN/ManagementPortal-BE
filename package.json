@@ -15,7 +15,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "prisma:local": "dotenv -e .local.env npx prisma migrate dev --name init",
-    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
@@ -97,8 +97,9 @@
     }
   },
   "lint-staged": {
-    "src/**/*.ts": [
+    "**/*.{ts,scss,html}": [
       "prettier --write",
+      "eslint --fix",
       "git add"
     ]
   }
