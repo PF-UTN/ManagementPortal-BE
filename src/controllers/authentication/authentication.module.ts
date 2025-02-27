@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AuthenticationController } from './authentication.controller';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
-import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
+import { UserServiceModule } from 'src/domain/service/user/user.service.module';
 
 const commandHandlers = [SignUpCommandHandler];
 
 @Module({
-  imports: [AuthenticationServiceModule],
+  imports: [UserServiceModule],
   controllers: [AuthenticationController],
   providers: [...commandHandlers],
 })

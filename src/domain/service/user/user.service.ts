@@ -8,13 +8,13 @@ import { UserRepository } from '@mp/repository';
 export class UserService {
   constructor(private userRepository: UserRepository) {}
 
-  async createUser(signUpDto: UserCreationDto): Promise<User> {
+  async createUser(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User(
-      signUpDto.firstName,
-      signUpDto.lastName,
-      signUpDto.email,
-      signUpDto.password,
-      signUpDto.phone,
+      userCreationDto.firstName,
+      userCreationDto.lastName,
+      userCreationDto.email,
+      userCreationDto.password,
+      userCreationDto.phone,
     );
 
     const newUser = await this.userRepository.createUser(user);
