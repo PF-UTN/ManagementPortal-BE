@@ -1,0 +1,13 @@
+model RegistrationRequest {
+    id                    Int                      @id @default(autoincrement())
+    fullNameOrBusinessName String                 @db.VarChar(100)
+    email                 String                   @unique @db.VarChar(250)
+    statusId              Int
+    requestDate           DateTime                 @default(now())
+    documentTypeAndNumber String                   @db.VarChar(50)
+    province              String                   @db.VarChar(50)
+    city                  String                   @db.VarChar(50)
+    phone                 String                   @db.VarChar(20)
+    
+    status                RegistrationRequestStatus @relation(fields: [statusId], references: [id])
+}

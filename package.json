@@ -14,7 +14,7 @@
     "start:prod-local": "dotenv -e .production.env nest start",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "prisma:local": "dotenv -e .local.env npx prisma migrate dev --name init",
+    "prisma:local": "dotenv -e .local.env npx prisma migrate dev --name init && npm run postdeploy",
     "lint": "eslint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:ci": "jest --coverage --ci",
     "eslint:ci": "npx eslint . -f json -o lint/eslint_report.json",
-    "vercel-build": "prisma generate && prisma migrate deploy && npm run build"
+    "vercel-build": "prisma generate && prisma migrate deploy && npm run postdeploy && npm run build",
+    "postdeploy": "ts-node prisma/postdeploy/prisma-postdeploy.configuration.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
