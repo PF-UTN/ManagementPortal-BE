@@ -89,7 +89,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@mp/repository(|/.*)$": "<rootDir>/libs/repository/src/$1"
+      "^@mp/repository(|/.*)$": "<rootDir>/libs/repository/src/$1",
+      "^mp/common(|/.*)$": "<rootDir>/libs/common/src/$1"
     }
   },
   "husky": {

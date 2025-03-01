@@ -21,7 +21,16 @@
     "paths": {
       "@mp/repository": [
         "libs/repository/src"
-      ]
+      ],
+      "@mp/common/dtos": [
+        "libs/common/src/dtos"
+      ],
+      "@mp/common/constants": [
+        "libs/common/src/constants"
+      ],
+      "@mp/common/domain": [
+        "libs/common/src/domain"
+      ],
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
-import { UserCreationDto } from './dto/user-creation.dto';
+import { UserCreationDto } from '../../../libs/common/src/dtos/user-creation.dto';
 import { SignUpCommand } from './command/sign-up.command';
 
 @Controller('authentication')
