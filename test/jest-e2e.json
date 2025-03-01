@@ -12,6 +12,10 @@
   },
   "moduleNameMapper": {
     "@mp/repository": "<rootDir>/../libs/repository/src",
-    "@mp/repository/(.*)": "<rootDir>/../libs/repository/src/$1"
+    "@mp/repository/(.*)": "<rootDir>/../libs/repository/src/$1",
+    "@mp/common/dtos": 
+      "<rootDir>/../libs/common/src/dtos",
+    "@mp/common/constants": "<rootDir>/../libs/common/src/constants",
+    "@mp/common/domain": "<rootDir>/../libs/common/src/domain"
   }
 }
