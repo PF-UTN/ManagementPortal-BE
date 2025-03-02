@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigModule } from '@nestjs/config';
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
+import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
 
 @Module({
   imports: [
@@ -11,6 +12,7 @@ import { AuthenticationModule } from './controllers/authentication/authenticatio
       envFilePath: `${process.env.NODE_ENV ? '.' + process.env.NODE_ENV : ''}.env`,
     }),
     AuthenticationModule,
+    RegistrationRequestModule,
   ],
   controllers: [],
   providers: [],
