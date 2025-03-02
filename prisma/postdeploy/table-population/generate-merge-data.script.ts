@@ -6,14 +6,14 @@ export const mergeTableData = async (tableName: string, values: Array<Record<str
   if (values.length === 0) throw new Error("Values array cannot be empty");
 
   const columns = Object.keys(values[0]);
-  const idColumn = "id"; // Assuming 'id' is the primary key
+  const idColumn = "id"; 
   
   const valuesList = values
-    .map(row => `(${columns.map(col => typeof row[col] === 'string' ? `'${row[col]}'` : row[col]).join(", ")})`)
+    .map(row => `(${columns.map(col => typeof row[col] === 'string' ? row[col].toString() : row[col]).join(", ")})`)
     .join(",\n  ");
 
   const updateClause = columns
-    .filter(col => col !== idColumn) // Exclude ID from update
+    .filter(col => col !== idColumn)
     .map(col => `${col} = EXCLUDED.${col}`)
     .join(", ");
 
@@ -27,8 +27,6 @@ export const mergeTableData = async (tableName: string, values: Array<Record<str
       RETURNING ${idColumn}
     )
     DELETE FROM "${tableName}" WHERE ${idColumn} NOT IN (SELECT ${idColumn} FROM inserted);`;
-
-  console.log(query);
 
   await prisma.$executeRawUnsafe(query);
 }
