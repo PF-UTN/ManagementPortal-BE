@@ -19,16 +19,4 @@ export class SearchRegistrationRequestRequest {
     description: 'The filters to apply to the search',
   })
   filters: SearchRegistrationRequestFiltersDto;
-
-  constructor(
-    searchText: string,
-    filters: SearchRegistrationRequestFiltersDto,
-    page: number,
-    pageSize: number,
-  ) {
-    this.searchText = searchText;
-    this.filters = filters;
-    this.page = page;
-    this.pageSize = pageSize;
-  }
 }
