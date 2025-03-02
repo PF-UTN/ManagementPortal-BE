@@ -5,6 +5,9 @@ model User {
   email                 String @unique @db.VarChar(250)
   password              String @db.VarChar(255)
   phone                 String @db.VarChar(20)
+  documentType          String @db.VarChar(4)
+  documentNumber        String @db.VarChar(10)
+  
   registrationRequestId Int?
 
   RegistrationRequest RegistrationRequest?

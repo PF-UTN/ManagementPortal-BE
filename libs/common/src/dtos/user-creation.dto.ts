@@ -15,4 +15,10 @@ export class UserCreationDto {
 
   @ApiProperty({ example: '+1234567890' })
   phone: string;
+
+  @ApiProperty({ example: '11222333' })
+  documentNumber: string;
+
+  @ApiProperty({ example: 'DNI' })
+  documentType: string;
 }
