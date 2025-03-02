@@ -1,6 +1,7 @@
-import { RegistrationRequestDto } from "./registration-request.dto";
+import { PartiallyInitializable } from '../partially-initializable';
+import { RegistrationRequestDto } from './registration-request.dto';
 
-export class SearchRegistrationRequestResponse {
-    total: number;
-    results: RegistrationRequestDto[];
+export class SearchRegistrationRequestResponse extends PartiallyInitializable<SearchRegistrationRequestResponse> {
+  total: number;
+  results: RegistrationRequestDto[];
 }

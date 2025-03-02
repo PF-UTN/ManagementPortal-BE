@@ -1,6 +1,6 @@
-import { RegistrationRequestDto } from "./registration-request/registration-request.dto";
+import { RegistrationRequestDto } from './registration-request/registration-request.dto';
 
 export class SearchRegistrationRequestResponse {
-    total: number;
-    results: RegistrationRequestDto[];
+  total: number;
+  results: RegistrationRequestDto[];
 }
