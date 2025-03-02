@@ -1,3 +1,5 @@
+import { PartiallyInitializable } from '@mp/common/dtos';
+
 export class User extends PartiallyInitializable<User> {
   id?: number;
   firstName: string;

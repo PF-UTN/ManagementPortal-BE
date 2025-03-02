@@ -9,9 +9,8 @@ export class UserService {
 
   async createUser(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User({
-      ...userCreationDto
-    }
-    );
+      ...userCreationDto,
+    });
 
     const newUser = await this.userRepository.createUser(user);
     return newUser;
