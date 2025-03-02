@@ -13,7 +13,7 @@ export class RegistrationRequestDomainService {
       query.searchText,
       query.filters,
       query.page,
-      query.pageSize
+      query.pageSize,
     );
   }
 }

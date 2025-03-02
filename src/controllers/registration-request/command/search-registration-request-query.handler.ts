@@ -18,9 +18,7 @@ export class SearchRegistrationRequestQueryHandler
     query: SearchRegistrationRequestQuery,
   ): Promise<SearchRegistrationRequestResponse> {
     const registrationRequests =
-      await this.registrationRequestDomainService.searchWithFiltersAsync(
-        query
-      );
+      await this.registrationRequestDomainService.searchWithFiltersAsync(query);
 
     const mappedResponse = registrationRequests.map(
       (registrationRequest): RegistrationRequestDto => {

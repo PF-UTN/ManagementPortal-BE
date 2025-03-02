@@ -21,8 +21,12 @@ describe('SearchRegistrationRequestQueryHandler', () => {
       ],
     }).compile();
 
-    handler = module.get<SearchRegistrationRequestQueryHandler>(SearchRegistrationRequestQueryHandler);
-    service = module.get<RegistrationRequestDomainService>(RegistrationRequestDomainService);
+    handler = module.get<SearchRegistrationRequestQueryHandler>(
+      SearchRegistrationRequestQueryHandler,
+    );
+    service = module.get<RegistrationRequestDomainService>(
+      RegistrationRequestDomainService,
+    );
   });
 
   it('should be defined', () => {
@@ -37,7 +41,7 @@ describe('SearchRegistrationRequestQueryHandler', () => {
       pageSize: 10,
       filters: { status: ['Pending'] },
     });
-    
+
     jest.spyOn(service, 'searchWithFiltersAsync').mockResolvedValue([]);
 
     // Act

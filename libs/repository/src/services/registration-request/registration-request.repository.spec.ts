@@ -22,7 +22,9 @@ describe('RegistrationRequestRepository', () => {
       ],
     }).compile();
 
-    repository = module.get<RegistrationRequestRepository>(RegistrationRequestRepository);
+    repository = module.get<RegistrationRequestRepository>(
+      RegistrationRequestRepository,
+    );
     prismaService = module.get<PrismaService>(PrismaService);
   });
 
@@ -31,17 +33,23 @@ describe('RegistrationRequestRepository', () => {
   });
 
   describe('searchWithFiltersAsync', () => {
-
     it('should construct the correct query with status filter', async () => {
       // Arrange
       const searchText = 'test';
-      const filters: SearchRegistrationRequestFiltersDto = { status: ['Pending'] };
+      const filters: SearchRegistrationRequestFiltersDto = {
+        status: ['Pending'],
+      };
       const page = 1;
       const pageSize = 10;
-  
+
       // Act
-      await repository.searchWithFiltersAsync(searchText, filters, page, pageSize);
-  
+      await repository.searchWithFiltersAsync(
+        searchText,
+        filters,
+        page,
+        pageSize,
+      );
+
       // Assert
       expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -60,17 +68,22 @@ describe('RegistrationRequestRepository', () => {
         }),
       );
     });
-  
+
     it('should construct the correct query with search text filter', async () => {
       // Arrange
       const searchText = 'test';
       const filters: SearchRegistrationRequestFiltersDto = {};
       const page = 1;
       const pageSize = 10;
-  
+
       // Act
-      await repository.searchWithFiltersAsync(searchText, filters, page, pageSize);
-  
+      await repository.searchWithFiltersAsync(
+        searchText,
+        filters,
+        page,
+        pageSize,
+      );
+
       // Assert
       expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -110,17 +123,22 @@ describe('RegistrationRequestRepository', () => {
         }),
       );
     });
-  
+
     it('should construct the correct query with skip and take', async () => {
       // Arrange
       const searchText = 'test';
       const filters: SearchRegistrationRequestFiltersDto = {};
       const page = 2;
       const pageSize = 10;
-  
+
       // Act
-      await repository.searchWithFiltersAsync(searchText, filters, page, pageSize);
-  
+      await repository.searchWithFiltersAsync(
+        searchText,
+        filters,
+        page,
+        pageSize,
+      );
+
       // Assert
       expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

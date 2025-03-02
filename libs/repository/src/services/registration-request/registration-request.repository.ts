@@ -4,13 +4,13 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class RegistrationRequestRepository {
-  constructor(private readonly prisma: PrismaService) { }
-  
+  constructor(private readonly prisma: PrismaService) {}
+
   async searchWithFiltersAsync(
     searchText: string,
     filters: SearchRegistrationRequestFiltersDto,
     page: number,
-    pageSize: number
+    pageSize: number,
   ) {
     return this.prisma.registrationRequest.findMany({
       where: {

@@ -21,8 +21,12 @@ describe('RegistrationRequestDomainService', () => {
       ],
     }).compile();
 
-    service = module.get<RegistrationRequestDomainService>(RegistrationRequestDomainService);
-    repository = module.get<RegistrationRequestRepository>(RegistrationRequestRepository);
+    service = module.get<RegistrationRequestDomainService>(
+      RegistrationRequestDomainService,
+    );
+    repository = module.get<RegistrationRequestRepository>(
+      RegistrationRequestRepository,
+    );
   });
 
   it('should be defined', () => {
@@ -33,7 +37,9 @@ describe('RegistrationRequestDomainService', () => {
     it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
       // Arrange
       const searchText = 'test';
-      const filters: SearchRegistrationRequestFiltersDto = { status: ['Pending'] };
+      const filters: SearchRegistrationRequestFiltersDto = {
+        status: ['Pending'],
+      };
       const page = 1;
       const pageSize = 10;
       const query = new SearchRegistrationRequestQuery({
@@ -51,7 +57,7 @@ describe('RegistrationRequestDomainService', () => {
         query.searchText,
         query.filters,
         query.page,
-        query.pageSize
+        query.pageSize,
       );
     });
   });

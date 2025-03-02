@@ -21,7 +21,9 @@ describe('RegistrationRequestController', () => {
       ],
     }).compile();
 
-    controller = module.get<RegistrationRequestController>(RegistrationRequestController);
+    controller = module.get<RegistrationRequestController>(
+      RegistrationRequestController,
+    );
     queryBus = module.get<QueryBus>(QueryBus);
   });
 
@@ -36,10 +38,12 @@ describe('RegistrationRequestController', () => {
         pageSize: 10,
         filters: { status: ['Pending'] },
       };
-  
+
       await controller.searchAsync(request);
-  
-      expect(queryBus.execute).toHaveBeenCalledWith(new SearchRegistrationRequestQuery(request));
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchRegistrationRequestQuery(request),
+      );
     });
   });
 });
