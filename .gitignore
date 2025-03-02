@@ -173,6 +173,3 @@ dist
 
 # Vercel
 .vercel
-
-# Prisma
-/prisma/migrations
