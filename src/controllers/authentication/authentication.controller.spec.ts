@@ -12,6 +12,65 @@ import { AuthenticationServiceModule } from '../../domain/service/authentication
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
+
+  beforeEach(async () => {
+    const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
+
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [AuthenticationServiceModule, UserServiceModule],
+      controllers: [AuthenticationController],
+      providers: [...commandHandlers, CommandBus],
+    }).compile();
+
+    controller = module.get<AuthenticationController>(AuthenticationController);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
+});
+
+describe('signUpAsync', () => {
+  let controller: AuthenticationController;
+  let commandBus: CommandBus;
+
+  beforeEach(async () => {
+    const commandHandlers = [SignUpCommandHandler];
+
+    const module: TestingModule = await Test.createTestingModule({
+      imports: [UserServiceModule],
+      controllers: [AuthenticationController],
+      providers: [...commandHandlers, CommandBus],
+    }).compile();
+
+    controller = module.get<AuthenticationController>(AuthenticationController);
+    commandBus = module.get<CommandBus>(CommandBus);
+  });
+
+  it('should call commandBus.execute with SignUpCommand when signUpAsync is called', async () => {
+    // Arrange
+    const userCreationDto: UserCreationDto = {
+      firstName: 'testFirstName',
+      lastName: 'testLastName',
+      email: 'testEmail@test.com',
+      password: 'testPass',
+      phone: '1234567890',
+    };
+    const executeSpy = jest
+      .spyOn(commandBus, 'execute')
+      .mockResolvedValueOnce(undefined);
+    const expectedCommand = new SignUpCommand(userCreationDto);
+
+    // Act
+    await controller.signUpAsync(userCreationDto);
+
+    // Assert
+    expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+  });
+});
+
+describe('signInAsync', () => {
+  let controller: AuthenticationController;
   let commandBus: CommandBus;
 
   beforeEach(async () => {
@@ -27,25 +86,21 @@ describe('AuthenticationController', () => {
     commandBus = module.get<CommandBus>(CommandBus);
   });
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
+  it('should call commandBus.execute with SignInCommand when signInAsync is called', async () => {
+    // Arrange
+    const userSignInDto: UserSignInDto = {
+      email: 'testEmail@test.com',
+      password: 'testPass',
+    };
+    const executeSpy = jest
+      .spyOn(commandBus, 'execute')
+      .mockResolvedValueOnce(undefined);
+    const expectedCommand = new SignInCommand(userSignInDto);
 
-  it('should call commandBus.execute with SignUpCommand when signUp is called', async () => {
-    const userCreationDto: UserCreationDto = { firstName: 'testFirstName', lastName: 'testLastName', email: 'testEmail@test.com', password: 'testPass', phone: '1234567890' };
-    const executeSpy = jest.spyOn(commandBus, 'execute').mockResolvedValueOnce(undefined);
+    // Act
+    await controller.signInAsync(userSignInDto);
 
-    await controller.signUp(userCreationDto);
-
-    expect(executeSpy).toHaveBeenCalledWith(new SignUpCommand(userCreationDto));
-  });
-
-  it('should call commandBus.execute with SignInCommand when signIn is called', async () => {
-    const userSignInDto: UserSignInDto = { email: 'testEmail@test.com', password: 'testPass' };
-    const executeSpy = jest.spyOn(commandBus, 'execute').mockResolvedValueOnce(undefined);
-
-    await controller.signIn(userSignInDto);
-
-    expect(executeSpy).toHaveBeenCalledWith(new SignInCommand(userSignInDto));
+    // Assert
+    expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
   });
 });
