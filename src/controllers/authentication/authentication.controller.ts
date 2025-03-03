@@ -13,14 +13,14 @@ export class AuthenticationController {
   @Post('signup')
   @ApiOperation({ summary: 'User signup', description: 'Registers a new user' })
   @ApiBody({ type: UserCreationDto })
-  async signUp(@Body() userCreationDto: UserCreationDto) {
+  async signUpAsync(@Body() userCreationDto: UserCreationDto) {
     return this.commandBus.execute(new SignUpCommand(userCreationDto));
   }
 
   @Post('signin')
   @ApiOperation({ summary: 'User signin', description: 'Logs in a user' })
   @ApiBody({ type: UserSignInDto })
-  async signIn(@Body() userSignInDto: UserSignInDto) {
+  async signInAsync(@Body() userSignInDto: UserSignInDto) {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }
 }
