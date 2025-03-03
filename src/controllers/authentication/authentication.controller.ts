@@ -20,7 +20,7 @@ export class AuthenticationController {
   @Post('signin')
   @ApiOperation({ summary: 'User signin', description: 'Logs in a user' })
   @ApiBody({ type: UserSignInDto })
-  async signInAsync(@Body() userSignInDto: UserSignInDto) {
+  async signInAsync(@Body() userSignInDto: UserSignInDto): Promise<{ access_token: string }> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }
 }
