@@ -4,7 +4,6 @@ import { UserService } from '../user/user.service';
 import { User } from '../../entity/user.entity';
 import { UserCreationDto } from '../../../controllers/authentication/dto/user-creation.dto';
 
-// Mock de UserRepository
 const mockUserRepository = {
   createUserAsync: jest.fn(),
   findByEmailAsync: jest.fn(),
@@ -17,7 +16,7 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: UserRepository, useValue: mockUserRepository }, // Mockeamos el repositorio
+        { provide: UserRepository, useValue: mockUserRepository },
       ],
     }).compile();
 
@@ -45,7 +44,7 @@ describe('UserService', () => {
         userCreationDto.password,
         userCreationDto.phone,
       );
-      mockUserRepository.createUserAsync.mockResolvedValue(createdUser); // Mockeamos el retorno de la función
+      mockUserRepository.createUserAsync.mockResolvedValue(createdUser);
 
       // Act
       const result = await service.createUserAsync(userCreationDto);
@@ -53,7 +52,7 @@ describe('UserService', () => {
       // Assert
       expect(result).toEqual(createdUser);
       expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
-        expect.any(User), // Verificamos que el argumento pasado sea un objeto User
+        expect.any(User),
       );
     });
   });
@@ -68,7 +67,7 @@ describe('UserService', () => {
         'password123',
         '1234567890',
       );
-      mockUserRepository.findByEmailAsync.mockResolvedValue(mockUser); // Mockeamos el retorno de la función
+      mockUserRepository.findByEmailAsync.mockResolvedValue(mockUser);
 
       // Act
       const result = await service.findByEmailAsync('john.doe@example.com');
@@ -82,7 +81,7 @@ describe('UserService', () => {
 
     it('should return null if user not found', async () => {
       // Arrange
-      mockUserRepository.findByEmailAsync.mockResolvedValue(null); // Mockeamos el retorno de la función
+      mockUserRepository.findByEmailAsync.mockResolvedValue(null);
 
       // Act
       const result = await service.findByEmailAsync('nonexistent@example.com');
