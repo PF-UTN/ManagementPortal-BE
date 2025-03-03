@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { UserRepository } from '@mp/repository';
 import { User } from '../../entity/user.entity';
 import { UserCreationDto } from '../../../controllers/authentication/dto/user-creation.dto';
-import { UserRepository } from '@mp/repository';
 
 
 @Injectable()
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private readonly userRepository: UserRepository) {}
 
-  async createUser(userCreationDto: UserCreationDto): Promise<User> {
+  async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User(
       userCreationDto.firstName,
       userCreationDto.lastName,
@@ -17,7 +17,11 @@ export class UserService {
       userCreationDto.phone,
     );
 
-    const newUser = await this.userRepository.createUser(user);
+    const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
+  }
+
+  async findByEmailAsync(email: string): Promise<User | null> {
+    return this.userRepository.findByEmailAsync(email);
   }
 }

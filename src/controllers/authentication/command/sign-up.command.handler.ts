@@ -7,6 +7,6 @@ export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
   constructor(private readonly service: UserService) {}
 
   async execute(command: SignUpCommand) {
-    return this.service.createUser(command.userCreationDto);
+    return this.service.createUserAsync(command.userCreationDto);
   }
 }
