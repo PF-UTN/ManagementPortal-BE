@@ -8,7 +8,7 @@ import { UserRepository } from '@mp/repository';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async createUser(userCreationDto: UserCreationDto): Promise<User> {
+  async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User(
       userCreationDto.firstName,
       userCreationDto.lastName,
@@ -17,11 +17,11 @@ export class UserService {
       userCreationDto.phone,
     );
 
-    const newUser = await this.userRepository.createUser(user);
+    const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userRepository.findByEmail(email);
+  async findByEmailAsync(email: string): Promise<User | null> {
+    return this.userRepository.findByEmailAsync(email);
   }
 }

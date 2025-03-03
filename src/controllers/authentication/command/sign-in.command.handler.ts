@@ -7,6 +7,6 @@ export class SignInCommandHandler implements ICommandHandler<SignInCommand> {
   constructor(private readonly service: AuthenticationService) {}
 
   async execute(command: SignInCommand) {
-    return this.service.signIn(command.userSignInDto.email, command.userSignInDto.password);
+    return this.service.signInAsync(command.userSignInDto.email, command.userSignInDto.password);
   }
 }
