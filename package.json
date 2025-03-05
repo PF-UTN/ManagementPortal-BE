@@ -14,7 +14,7 @@
     "start:prod-local": "dotenv -e .production.env nest start",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "prisma:local": "dotenv -e .local.env npx prisma migrate dev --name init",
+    "prisma:local": "dotenv -e .local.env npx prisma migrate dev --name init && npm run postdeploy",
     "lint": "eslint --fix",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -23,7 +23,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:ci": "jest --coverage --ci",
     "eslint:ci": "npx eslint . -f json -o lint/eslint_report.json",
-    "vercel-build": "prisma generate && prisma migrate deploy && npm run build"
+    "vercel-build": "prisma generate && prisma migrate deploy && npm run postdeploy && npm run build",
+    "postdeploy": "ts-node prisma/postdeploy/prisma-postdeploy.configuration.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -54,9 +55,9 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^15.15.0",
-    "husky": "^8.0.0",
+    "husky": "^8.0.3",
     "jest": "^29.7.0",
-    "lint-staged": "^13.0.0",
+    "lint-staged": "^13.3.0",
     "prettier": "^3.4.2",
     "prisma": "^6.4.0",
     "source-map-support": "^0.5.21",
@@ -89,7 +90,8 @@
       "<rootDir>/libs/"
     ],
     "moduleNameMapper": {
-      "^@mp/repository(|/.*)$": "<rootDir>/libs/repository/src/$1"
+      "^@mp/repository(|/.*)$": "<rootDir>/libs/repository/src/$1",
+      "^@mp/common(|/.*)$": "<rootDir>/libs/common/src/$1"
     }
   },
   "husky": {
