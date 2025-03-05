@@ -1,14 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CommandBus } from '@nestjs/cqrs';
+import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
 import { AuthenticationController } from './authentication.controller';
-import { SignUpCommandHandler } from './command/sign-up.command.handler';
-import { SignInCommandHandler } from './command/sign-in.command.handler';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
-import { UserCreationDto } from './dto/user-creation.dto';
-import { UserSignInDto } from './dto/user-sign-in.dto';
-import { SignUpCommand } from './command/sign-up.command';
-import { SignInCommand } from './command/sign-in.command';
 import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
+import { SignInCommand } from './command/sign-in.command';
+import { SignInCommandHandler } from './command/sign-in.command.handler';
+import { SignUpCommand } from './command/sign-up.command';
+import { SignUpCommandHandler } from './command/sign-up.command.handler';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -55,6 +54,8 @@ describe('signUpAsync', () => {
       email: 'testEmail@test.com',
       password: 'testPass',
       phone: '1234567890',
+      documentNumber: '123456789',
+      documentType: 'DNI',
     };
     const executeSpy = jest
       .spyOn(commandBus, 'execute')

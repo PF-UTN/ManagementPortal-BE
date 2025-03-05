@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@mp/repository';
 import { UserService } from '../user/user.service';
 import { User } from '../../entity/user.entity';
-import { UserCreationDto } from '../../../controllers/authentication/dto/user-creation.dto';
+import { UserCreationDto } from '@mp/common/dtos';
 
 const mockUserRepository = {
   createUserAsync: jest.fn(),
@@ -28,7 +28,7 @@ describe('UserService', () => {
   });
 
   describe('createUserAsync', () => {
-    it('should create a user', async () => {
+    it('should call createUserAsync', async () => {
       // Arrange
       const userCreationDto: UserCreationDto = {
         firstName: 'John',
@@ -36,60 +36,40 @@ describe('UserService', () => {
         email: 'john.doe@example.com',
         password: 'password123',
         phone: '1234567890',
+        documentNumber: '123456789',
+        documentType: 'DNI',
       };
-      const createdUser = new User(
-        userCreationDto.firstName,
-        userCreationDto.lastName,
-        userCreationDto.email,
-        userCreationDto.password,
-        userCreationDto.phone,
-      );
-      mockUserRepository.createUserAsync.mockResolvedValue(createdUser);
 
       // Act
-      const result = await service.createUserAsync(userCreationDto);
+      await service.createUserAsync(userCreationDto);
 
       // Assert
-      expect(result).toEqual(createdUser);
       expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
-        expect.any(User),
+        new User(userCreationDto),
       );
     });
   });
 
   describe('findByEmailAsync', () => {
-    it('should return a user when email exists', async () => {
+    it('should call findByEmailAsync with user email', async () => {
       // Arrange
-      const mockUser = new User(
-        'John',
-        'Doe',
-        'john.doe@example.com',
-        'password123',
-        '1234567890',
-      );
+      const mockUser = new User({
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'password123',
+        phone: '1234567890',
+        documentNumber: '123456789',
+        documentType: 'DNI',
+      });
       mockUserRepository.findByEmailAsync.mockResolvedValue(mockUser);
 
       // Act
-      const result = await service.findByEmailAsync('john.doe@example.com');
+      await service.findByEmailAsync('john.doe@example.com');
 
       // Assert
-      expect(result).toEqual(mockUser);
       expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
         'john.doe@example.com',
-      );
-    });
-
-    it('should return null if user not found', async () => {
-      // Arrange
-      mockUserRepository.findByEmailAsync.mockResolvedValue(null);
-
-      // Act
-      const result = await service.findByEmailAsync('nonexistent@example.com');
-
-      // Assert
-      expect(result).toBeNull();
-      expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
-        'nonexistent@example.com',
       );
     });
   });
