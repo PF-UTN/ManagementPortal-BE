@@ -23,7 +23,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:ci": "jest --coverage --ci",
     "eslint:ci": "npx eslint . -f json -o lint/eslint_report.json",
-    "vercel-build": "prisma generate && prisma migrate deploy && npm run postdeploy && npm run build",
+    "vercel-build": "prisma generate && prisma migrate dev --name update-schema && npm run postdeploy && npm run build",
     "postdeploy": "ts-node prisma/postdeploy/prisma-postdeploy.configuration.ts"
   },
   "dependencies": {
