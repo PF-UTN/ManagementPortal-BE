@@ -14,7 +14,13 @@ export const mergeTableData = async (
   const valuesList = values
     .map(
       (row) =>
-        `(${columns.map((col) => (typeof row[col] === 'string' ? row[col].toString() : row[col])).join(', ')})`,
+        '(' +
+        columns
+          .map((col) =>
+            typeof row[col] === 'string' ? `'${row[col]}'` : row[col],
+          )
+          .join(', ') +
+        ')',
     )
     .join(',\n  ');
 
