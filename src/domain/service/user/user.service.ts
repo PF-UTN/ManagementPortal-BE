@@ -7,7 +7,7 @@ import { User } from '../../entity/user.entity';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  async createUser(userCreationDto: UserCreationDto): Promise<User> {
+  async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const user = new User({
       ...userCreationDto,
     });
