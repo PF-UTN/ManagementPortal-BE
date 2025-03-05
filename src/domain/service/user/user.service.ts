@@ -12,7 +12,11 @@ export class UserService {
       ...userCreationDto,
     });
 
-    const newUser = await this.userRepository.createUser(user);
+    const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
+  }
+
+  async findByEmailAsync(email: string): Promise<User | null> {
+    return this.userRepository.findByEmailAsync(email);
   }
 }
