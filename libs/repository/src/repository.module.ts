@@ -3,9 +3,10 @@ import {
   UserRepository,
   PrismaService,
   RegistrationRequestRepository,
+  RegistrationRequestStatusRepository
 } from './services';
 @Module({
-  providers: [PrismaService, UserRepository, RegistrationRequestRepository],
-  exports: [UserRepository, RegistrationRequestRepository],
+  providers: [PrismaService, UserRepository, RegistrationRequestRepository, RegistrationRequestStatusRepository],
+  exports: [UserRepository, RegistrationRequestRepository, RegistrationRequestStatusRepository],
 })
 export class RepositoryModule {}

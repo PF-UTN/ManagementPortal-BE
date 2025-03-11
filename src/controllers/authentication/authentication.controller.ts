@@ -10,7 +10,7 @@ export class AuthenticationController {
   constructor(private readonly commandBus: CommandBus) {}
 
   @Post('signup')
-  @ApiOperation({ summary: 'User signup', description: 'Registers a new user' })
+  @ApiOperation({ summary: 'User signup', description: 'Registers a new user and creates a registration request' })
   @ApiBody({ type: UserCreationDto })
   async signUpAsync(@Body() userCreationDto: UserCreationDto) {
     return this.commandBus.execute(new SignUpCommand(userCreationDto));

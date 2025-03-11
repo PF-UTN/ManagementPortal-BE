@@ -1,6 +1,7 @@
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
+import { Prisma, RegistrationRequest } from '@prisma/client';
 
 @Injectable()
 export class RegistrationRequestRepository {
@@ -61,6 +62,14 @@ export class RegistrationRequestRepository {
       skip: (page - 1) * pageSize,
       take: pageSize,
       orderBy: { requestDate: 'desc' },
+    });
+  }
+
+  async createRegistrationRequestAsync(
+    data: Prisma.RegistrationRequestCreateInput,
+  ): Promise<RegistrationRequest> {
+    return this.prisma.registrationRequest.create({
+      data,
     });
   }
 }
