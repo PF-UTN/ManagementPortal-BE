@@ -6,7 +6,7 @@ model User {
   password              String @db.VarChar(255)
   phone                 String @db.VarChar(20)
   documentType          String @db.VarChar(4)
-  documentNumber        String @db.VarChar(10)
+  documentNumber        String @db.VarChar(11)
   
   registrationRequest   RegistrationRequest?
 }
