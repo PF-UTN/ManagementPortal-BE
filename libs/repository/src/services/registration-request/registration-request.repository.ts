@@ -1,7 +1,7 @@
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma.service';
 import { Prisma, RegistrationRequest } from '@prisma/client';
+import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class RegistrationRequestRepository {
