@@ -148,4 +148,35 @@ describe('RegistrationRequestRepository', () => {
       );
     });
   });
+describe('createRegistrationRequestAsync', () => {
+  it('should create a new registration request', async () => {
+    // Arrange
+    const createData = {
+      user: {
+        connect: { id: 1 },
+      },
+      status: {
+        connect: { id: 1 },
+      },
+      requestDate: new Date(),
+      note: 'test',
+    };
+    const createdRequest = {
+      id: 1,
+      ...createData,
+    };
+    prismaService.registrationRequest.create = jest
+      .fn()
+      .mockResolvedValue(createdRequest);
+
+    // Act
+    const result = await repository.createRegistrationRequestAsync(createData);
+
+    // Assert
+    expect(prismaService.registrationRequest.create).toHaveBeenCalledWith({
+      data: createData,
+    });
+    expect(result).toEqual(createdRequest);
+  });
+});
 });
