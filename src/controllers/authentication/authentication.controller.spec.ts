@@ -8,6 +8,8 @@ import { SignInCommand } from './command/sign-in.command';
 import { SignInCommandHandler } from './command/sign-in.command.handler';
 import { SignUpCommand } from './command/sign-up.command';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
+import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
+import { RegistrationRequestDomainServiceModule } from '../../domain/service/registration-request/registration-request-domain.service.module';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
@@ -16,7 +18,7 @@ describe('AuthenticationController', () => {
     const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AuthenticationServiceModule, UserServiceModule],
+      imports: [AuthenticationServiceModule, UserServiceModule, RegistrationRequestDomainServiceModule, RegistrationRequestStatusServiceModule],
       controllers: [AuthenticationController],
       providers: [...commandHandlers, CommandBus],
     }).compile();
@@ -37,7 +39,7 @@ describe('signUpAsync', () => {
     const commandHandlers = [SignUpCommandHandler];
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [UserServiceModule],
+      imports: [UserServiceModule, RegistrationRequestDomainServiceModule, RegistrationRequestStatusServiceModule],
       controllers: [AuthenticationController],
       providers: [...commandHandlers, CommandBus],
     }).compile();
@@ -78,7 +80,7 @@ describe('signInAsync', () => {
     const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [AuthenticationServiceModule, UserServiceModule],
+      imports: [AuthenticationServiceModule, UserServiceModule, RegistrationRequestDomainServiceModule, RegistrationRequestStatusServiceModule],
       controllers: [AuthenticationController],
       providers: [...commandHandlers, CommandBus],
     }).compile();

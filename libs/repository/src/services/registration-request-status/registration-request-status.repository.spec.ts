@@ -63,7 +63,9 @@ describe('findByCodeAsync', () => {
 
     jest.spyOn(service, 'findByCodeAsync').mockResolvedValue(expectedStatus);
 
+    // Act
     const result = await service.findByCodeAsync(code);
+    // Assert
     expect(result).toEqual(expectedStatus);
   });
 
