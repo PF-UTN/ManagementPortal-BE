@@ -1,4 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { RegistrationRequestStatus } from '@mp/common/constants';
 import { SignUpCommand } from './sign-up.command';
 import { UserService } from '../../../domain/service/user/user.service';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
@@ -17,7 +18,7 @@ export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
       command.userCreationDto,
     );
     const status =
-      await this.registrationRequestStatusService.findByCodeAsync('Pending');
+      await this.registrationRequestStatusService.findByCodeAsync(RegistrationRequestStatus.Pending);
 
     if (!status) {
       throw new Error(
