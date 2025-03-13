@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
 import { SignUpCommand } from './command/sign-up.command';
@@ -12,7 +12,7 @@ export class AuthenticationController {
   @Post('signup')
   @ApiOperation({ summary: 'User signup', description: 'Registers a new user and creates a registration request' })
   @ApiBody({ type: UserCreationDto })
-  async signUpAsync(@Body() userCreationDto: UserCreationDto) {
+  async signUpAsync(@Body(ValidationPipe) userCreationDto: UserCreationDto) {
     return this.commandBus.execute(new SignUpCommand(userCreationDto));
   }
 
@@ -20,7 +20,7 @@ export class AuthenticationController {
   @ApiOperation({ summary: 'User signin', description: 'Logs in a user' })
   @ApiBody({ type: UserSignInDto })
   async signInAsync(
-    @Body() userSignInDto: UserSignInDto,
+    @Body(ValidationPipe) userSignInDto: UserSignInDto,
   ): Promise<{ access_token: string }> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }
