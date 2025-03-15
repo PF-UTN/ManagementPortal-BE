@@ -28,30 +28,30 @@ describe('RegistrationRequestStatusService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
-  describe('findByCodeAsync', () => {
-    it('should return a registration request status by code', async () => {
-      // Arrange
-      const code = 'test-code';
-      const expectedStatus = {
-        id: 1,
-        code: 'test-code',
-      };
 
-      jest.spyOn(service, 'findByCodeAsync').mockResolvedValue(expectedStatus);
+  describe('findByCodeAsync', () => {});
+  it('should return a registration request status by code', async () => {
+    // Arrange
+    const code = 'test-code';
+    const expectedStatus = {
+      id: 1,
+      code: 'test-code',
+    };
 
-      // Act
-      const result = await service.findByCodeAsync(code);
-      // Assert
-      expect(result).toEqual(expectedStatus);
-    });
+    jest.spyOn(service, 'findByCodeAsync').mockResolvedValue(expectedStatus);
 
-    it('should return null if no registration request status is found', async () => {
-      const code = 'non-existent-code';
+    // Act
+    const result = await service.findByCodeAsync(code);
+    // Assert
+    expect(result).toEqual(expectedStatus);
+  });
 
-      jest.spyOn(service, 'findByCodeAsync').mockResolvedValue(null);
+  it('should return null if no registration request status is found', async () => {
+    const code = 'non-existent-code';
 
-      const result = await service.findByCodeAsync(code);
-      expect(result).toBeNull();
-    });
+    jest.spyOn(service, 'findByCodeAsync').mockResolvedValue(null);
+
+    const result = await service.findByCodeAsync(code);
+    expect(result).toBeNull();
   });
 });
