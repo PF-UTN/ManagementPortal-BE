@@ -16,6 +16,7 @@ describe('RegistrationRequestDomainService', () => {
           provide: RegistrationRequestRepository,
           useValue: {
             searchWithFiltersAsync: jest.fn(),
+            createRegistrationRequestAsync: jest.fn(),
           },
         },
       ],
@@ -61,4 +62,25 @@ describe('RegistrationRequestDomainService', () => {
       );
     });
   });
+
+describe('createRegistrationRequestAsync', () => {
+  it('should call createRegistrationRequestAsync on the repository with correct parameters', async () => {
+    // Arrange
+    const registrationRequestCreationDto = {
+      note: 'test',
+      status: { connect: { id: 1 } },
+      user: { connect: { id: 1 } },
+    };
+
+    // Act
+    await service.createRegistrationRequestAsync(
+      registrationRequestCreationDto,
+    );
+
+    // Assert
+    expect(repository.createRegistrationRequestAsync).toHaveBeenCalledWith(
+      registrationRequestCreationDto,
+    );
+  });
+});
 });

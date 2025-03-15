@@ -8,7 +8,5 @@ model User {
   documentType          String @db.VarChar(4)
   documentNumber        String @db.VarChar(10)
   
-  registrationRequestId Int?
-
-  RegistrationRequest RegistrationRequest?
+  registrationRequest   RegistrationRequest?
 }
