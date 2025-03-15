@@ -28,31 +28,8 @@ describe('RegistrationRequestStatusService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
-});
 
-describe('findByCodeAsync', () => {
-  let service: RegistrationRequestStatusRepository;
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        RegistrationRequestStatusRepository,
-        {
-          provide: PrismaService,
-          useValue: {
-            registrationRequestStatus: {
-              findUnique: jest.fn(),
-            },
-          },
-        },
-      ],
-    }).compile();
-
-    service = module.get<RegistrationRequestStatusRepository>(
-      RegistrationRequestStatusRepository,
-    );
-  });
-
+  describe('findByCodeAsync', () => {});
   it('should return a registration request status by code', async () => {
     // Arrange
     const code = 'test-code';
