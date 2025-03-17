@@ -8,8 +8,6 @@ import * as bcrypt from 'bcrypt';
 export class UserService {
   constructor(private readonly userRepository: UserRepository) {}
 
-  private readonly saltOrRounds = 10;
-
   async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const hashedPassword = await this.hashPasswordAsync(
       userCreationDto.password,
@@ -29,6 +27,7 @@ export class UserService {
   }
 
   async hashPasswordAsync(password: string): Promise<string> {
-    return bcrypt.hash(password, this.saltOrRounds);
+    const salt = await bcrypt.genSalt();
+    return bcrypt.hash(password, salt);
   }
 }

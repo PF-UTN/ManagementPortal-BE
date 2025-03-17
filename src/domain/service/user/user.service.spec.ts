@@ -12,7 +12,7 @@ const mockUserRepository = {
 
 describe('UserService', () => {
   let service: UserService;
-  const saltOrRounds = 10;
+  const salt = '$2b$10$XMvtvPCegzPFKHR3RsTsH.';
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -90,7 +90,9 @@ describe('UserService', () => {
     it('should hash the password correctly', async () => {
       // Arrange
       const password = 'password123';
-      const hashedPassword = await bcrypt.hash(password, saltOrRounds);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      jest.spyOn(bcrypt, 'genSalt').mockImplementation(jest.fn(() => salt));
 
       jest
         .spyOn(bcrypt, 'hash')
@@ -101,7 +103,7 @@ describe('UserService', () => {
 
       // Assert
       expect(result).toBe(hashedPassword);
-      expect(bcrypt.hash).toHaveBeenCalledWith(password, saltOrRounds);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, salt);
     });
   });
 });
