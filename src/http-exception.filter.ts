@@ -1,6 +1,11 @@
+import { INestApplication } from '@nestjs/common';
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, InternalServerErrorException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+
+export const GlobalExceptionFilterConfiguration = (app: INestApplication) => {
+  app.useGlobalFilters(new GlobalExceptionFilter());
+}
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
