@@ -3,6 +3,7 @@ import { UserRepository } from '@mp/repository';
 import { UserService } from '../user/user.service';
 import { User } from '../../entity/user.entity';
 import { UserCreationDto } from '@mp/common/dtos';
+import * as bcrypt from 'bcrypt';
 
 const mockUserRepository = {
   createUserAsync: jest.fn(),
@@ -71,6 +72,24 @@ describe('UserService', () => {
       expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
         'john.doe@example.com',
       );
+    });
+  });
+
+  describe('hashPasswordAsync', () => {
+    it('should hash the password correctly', async () => {
+      // Arrange
+      const password = 'password123';
+      const saltOrRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltOrRounds);
+
+      jest.spyOn(bcrypt, 'hash').mockImplementation(jest.fn(() => Promise.resolve(hashedPassword)));
+
+      // Act
+      const result = await service.hashPasswordAsync(password);
+
+      // Assert
+      expect(result).toBe(hashedPassword);
+      expect(bcrypt.hash).toHaveBeenCalledWith(password, saltOrRounds);
     });
   });
 });
