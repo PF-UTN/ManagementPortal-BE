@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { UserService } from '../user/user.service';
+import * as bcrypt from 'bcrypt';
 
 describe('AuthenticationService', () => {
   let service: AuthenticationService;
@@ -58,7 +59,16 @@ describe('AuthenticationService', () => {
 
   it('should return a JWT token if credentials are correct', async () => {
     // Arrange
-    const mockUser = { email: 'test@test.com', password: 'password', id: 1 };
+    const mockUser = {
+      email: 'test@test.com',
+      password: 'hashedPassword',
+      id: 1,
+    };
+
+    jest
+      .spyOn(bcrypt, 'compare')
+      .mockImplementation(jest.fn(() => Promise.resolve(true)));
+
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
     mockJwtService.signAsync.mockResolvedValueOnce('mockJwtToken');
 
@@ -67,6 +77,7 @@ describe('AuthenticationService', () => {
 
     // Assert
     expect(result).toEqual({ access_token: 'mockJwtToken' });
+    expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedPassword');
     expect(mockJwtService.signAsync).toHaveBeenCalledWith({
       email: 'test@test.com',
       sub: 1,

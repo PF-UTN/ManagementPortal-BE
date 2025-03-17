@@ -12,6 +12,7 @@ const mockUserRepository = {
 
 describe('UserService', () => {
   let service: UserService;
+  const saltOrRounds = 10;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -29,7 +30,7 @@ describe('UserService', () => {
   });
 
   describe('createUserAsync', () => {
-    it('should call createUserAsync', async () => {
+    it('should call createUserAsync with a hashed password', async () => {
       // Arrange
       const userCreationDto: UserCreationDto = {
         firstName: 'John',
@@ -41,12 +42,22 @@ describe('UserService', () => {
         documentType: 'DNI',
       };
 
+      const hashedPassword = 'hashedPassword123';
+      jest
+        .spyOn(service, 'hashPasswordAsync')
+        .mockResolvedValue(hashedPassword);
+
+      const expectedUser = new User({
+        ...userCreationDto,
+        password: hashedPassword,
+      });
+
       // Act
       await service.createUserAsync(userCreationDto);
 
       // Assert
       expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
-        new User(userCreationDto),
+        expectedUser,
       );
     });
   });
@@ -79,10 +90,11 @@ describe('UserService', () => {
     it('should hash the password correctly', async () => {
       // Arrange
       const password = 'password123';
-      const saltOrRounds = 10;
       const hashedPassword = await bcrypt.hash(password, saltOrRounds);
 
-      jest.spyOn(bcrypt, 'hash').mockImplementation(jest.fn(() => Promise.resolve(hashedPassword)));
+      jest
+        .spyOn(bcrypt, 'hash')
+        .mockImplementation(jest.fn(() => Promise.resolve(hashedPassword)));
 
       // Act
       const result = await service.hashPasswordAsync(password);
