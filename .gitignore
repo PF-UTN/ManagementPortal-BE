@@ -17,6 +17,7 @@ lerna-debug.log*
 
 # Tests
 /coverage
+/lint
 /.nyc_output
 
 # IDEs and editors
@@ -30,7 +31,7 @@ lerna-debug.log*
 
 # IDE - VSCode
 .vscode/*
-!.vscode/settings.json
+.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
@@ -172,6 +173,3 @@ dist
 
 # Vercel
 .vercel
-
-# Prisma
-/prisma/migrations

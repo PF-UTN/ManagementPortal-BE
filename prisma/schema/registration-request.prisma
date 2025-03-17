@@ -1,0 +1,10 @@
+model RegistrationRequest {
+  id          Int      @id @default(autoincrement())
+  note        String   @db.VarChar(50)
+  requestDate DateTime @default(now())
+
+  statusId    Int
+  status      RegistrationRequestStatus @relation(fields: [statusId], references: [id])
+  userId      Int                       @unique
+  user        User                      @relation(fields: [userId], references: [id])
+}
