@@ -7,7 +7,7 @@ export class EncryptionService {
   private readonly rounds: number = Number(BCRYPT_ROUNDS);
 
   async hashAsync(password: string): Promise<string> {
-    let salt = await this.genSaltAsync(this.rounds);
+    const salt = await this.genSaltAsync(this.rounds);
     return bcrypt.hash(password, salt);
   }
 
