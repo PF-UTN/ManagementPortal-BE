@@ -31,6 +31,9 @@
       "@mp/common/domain": [
         "libs/common/src/domain"
       ],
+      "@mp/common/services": [
+        "libs/common/src/services"
+      ],
     }
   }
 }

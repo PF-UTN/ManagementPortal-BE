@@ -1,12 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@mp/repository';
+import { UserCreationDto } from '@mp/common/dtos';
+import { EncryptionService } from '@mp/common/services';
 import { UserService } from '../user/user.service';
 import { User } from '../../entity/user.entity';
-import { UserCreationDto } from '@mp/common/dtos';
 
 const mockUserRepository = {
   createUserAsync: jest.fn(),
   findByEmailAsync: jest.fn(),
+};
+
+const mockEncryptionService = {
+  hashAsync: jest.fn(),
 };
 
 describe('UserService', () => {
@@ -17,6 +22,7 @@ describe('UserService', () => {
       providers: [
         UserService,
         { provide: UserRepository, useValue: mockUserRepository },
+        { provide: EncryptionService, useValue: mockEncryptionService },
       ],
     }).compile();
 
@@ -28,7 +34,7 @@ describe('UserService', () => {
   });
 
   describe('createUserAsync', () => {
-    it('should call createUserAsync', async () => {
+    it('should call createUserAsync with a hashed password', async () => {
       // Arrange
       const userCreationDto: UserCreationDto = {
         firstName: 'John',
@@ -39,16 +45,41 @@ describe('UserService', () => {
         documentNumber: '123456789',
         documentType: 'DNI',
       };
-
+  
+      const hashedPassword = 'hashedPassword123';
+      mockEncryptionService.hashAsync.mockResolvedValue(hashedPassword);
+  
+      const expectedUser = new User({
+        ...userCreationDto,
+        password: hashedPassword,
+      });
+  
       // Act
       await service.createUserAsync(userCreationDto);
-
+  
       // Assert
-      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
-        new User(userCreationDto),
-      );
+      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(expectedUser);
     });
-  });
+  
+    it('should call hashAsync with the correct password', async () => {
+      // Arrange
+      const userCreationDto: UserCreationDto = {
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'password123',
+        phone: '1234567890',
+        documentNumber: '123456789',
+        documentType: 'DNI',
+      };
+  
+      // Act
+      await service.createUserAsync(userCreationDto);
+  
+      // Assert
+      expect(mockEncryptionService.hashAsync).toHaveBeenCalledWith(userCreationDto.password);
+    });
+  });  
 
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
