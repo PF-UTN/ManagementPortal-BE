@@ -1,13 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SearchRegistrationRequestFiltersDto } from './search-registration-request-filters.dto';
-import { IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsDefined, IsNumber, IsString, MaxLength } from 'class-validator';
 
 export class SearchRegistrationRequestRequest {
   @ApiProperty({
-    example: 'search text',
+    example: '',
     description: 'The text to search for',
-    required: false,
+    required: true,
   })
+  @IsDefined()
   @IsString()
   @MaxLength(50)
   searchText: string;
@@ -15,7 +16,7 @@ export class SearchRegistrationRequestRequest {
   @ApiProperty({
     example: 1,
     description: 'The page number for pagination',
-    required: true,
+    required: false,
   })
   @IsNumber()
   page: number;
@@ -23,7 +24,7 @@ export class SearchRegistrationRequestRequest {
   @ApiProperty({
     example: 10,
     description: 'The number of items per page',
-    required: true,
+    required: false,
   })
   @IsNumber()
   pageSize: number;
