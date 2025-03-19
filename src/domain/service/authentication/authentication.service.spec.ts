@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
+import { EncryptionService } from '@mp/common/services';
 import { AuthenticationService } from './authentication.service';
 import { UserService } from '../user/user.service';
-import * as bcrypt from 'bcrypt';
 
 describe('AuthenticationService', () => {
   let service: AuthenticationService;
@@ -16,12 +16,17 @@ describe('AuthenticationService', () => {
     signAsync: jest.fn(),
   };
 
+  const mockEncryptionService = {
+    compareAsync: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthenticationService,
         { provide: UserService, useValue: mockUserService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: EncryptionService, useValue: mockEncryptionService },
       ],
     }).compile();
 
@@ -65,19 +70,54 @@ describe('AuthenticationService', () => {
       id: 1,
     };
 
-    jest
-      .spyOn(bcrypt, 'compare')
-      .mockImplementation(jest.fn(() => Promise.resolve(true)));
-
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
     mockJwtService.signAsync.mockResolvedValueOnce('mockJwtToken');
+    mockEncryptionService.compareAsync.mockResolvedValueOnce(true);
 
     // Act
     const result = await service.signInAsync('test@test.com', 'password');
 
     // Assert
     expect(result).toEqual({ access_token: 'mockJwtToken' });
-    expect(bcrypt.compare).toHaveBeenCalledWith('password', 'hashedPassword');
+  });
+
+  it('should call compareAsync with correct arguments', async () => {
+    // Arrange
+    const mockUser = {
+      email: 'test@test.com',
+      password: 'hashedPassword',
+      id: 1,
+    };
+
+    mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
+    mockEncryptionService.compareAsync.mockResolvedValueOnce(true);
+
+    // Act
+    await service.signInAsync('test@test.com', 'password');
+
+    // Assert
+    expect(mockEncryptionService.compareAsync).toHaveBeenCalledWith(
+      'password',
+      'hashedPassword',
+    );
+  });
+
+  it('should call signAsync with correct payload', async () => {
+    // Arrange
+    const mockUser = {
+      email: 'test@test.com',
+      password: 'hashedPassword',
+      id: 1,
+    };
+
+    mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
+    mockJwtService.signAsync.mockResolvedValueOnce('mockJwtToken');
+    mockEncryptionService.compareAsync.mockResolvedValueOnce(true);
+
+    // Act
+    await service.signInAsync('test@test.com', 'password');
+
+    // Assert
     expect(mockJwtService.signAsync).toHaveBeenCalledWith({
       email: 'test@test.com',
       sub: 1,

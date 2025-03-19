@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@mp/repository';
 import { UserCreationDto } from '@mp/common/dtos';
+import { EncryptionService } from '@mp/common/services';
 import { User } from '../../entity/user.entity';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly encryptionService: EncryptionService,
+  ) {}
 
   async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const hashedPassword = await this.hashPasswordAsync(
@@ -26,8 +29,7 @@ export class UserService {
     return this.userRepository.findByEmailAsync(email);
   }
 
-  async hashPasswordAsync(password: string): Promise<string> {
-    const salt = await bcrypt.genSalt();
-    return bcrypt.hash(password, salt);
+  private async hashPasswordAsync(password: string): Promise<string> {
+    return await this.encryptionService.hashAsync(password);
   }
 }
