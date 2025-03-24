@@ -32,4 +32,8 @@ export class UserService {
   private async hashPasswordAsync(password: string): Promise<string> {
     return await this.encryptionService.hashAsync(password);
   }
+
+  async findByIdAsync(id: number): Promise<User | null> {
+    return this.userRepository.findByIdAsync(id);
+  }
 }

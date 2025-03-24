@@ -8,6 +8,7 @@ import { User } from '../../entity/user.entity';
 const mockUserRepository = {
   createUserAsync: jest.fn(),
   findByEmailAsync: jest.fn(),
+  findByIdAsync: jest.fn(),
 };
 
 const mockEncryptionService = {
@@ -45,22 +46,24 @@ describe('UserService', () => {
         documentNumber: '123456789',
         documentType: 'DNI',
       };
-  
+
       const hashedPassword = 'hashedPassword123';
       mockEncryptionService.hashAsync.mockResolvedValue(hashedPassword);
-  
+
       const expectedUser = new User({
         ...userCreationDto,
         password: hashedPassword,
       });
-  
+
       // Act
       await service.createUserAsync(userCreationDto);
-  
+
       // Assert
-      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(expectedUser);
+      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
+        expectedUser,
+      );
     });
-  
+
     it('should call hashAsync with the correct password', async () => {
       // Arrange
       const userCreationDto: UserCreationDto = {
@@ -72,14 +75,16 @@ describe('UserService', () => {
         documentNumber: '123456789',
         documentType: 'DNI',
       };
-  
+
       // Act
       await service.createUserAsync(userCreationDto);
-  
+
       // Assert
-      expect(mockEncryptionService.hashAsync).toHaveBeenCalledWith(userCreationDto.password);
+      expect(mockEncryptionService.hashAsync).toHaveBeenCalledWith(
+        userCreationDto.password,
+      );
     });
-  });  
+  });
 
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
@@ -102,6 +107,27 @@ describe('UserService', () => {
       expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
         'john.doe@example.com',
       );
+    });
+  });
+  describe('findByIdAsync', () => {
+    it('should call findByIdAsync with user id', async () => {
+      // Arrange
+      const mockUser = new User({
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john.doe@example.com',
+        password: 'password123',
+        phone: '1234567890',
+        documentNumber: '123456789',
+        documentType: 'DNI',
+      });
+      mockUserRepository.findByIdAsync.mockResolvedValue(mockUser);
+
+      // Act
+      await service.findByIdAsync(1);
+
+      // Assert
+      expect(mockUserRepository.findByIdAsync).toHaveBeenCalledWith(1);
     });
   });
 });

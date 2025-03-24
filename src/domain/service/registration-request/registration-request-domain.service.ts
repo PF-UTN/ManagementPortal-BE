@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { RegistrationRequestRepository } from '@mp/repository';
-import { RegistrationRequestCreationDto } from '@mp/common/dtos';
+import {
+  RegistrationRequestCreationDto,
+  UpdateRegistrationRequestStatusDto,
+} from '@mp/common/dtos';
 import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
 
 @Injectable()
@@ -18,9 +21,29 @@ export class RegistrationRequestDomainService {
     );
   }
 
-  async createRegistrationRequestAsync(registrationRequestCreationDto: RegistrationRequestCreationDto) {
+  async createRegistrationRequestAsync(
+    registrationRequestCreationDto: RegistrationRequestCreationDto,
+  ) {
     return await this.registrationRequestRepository.createRegistrationRequestAsync(
       registrationRequestCreationDto,
+    );
+  }
+
+  async findRegistrationRequestByIdAsync(registrationRequestId: number) {
+    return this.registrationRequestRepository.findRegistrationRequestWithStatusByIdAsync(
+      registrationRequestId,
+    );
+  }
+
+  async updateRegistrationRequestStatusAsync(
+    updateRegistrationRequestStatusDto: UpdateRegistrationRequestStatusDto,
+  ) {
+    return await this.registrationRequestRepository.updateRegistrationRequestStatusAsync(
+      updateRegistrationRequestStatusDto.registrationRequestId,
+      {
+        status: updateRegistrationRequestStatusDto.status,
+        note: updateRegistrationRequestStatusDto.note,
+      },
     );
   }
 }

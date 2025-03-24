@@ -28,4 +28,11 @@ export class MailingService {
 
     return await this.transporter.sendMail(mailOptions);
   }
+
+  async sendRegistrationRequestApprovedEmailAsync(to: string) {
+    const subject = 'Solicitud de Registro Aprobada';
+    const text = 'Tu solicitud de registro ha sido aprobada.';
+
+    return await this.sendMailAsync(to, subject, text);
+  }
 }

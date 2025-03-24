@@ -17,6 +17,8 @@ describe('RegistrationRequestDomainService', () => {
           useValue: {
             searchWithFiltersAsync: jest.fn(),
             createRegistrationRequestAsync: jest.fn(),
+            findRegistrationRequestWithStatusByIdAsync: jest.fn(),
+            updateRegistrationRequestStatusAsync: jest.fn(),
           },
         },
       ],
@@ -63,24 +65,66 @@ describe('RegistrationRequestDomainService', () => {
     });
   });
 
-describe('createRegistrationRequestAsync', () => {
-  it('should call createRegistrationRequestAsync on the repository with correct parameters', async () => {
-    // Arrange
-    const registrationRequestCreationDto = {
-      note: 'test',
-      status: { connect: { id: 1 } },
-      user: { connect: { id: 1 } },
-    };
+  describe('createRegistrationRequestAsync', () => {
+    it('should call createRegistrationRequestAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const registrationRequestCreationDto = {
+        note: 'test',
+        status: { connect: { id: 1 } },
+        user: { connect: { id: 1 } },
+      };
 
-    // Act
-    await service.createRegistrationRequestAsync(
-      registrationRequestCreationDto,
-    );
+      // Act
+      await service.createRegistrationRequestAsync(
+        registrationRequestCreationDto,
+      );
 
-    // Assert
-    expect(repository.createRegistrationRequestAsync).toHaveBeenCalledWith(
-      registrationRequestCreationDto,
-    );
+      // Assert
+      expect(repository.createRegistrationRequestAsync).toHaveBeenCalledWith(
+        registrationRequestCreationDto,
+      );
+    });
   });
-});
+
+  describe('findRegistrationRequestByIdAsync', () => {
+    it('should call findRegistrationRequestWithStatusByIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+
+      // Act
+      await service.findRegistrationRequestByIdAsync(registrationRequestId);
+
+      // Assert
+      expect(
+        repository.findRegistrationRequestWithStatusByIdAsync,
+      ).toHaveBeenCalledWith(registrationRequestId);
+    });
+  });
+
+  describe('updateRegistrationRequestStatusAsync', () => {
+    it('should call updateRegistrationRequestStatusAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const updateRegistrationRequestStatusDto = {
+        registrationRequestId: 1,
+        status: { connect: { id: 1 } },
+        note: 'Approved by admin',
+      };
+
+      // Act
+      await service.updateRegistrationRequestStatusAsync(
+        updateRegistrationRequestStatusDto,
+      );
+
+      // Assert
+      expect(
+        repository.updateRegistrationRequestStatusAsync,
+      ).toHaveBeenCalledWith(
+        updateRegistrationRequestStatusDto.registrationRequestId,
+        {
+          status: updateRegistrationRequestStatusDto.status,
+          note: updateRegistrationRequestStatusDto.note,
+        },
+      );
+    });
+  });
 });

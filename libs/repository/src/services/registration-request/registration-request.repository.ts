@@ -1,6 +1,6 @@
-import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { Injectable } from '@nestjs/common';
 import { Prisma, RegistrationRequest } from '@prisma/client';
+import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -69,6 +69,25 @@ export class RegistrationRequestRepository {
     data: Prisma.RegistrationRequestCreateInput,
   ): Promise<RegistrationRequest> {
     return this.prisma.registrationRequest.create({
+      data,
+    });
+  }
+
+  async findRegistrationRequestWithStatusByIdAsync(
+    registrationRequestId: number,
+  ) {
+    return this.prisma.registrationRequest.findUnique({
+      where: { id: registrationRequestId },
+      include: { status: true },
+    });
+  }
+
+  async updateRegistrationRequestStatusAsync(
+    registrationRequestId: number,
+    data: Prisma.RegistrationRequestUpdateInput,
+  ) {
+    return this.prisma.registrationRequest.update({
+      where: { id: registrationRequestId },
       data,
     });
   }
