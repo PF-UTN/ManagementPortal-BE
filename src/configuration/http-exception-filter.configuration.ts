@@ -3,7 +3,6 @@ import {
   Catch,
   ArgumentsHost,
   HttpException,
-  InternalServerErrorException,
   INestApplication,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
@@ -18,17 +17,25 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : new InternalServerErrorException().getStatus();
+    if (exception instanceof HttpException) {
+      const status = exception.getStatus();
+      const errorResponse = exception.getResponse();
 
-    response.status(status).json({
-      statusCode: status,
-      message:
-        exception instanceof HttpException
-          ? exception.message
-          : 'Error interno del servidor',
+      response.status(status).json({
+        statusCode: status,
+        ...(typeof errorResponse === 'object'
+          ? errorResponse
+          : { message: errorResponse }),
+        timestamp: new Date().toISOString(),
+        path: request.url,
+      });
+
+      return;
+    }
+
+    response.status(500).json({
+      statusCode: 500,
+      message: 'Internal Server Error',
       timestamp: new Date().toISOString(),
       path: request.url,
       stack:
