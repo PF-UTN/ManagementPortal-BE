@@ -1,12 +1,19 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
-import { ApiOperation } from '@nestjs/swagger';
-import { SearchRegistrationRequestRequest } from '@mp/common/dtos';
+import { Controller, Post, Body, Param, ParseIntPipe, ValidationPipe, HttpCode } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApproveRegistrationRequestDto,
+  SearchRegistrationRequestRequest,
+} from '@mp/common/dtos';
 import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
+import { ApproveRegistrationRequestCommand } from './command/approve-registration-request.command';
 
 @Controller('registration-request')
 export class RegistrationRequestController {
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Post('search')
   @ApiOperation({
@@ -19,6 +26,23 @@ export class RegistrationRequestController {
   ) {
     return this.queryBus.execute(
       new SearchRegistrationRequestQuery(searchRegistrationRequestRequest),
+    );
+  }
+
+  @Post(':id/approve')
+  @HttpCode(204)
+  @ApiOperation({
+    summary: 'Approve a registration request',
+    description: 'Approve a registration request with the provided ID.',
+  })
+  @ApiParam({ name: 'id', description: 'The ID of the registration request to approve' })
+  @ApiBody({ type: ApproveRegistrationRequestDto })
+  approveRegistrationRequestAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(ValidationPipe) approveRegistrationRequestDto: ApproveRegistrationRequestDto,
+  ) {
+    return this.commandBus.execute(
+      new ApproveRegistrationRequestCommand(id, approveRegistrationRequestDto),
     );
   }
 }

@@ -179,4 +179,58 @@ describe('createRegistrationRequestAsync', () => {
     expect(result).toEqual(createdRequest);
   });
 });
+
+describe('findRegistrationRequestWithStatusByIdAsync', () => {
+  it('should return the registration request with status by id', async () => {
+    // Arrange
+    const registrationRequestId = 1;
+    const registrationRequest = {
+      id: registrationRequestId,
+      status: { id: 1, code: 'Pending' },
+    };
+    prismaService.registrationRequest.findUnique = jest
+      .fn()
+      .mockResolvedValue(registrationRequest);
+
+    // Act
+    const result = await repository.findRegistrationRequestWithStatusByIdAsync(
+      registrationRequestId,
+    );
+
+    // Assert
+    expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith({
+      where: { id: registrationRequestId },
+      include: { status: true },
+    });
+    expect(result).toEqual(registrationRequest);
+  });
+});
+
+describe('updateRegistrationRequestStatusAsync', () => {
+  it('should update the registration request status', async () => {
+    // Arrange
+    const registrationRequestId = 1;
+    const updateData = { status: { connect: { id: 2 } } };
+    const updatedRequest = {
+      id: registrationRequestId,
+      status: { id: 2, code: 'Approved' },
+    };
+    prismaService.registrationRequest.update = jest
+      .fn()
+      .mockResolvedValue(updatedRequest);
+
+    // Act
+    const result = await repository.updateRegistrationRequestStatusAsync(
+      registrationRequestId,
+      updateData,
+    );
+
+    // Assert
+    expect(prismaService.registrationRequest.update).toHaveBeenCalledWith({
+      where: { id: registrationRequestId },
+      data: updateData,
+    });
+    expect(result).toEqual(updatedRequest);
+  });
+});
 });

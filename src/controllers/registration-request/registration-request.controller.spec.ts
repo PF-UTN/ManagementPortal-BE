@@ -1,12 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { RegistrationRequestController } from './registration-request.controller';
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { SearchRegistrationRequestRequest } from '@mp/common/dtos';
 import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
 
 describe('RegistrationRequestController', () => {
   let controller: RegistrationRequestController;
   let queryBus: QueryBus;
+  let commandBus: CommandBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -18,6 +19,12 @@ describe('RegistrationRequestController', () => {
             execute: jest.fn(),
           },
         },
+        {
+          provide: CommandBus,
+          useValue: {
+            execute: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -25,6 +32,7 @@ describe('RegistrationRequestController', () => {
       RegistrationRequestController,
     );
     queryBus = module.get<QueryBus>(QueryBus);
+    commandBus = module.get<CommandBus>(CommandBus);
   });
 
   it('should be defined', () => {
@@ -43,6 +51,22 @@ describe('RegistrationRequestController', () => {
 
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchRegistrationRequestQuery(request),
+      );
+    });
+  });
+
+  describe('approveRegistrationRequestAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+      const approveRegistrationRequestDto = { note: 'Test note' };
+
+      // Act
+      await controller.approveRegistrationRequestAsync(registrationRequestId, approveRegistrationRequestDto);
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        expect.objectContaining({ registrationRequestId, approveRegistrationRequestDto }),
       );
     });
   });
