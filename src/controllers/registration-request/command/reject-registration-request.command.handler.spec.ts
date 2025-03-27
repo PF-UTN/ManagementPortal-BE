@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { RegistrationRequestStatus } from '@mp/common/constants';
+import { MailingService } from '@mp/common/services';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { RejectRegistrationRequestCommandHandler } from './reject-registration-request.command.handler';
 import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { UserService } from '../../../domain/service/user/user.service';
-import { MailingService } from '@mp/common/services';
 import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { RegistrationRequestStatus } from '@mp/common/constants';
 
 describe('RejectRegistrationRequestCommandHandler', () => {
   let handler: RejectRegistrationRequestCommandHandler;
