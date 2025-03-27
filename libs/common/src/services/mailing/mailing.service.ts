@@ -1,6 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { MAIL_FROM, MAIL_HOST, MAIL_PASS, MAIL_PORT, MAIL_SECURE, MAIL_USER } from './mailing.constants';
+import {
+  MAIL_FROM,
+  MAIL_HOST,
+  MAIL_PASS,
+  MAIL_PORT,
+  MAIL_SECURE,
+  MAIL_USER,
+  SUPPORT_EMAIL,
+} from './mailing.constants';
 
 @Injectable()
 export class MailingService {
@@ -32,6 +40,13 @@ export class MailingService {
   async sendRegistrationRequestApprovedEmailAsync(to: string) {
     const subject = 'Solicitud de Registro Aprobada';
     const text = 'Tu solicitud de registro ha sido aprobada.';
+
+    return await this.sendMailAsync(to, subject, text);
+  }
+
+  async sendRegistrationRequestRejectedEmailAsync(to: string, note: string) {
+    const subject = 'Solicitud de Registro Rechazada';
+    const text = `Tu solicitud de registro ha sido rechazada por el siguiente motivo: ${note}. Si crees que se trata de un error, por favor contactate con nosotros al email: ${SUPPORT_EMAIL}`;
 
     return await this.sendMailAsync(to, subject, text);
   }
