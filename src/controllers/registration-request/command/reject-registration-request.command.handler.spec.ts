@@ -89,7 +89,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
   it('should update registration request status when registration request is rejected', async () => {
     // Arrange
     const registrationRequest = {
-      status: { code: 'Pending' },
+      statusId: 1,
       userId: 1,
     };
     jest
