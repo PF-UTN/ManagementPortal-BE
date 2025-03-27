@@ -1,8 +1,7 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RegistrationRequestStatus } from '@mp/common/constants';
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { MailingService } from '@mp/common/services';
-import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
 import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
@@ -12,7 +11,6 @@ export class RejectRegistrationRequestCommandHandler
   implements ICommandHandler<RejectRegistrationRequestCommand>
 {
   constructor(
-    private readonly registrationRequestStatusService: RegistrationRequestStatusService,
     private readonly registrationRequestService: RegistrationRequestDomainService,
     private readonly userService: UserService,
     private readonly mailingService: MailingService,
@@ -30,20 +28,9 @@ export class RejectRegistrationRequestCommandHandler
       );
     }
 
-    if (registrationRequest.status.code !== RegistrationRequestStatus.Pending) {
+    if (registrationRequest.statusId !== RegistrationRequestStatusId.Pending) {
       throw new BadRequestException(
         'The registration request status cannot be modified.',
-      );
-    }
-
-    const rejectedStatus =
-      await this.registrationRequestStatusService.findByCodeAsync(
-        RegistrationRequestStatus.Rejected,
-      );
-
-    if (!rejectedStatus) {
-      throw new Error(
-        `RegistrationRequestStatus with code="${RegistrationRequestStatus.Rejected}" not found`,
       );
     }
 
@@ -51,7 +38,7 @@ export class RejectRegistrationRequestCommandHandler
       await this.registrationRequestService.updateRegistrationRequestStatusAsync(
         {
           registrationRequestId: command.registrationRequestId,
-          status: { connect: { id: rejectedStatus.id } },
+          status: { connect: { id: RegistrationRequestStatusId.Rejected } },
           note: command.rejectRegistrationRequestDto.note,
         },
       );
@@ -67,7 +54,8 @@ export class RejectRegistrationRequestCommandHandler
     }
 
     await this.mailingService.sendRegistrationRequestRejectedEmailAsync(
-      user.email, command.rejectRegistrationRequestDto.note!,
+      user.email,
+      command.rejectRegistrationRequestDto.note!,
     );
   }
 }
