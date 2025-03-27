@@ -107,8 +107,9 @@ describe('RejectRegistrationRequestCommandHandler', () => {
 
     jest.spyOn(mockUserService, 'findByIdAsync').mockResolvedValue({ id: 1 });
 
-    // Act
     const command = new RejectRegistrationRequestCommand(1, { note: 'test' });
+
+    // Act
     await handler.execute(command);
 
     // Assert
