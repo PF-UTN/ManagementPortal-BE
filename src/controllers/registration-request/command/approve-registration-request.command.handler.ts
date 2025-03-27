@@ -1,9 +1,8 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RegistrationRequestStatus } from '@mp/common/constants';
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { MailingService } from '@mp/common/services';
 import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
-import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
 
@@ -12,7 +11,6 @@ export class ApproveRegistrationRequestCommandHandler
   implements ICommandHandler<ApproveRegistrationRequestCommand>
 {
   constructor(
-    private readonly registrationRequestStatusService: RegistrationRequestStatusService,
     private readonly registrationRequestService: RegistrationRequestDomainService,
     private readonly userService: UserService,
     private readonly mailingService: MailingService,
@@ -30,20 +28,9 @@ export class ApproveRegistrationRequestCommandHandler
       );
     }
 
-    if (registrationRequest.status.code !== RegistrationRequestStatus.Pending) {
+    if (registrationRequest.statusId !== RegistrationRequestStatusId.Pending) {
       throw new BadRequestException(
         'The registration request status cannot be modified.',
-      );
-    }
-
-    const approvedStatus =
-      await this.registrationRequestStatusService.findByCodeAsync(
-        RegistrationRequestStatus.Approved,
-      );
-
-    if (!approvedStatus) {
-      throw new Error(
-        `RegistrationRequestStatus with code="${RegistrationRequestStatus.Approved}" not found`,
       );
     }
 
@@ -51,7 +38,7 @@ export class ApproveRegistrationRequestCommandHandler
       await this.registrationRequestService.updateRegistrationRequestStatusAsync(
         {
           registrationRequestId: command.registrationRequestId,
-          status: { connect: { id: approvedStatus.id } },
+          status: { connect: { id: RegistrationRequestStatusId.Approved } },
           note: command.approveRegistrationRequestDto?.note ?? '',
         },
       );
