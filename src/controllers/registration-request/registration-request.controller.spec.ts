@@ -62,12 +62,40 @@ describe('RegistrationRequestController', () => {
       const approveRegistrationRequestDto = { note: 'Test note' };
 
       // Act
-      await controller.approveRegistrationRequestAsync(registrationRequestId, approveRegistrationRequestDto);
+      await controller.approveRegistrationRequestAsync(
+        registrationRequestId,
+        approveRegistrationRequestDto,
+      );
 
       // Assert
       expect(commandBus.execute).toHaveBeenCalledWith(
-        expect.objectContaining({ registrationRequestId, approveRegistrationRequestDto }),
+        expect.objectContaining({
+          registrationRequestId,
+          approveRegistrationRequestDto,
+        }),
       );
+    });
+
+    describe('rejectRegistrationRequestAsync', () => {
+      it('should call execute on the commandBus with correct parameters', async () => {
+        // Arrange
+        const registrationRequestId = 1;
+        const rejectRegistrationRequestDto = { note: 'Test note' };
+
+        // Act
+        await controller.rejectRegistrationRequestAsync(
+          registrationRequestId,
+          rejectRegistrationRequestDto,
+        );
+
+        // Assert
+        expect(commandBus.execute).toHaveBeenCalledWith(
+          expect.objectContaining({
+            registrationRequestId,
+            rejectRegistrationRequestDto,
+          }),
+        );
+      });
     });
   });
 });

@@ -6,8 +6,9 @@ import { SearchRegistrationRequestQueryHandler } from './command/search-registra
 import { ApproveRegistrationRequestCommandHandler } from './command/approve-registration-request.command.handler';
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
+import { RejectRegistrationRequestCommandHandler } from './command/reject-registration-request.command.handler';
 
-const commandHandlers = [ApproveRegistrationRequestCommandHandler];
+const commandHandlers = [ApproveRegistrationRequestCommandHandler, RejectRegistrationRequestCommandHandler];
 
 @Module({
   imports: [
