@@ -16,6 +16,7 @@
     "@mp/common/dtos": 
       "<rootDir>/../libs/common/src/dtos",
     "@mp/common/constants": "<rootDir>/../libs/common/src/constants",
-    "@mp/common/domain": "<rootDir>/../libs/common/src/domain"
+    "@mp/common/domain": "<rootDir>/../libs/common/src/domain",    
+    "@mp/common/guards": "<rootDir>/../libs/common/src/guards"
   }
 }

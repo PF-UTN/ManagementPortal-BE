@@ -1,6 +1,6 @@
 import { JwtModule } from '@nestjs/jwt';
 
-const SECRET = process.env.JWT_SECRET;
+export const SECRET = process.env.JWT_SECRET;
 const EXPIRATION = process.env.JWT_EXPIRATION;
 
 export const JWT = JwtModule.register({

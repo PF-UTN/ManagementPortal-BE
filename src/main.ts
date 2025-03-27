@@ -4,11 +4,13 @@ import {
   GlobalExceptionFilterConfiguration,
   SwaggerConfiguration,
 } from './configuration';
+import { AuthenticationConfiguration } from './configuration/authentication.configuration';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
 
+  AuthenticationConfiguration(app);
   SwaggerConfiguration(app);
   GlobalExceptionFilterConfiguration(app);
 

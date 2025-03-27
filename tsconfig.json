@@ -34,6 +34,9 @@
       "@mp/common/services": [
         "libs/common/src/services"
       ],
+      "@mp/common/guards": [
+        "libs/common/src/guards"
+      ],
     }
   }
 }
