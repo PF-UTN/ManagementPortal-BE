@@ -1,24 +1,23 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserRepository } from '@mp/repository';
-import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
+import {
+  UserRepositoryMock,
+  mockUserCreationDto,
+  mockUser,
+  EncryptionServiceMock,
+} from '@mp/common/testing';
 import { UserService } from '../user/user.service';
 import { User } from '../../entity/user.entity';
 
-const mockUserRepository = {
-  createUserAsync: jest.fn(),
-  findByEmailAsync: jest.fn(),
-  findByIdAsync: jest.fn(),
-};
-
-const mockEncryptionService = {
-  hashAsync: jest.fn(),
-};
-
 describe('UserService', () => {
   let service: UserService;
+  let mockUserRepository: UserRepositoryMock;
+  let mockEncryptionService: EncryptionServiceMock;
 
   beforeEach(async () => {
+    mockUserRepository = new UserRepositoryMock();
+    mockEncryptionService = new EncryptionServiceMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
@@ -37,21 +36,12 @@ describe('UserService', () => {
   describe('createUserAsync', () => {
     it('should call createUserAsync with a hashed password', async () => {
       // Arrange
-      const userCreationDto: UserCreationDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      };
-
+      const userCreationDto = { ...mockUserCreationDto };
       const hashedPassword = 'hashedPassword123';
       mockEncryptionService.hashAsync.mockResolvedValue(hashedPassword);
 
       const expectedUser = new User({
-        ...userCreationDto,
+        ...mockUserCreationDto,
         password: hashedPassword,
       });
 
@@ -66,15 +56,7 @@ describe('UserService', () => {
 
     it('should call hashAsync with the correct password', async () => {
       // Arrange
-      const userCreationDto: UserCreationDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      };
+      const userCreationDto = { ...mockUserCreationDto };
 
       // Act
       await service.createUserAsync(userCreationDto);
@@ -89,16 +71,8 @@ describe('UserService', () => {
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
       // Arrange
-      const mockUser = new User({
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      });
-      mockUserRepository.findByEmailAsync.mockResolvedValue(mockUser);
+      const user = { ...mockUser };
+      mockUserRepository.findByEmailAsync.mockResolvedValue(user);
 
       // Act
       await service.findByEmailAsync('john.doe@example.com');
@@ -112,16 +86,8 @@ describe('UserService', () => {
   describe('findByIdAsync', () => {
     it('should call findByIdAsync with user id', async () => {
       // Arrange
-      const mockUser = new User({
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      });
-      mockUserRepository.findByIdAsync.mockResolvedValue(mockUser);
+      const user = { ...mockUser };
+      mockUserRepository.findByIdAsync.mockResolvedValue(user);
 
       // Act
       await service.findByIdAsync(1);
