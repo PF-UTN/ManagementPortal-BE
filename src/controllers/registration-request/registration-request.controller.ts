@@ -45,8 +45,7 @@ export class RegistrationRequestController {
   @ApiBody({ type: ApproveRegistrationRequestDto })
   approveRegistrationRequestAsync(
     @Param('id', ParseIntPipe) id: number,
-    @Body(ValidationPipe)
-    approveRegistrationRequestDto: ApproveRegistrationRequestDto,
+    @Body() approveRegistrationRequestDto: ApproveRegistrationRequestDto,
   ) {
     return this.commandBus.execute(
       new ApproveRegistrationRequestCommand(id, approveRegistrationRequestDto),
@@ -66,8 +65,7 @@ export class RegistrationRequestController {
   @ApiBody({ type: RejectRegistrationRequestDto })
   rejectRegistrationRequestAsync(
     @Param('id', ParseIntPipe) id: number,
-    @Body(ValidationPipe)
-    rejectRegistrationRequestDto: RejectRegistrationRequestDto,
+    @Body() rejectRegistrationRequestDto: RejectRegistrationRequestDto,
   ) {
     return this.commandBus.execute(
       new RejectRegistrationRequestCommand(id, rejectRegistrationRequestDto),
