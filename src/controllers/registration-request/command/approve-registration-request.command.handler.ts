@@ -39,7 +39,7 @@ export class ApproveRegistrationRequestCommandHandler
         {
           registrationRequestId: command.registrationRequestId,
           status: { connect: { id: RegistrationRequestStatusId.Approved } },
-          note: command.approveRegistrationRequestDto?.note ?? '',
+          note: command.approveRegistrationRequestDto?.note,
         },
       );
 
