@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Param, ParseIntPipe, ValidationPipe, HttpCode, Get } from '@nestjs/common';
+import { Controller, Post, Body, Param, ParseIntPipe, HttpCode, Get } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
 import {
