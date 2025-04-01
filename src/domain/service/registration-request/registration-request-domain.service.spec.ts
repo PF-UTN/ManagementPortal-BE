@@ -19,6 +19,7 @@ describe('RegistrationRequestDomainService', () => {
             createRegistrationRequestAsync: jest.fn(),
             findRegistrationRequestWithStatusByIdAsync: jest.fn(),
             updateRegistrationRequestStatusAsync: jest.fn(),
+            findRegistrationRequestWithDetailsByIdAsync: jest.fn(),
           },
         },
       ],
@@ -97,6 +98,21 @@ describe('RegistrationRequestDomainService', () => {
       // Assert
       expect(
         repository.findRegistrationRequestWithStatusByIdAsync,
+      ).toHaveBeenCalledWith(registrationRequestId);
+    });
+  });
+
+  describe('findRegistrationRequestWithDetailsByIdAsync', () => {
+    it('should call findRegistrationRequestWithDetailsByIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+
+      // Act
+      await service.findRegistrationRequestWithDetailsByIdAsync(registrationRequestId);
+
+      // Assert
+      expect(
+        repository.findRegistrationRequestWithDetailsByIdAsync,
       ).toHaveBeenCalledWith(registrationRequestId);
     });
   });

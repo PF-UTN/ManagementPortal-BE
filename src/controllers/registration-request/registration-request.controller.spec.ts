@@ -98,4 +98,21 @@ describe('RegistrationRequestController', () => {
       });
     });
   });
+
+  describe('getRegistrationRequestByIdAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+
+      // Act
+      await controller.getRegistrationRequestByIdAsync(registrationRequestId);
+
+      // Assert
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: registrationRequestId,
+        }),
+      );
+    });
+  });
 });

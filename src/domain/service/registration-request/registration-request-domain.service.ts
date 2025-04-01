@@ -35,6 +35,14 @@ export class RegistrationRequestDomainService {
     );
   }
 
+  async findRegistrationRequestWithDetailsByIdAsync(
+    registrationRequestId: number,
+  ) {
+    return this.registrationRequestRepository.findRegistrationRequestWithDetailsByIdAsync(
+      registrationRequestId,
+    );
+  }
+
   async updateRegistrationRequestStatusAsync(
     updateRegistrationRequestStatusDto: UpdateRegistrationRequestStatusDto,
   ) {

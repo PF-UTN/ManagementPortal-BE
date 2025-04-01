@@ -7,8 +7,10 @@ import { ApproveRegistrationRequestCommandHandler } from './command/approve-regi
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
 import { RejectRegistrationRequestCommandHandler } from './command/reject-registration-request.command.handler';
+import { GetRegistrationRequestByIdQueryHandler } from './query/get-registration-request-by-id.query.handler';
 
 const commandHandlers = [ApproveRegistrationRequestCommandHandler, RejectRegistrationRequestCommandHandler];
+const queryHandlers = [SearchRegistrationRequestQueryHandler, GetRegistrationRequestByIdQueryHandler];
 
 @Module({
   imports: [
@@ -18,6 +20,6 @@ const commandHandlers = [ApproveRegistrationRequestCommandHandler, RejectRegistr
     MailingServiceModule
   ],
   controllers: [RegistrationRequestController],
-  providers: [...commandHandlers, SearchRegistrationRequestQueryHandler],
+  providers: [...commandHandlers, ...queryHandlers],
 })
 export class RegistrationRequestModule {}
