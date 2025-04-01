@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SearchRegistrationRequestFiltersDto } from './search-registration-request-filters.dto';
-import { IsDefined, IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsDefined, IsNumber, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class SearchRegistrationRequestRequest {
   @ApiProperty({
@@ -32,7 +33,10 @@ export class SearchRegistrationRequestRequest {
   @ApiProperty({
     type: SearchRegistrationRequestFiltersDto,
     description: 'The filters to apply to the search',
-    required: false,
+    required: true,
   })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => SearchRegistrationRequestFiltersDto)
   filters: SearchRegistrationRequestFiltersDto;
 }
