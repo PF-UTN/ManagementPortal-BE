@@ -78,6 +78,7 @@ describe('SearchRegistrationRequestQueryHandler', () => {
           phone: '123-456-7890',
           registrationRequestId: 1,
           password: 'password',
+          roleId: 1,
         },
       },
     ];

@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { UserRepository } from '@mp/repository';
 import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
-import { User } from '../../entity/user.entity';
+import { Prisma, User } from '@prisma/client';
+import { RoleIds } from '@mp/common/constants';
 
 @Injectable()
 export class UserService {
@@ -16,10 +17,11 @@ export class UserService {
       userCreationDto.password,
     );
 
-    const user = new User({
+    const user = {
       ...userCreationDto,
       password: hashedPassword,
-    });
+      Role: { connect: { id: RoleIds.Employee } },
+    } as Prisma.UserCreateInput;
 
     const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
