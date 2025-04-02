@@ -1,10 +1,21 @@
 import { PrismaClient } from '@prisma/client';
-import { registrationRequestStatusPostDeployAsync } from './table-population/registration-request-status.postdeploy';
+import {
+  permissionPostDeployAsync,
+  registrationRequestStatusPostDeployAsync,
+  rolePermissionPostDeployAsync,
+  rolePostDeployAsync,
+} from './table-population';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await registrationRequestStatusPostDeployAsync();
+  await Promise.all([
+    registrationRequestStatusPostDeployAsync(),
+    rolePostDeployAsync(),
+    permissionPostDeployAsync(),
+  ]);
+
+  await Promise.all([rolePermissionPostDeployAsync()]);
 }
 
 main()
