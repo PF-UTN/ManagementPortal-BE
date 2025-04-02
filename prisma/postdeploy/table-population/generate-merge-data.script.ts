@@ -5,11 +5,11 @@ const prisma = new PrismaClient();
 export const mergeTableData = async (
   tableName: string,
   values: Array<Record<string, string | number | Date>>,
+  uniqueColumns: string[] = ['id'],
 ): Promise<void> => {
   if (values.length === 0) throw new Error('Values array cannot be empty');
 
   const columns = Object.keys(values[0]);
-  const idColumn = 'id';
 
   const valuesList = values
     .map(
@@ -24,20 +24,23 @@ export const mergeTableData = async (
     )
     .join(',\n  ');
 
-  const updateClause = columns
-    .filter((col) => col !== idColumn)
-    .map((col) => `${col} = EXCLUDED.${col}`)
+  const quotedColumns = columns.map((col) => `"${col}"`).join(', ');
+  const uniqueKey = uniqueColumns.map((col) => `"${col}"`).join(', ');
+  const returningColumns = uniqueColumns.map((col) => `"${col}"`).join(', ');
+  const updateColumns = columns.filter((col) => !uniqueColumns.includes(col));
+  const updateClause = updateColumns
+    .map((col) => `"${col}" = EXCLUDED."${col}"`)
     .join(', ');
 
   const query = `WITH inserted AS (
-      INSERT INTO "${tableName}" (${columns.join(', ')})
+      INSERT INTO "${tableName}" (${quotedColumns})
       VALUES
         ${valuesList}
-      ON CONFLICT (${idColumn})
-      DO UPDATE SET ${updateClause}
-      RETURNING ${idColumn}
+      ON CONFLICT (${uniqueKey})
+      ${updateClause ? `DO UPDATE SET ${updateClause}` : 'DO NOTHING'}
+      RETURNING ${returningColumns}
     )
-    DELETE FROM "${tableName}" WHERE ${idColumn} NOT IN (SELECT ${idColumn} FROM inserted);`;
+    DELETE FROM "${tableName}" WHERE (${uniqueKey}) NOT IN (SELECT ${returningColumns} FROM inserted);`;
 
   await prisma.$executeRawUnsafe(query);
 };
