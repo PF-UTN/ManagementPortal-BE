@@ -2,9 +2,9 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
-import { Public } from '@mp/common/guards';
 import { SignUpCommand } from './command/sign-up.command';
 import { SignInCommand } from './command/sign-in.command';
+import { Public } from '@mp/common/decorators';
 
 @Controller('authentication')
 export class AuthenticationController {

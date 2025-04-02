@@ -37,6 +37,9 @@
       "@mp/common/guards": [
         "libs/common/src/guards"
       ],
+      "@mp/common/decorators": [
+        "libs/common/src/decorators"
+      ],
     }
   }
 }
