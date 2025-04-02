@@ -1,10 +1,11 @@
 import { Prisma } from '@prisma/client';
-import { IsString, Length } from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 
 export class RegistrationRequestCreationDto {
+  @IsOptional()
   @IsString()
   @Length(0, 50)
-  note: string;
+  note?: string;
   status: Prisma.RegistrationRequestStatusCreateNestedOneWithoutRegistrationRequestInput;
   user: Prisma.UserCreateNestedOneWithoutRegistrationRequestInput;
 }
