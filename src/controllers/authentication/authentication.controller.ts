@@ -1,4 +1,4 @@
-import { Body, Controller, Post, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
@@ -17,7 +17,7 @@ export class AuthenticationController {
     description: 'Registers a new user and creates a registration request',
   })
   @ApiBody({ type: UserCreationDto })
-  async signUpAsync(@Body(ValidationPipe) userCreationDto: UserCreationDto) {
+  async signUpAsync(@Body() userCreationDto: UserCreationDto) {
     return this.commandBus.execute(new SignUpCommand(userCreationDto));
   }
 
@@ -26,7 +26,7 @@ export class AuthenticationController {
   @ApiOperation({ summary: 'User signin', description: 'Logs in a user' })
   @ApiBody({ type: UserSignInDto })
   async signInAsync(
-    @Body(ValidationPipe) userSignInDto: UserSignInDto,
+    @Body() userSignInDto: UserSignInDto,
   ): Promise<{ access_token: string }> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }

@@ -2,13 +2,13 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { MailingService } from '@mp/common/services';
-import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
+import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
 
-@CommandHandler(ApproveRegistrationRequestCommand)
-export class ApproveRegistrationRequestCommandHandler
-  implements ICommandHandler<ApproveRegistrationRequestCommand>
+@CommandHandler(RejectRegistrationRequestCommand)
+export class RejectRegistrationRequestCommandHandler
+  implements ICommandHandler<RejectRegistrationRequestCommand>
 {
   constructor(
     private readonly registrationRequestService: RegistrationRequestDomainService,
@@ -16,7 +16,7 @@ export class ApproveRegistrationRequestCommandHandler
     private readonly mailingService: MailingService,
   ) {}
 
-  async execute(command: ApproveRegistrationRequestCommand) {
+  async execute(command: RejectRegistrationRequestCommand) {
     const registrationRequest =
       await this.registrationRequestService.findRegistrationRequestByIdAsync(
         command.registrationRequestId,
@@ -38,8 +38,8 @@ export class ApproveRegistrationRequestCommandHandler
       await this.registrationRequestService.updateRegistrationRequestStatusAsync(
         {
           registrationRequestId: command.registrationRequestId,
-          status: { connect: { id: RegistrationRequestStatusId.Approved } },
-          note: command.approveRegistrationRequestDto?.note,
+          status: { connect: { id: RegistrationRequestStatusId.Rejected } },
+          note: command.rejectRegistrationRequestDto.note,
         },
       );
 
@@ -53,8 +53,9 @@ export class ApproveRegistrationRequestCommandHandler
       );
     }
 
-    await this.mailingService.sendRegistrationRequestApprovedEmailAsync(
+    await this.mailingService.sendRegistrationRequestRejectedEmailAsync(
       user.email,
+      command.rejectRegistrationRequestDto.note!,
     );
   }
 }

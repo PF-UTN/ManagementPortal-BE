@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import {
   GlobalExceptionFilterConfiguration,
   SwaggerConfiguration,
+  GlobalPipesConfiguration,
 } from './configuration';
 import { AuthenticationConfiguration } from './configuration/authentication.configuration';
 
@@ -13,6 +14,7 @@ async function bootstrap() {
   AuthenticationConfiguration(app);
   SwaggerConfiguration(app);
   GlobalExceptionFilterConfiguration(app);
+  GlobalPipesConfiguration(app);
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
