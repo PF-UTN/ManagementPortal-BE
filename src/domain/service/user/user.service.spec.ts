@@ -54,7 +54,7 @@ describe('UserService', () => {
       const expectedUser = {
         ...userCreationDto,
         password: hashedPassword,
-        Role: { connect: { id: RoleIds.Employee } },
+        role: { connect: { id: RoleIds.Employee } },
       } as Prisma.UserCreateInput;
 
       // Act

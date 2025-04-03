@@ -9,5 +9,5 @@ model User {
   documentNumber      String               @db.VarChar(11)
   roleId              Int
   registrationRequest RegistrationRequest?
-  Role                Role                @relation(fields: [roleId], references: [id], onDelete: Restrict)
+  role                Role                @relation(fields: [roleId], references: [id], onDelete: Restrict)
 }
