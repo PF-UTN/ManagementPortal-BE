@@ -7,7 +7,12 @@ import {
   HttpCode,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 import {
   ApproveRegistrationRequestDto,
   RejectRegistrationRequestDto,
@@ -28,6 +33,7 @@ export class RegistrationRequestController {
 
   @Post('search')
   @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Search registration requests for listing',
     description:

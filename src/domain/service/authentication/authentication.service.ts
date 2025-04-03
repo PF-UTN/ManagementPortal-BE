@@ -32,7 +32,7 @@ export class AuthenticationService {
     const payload = {
       email: user.email,
       sub: user.id,
-      permissions: user.role?.rolePermissions.map(
+      permissions: user.role.rolePermissions.map(
         (rolePermission) => rolePermission.permission.name,
       ),
     };
