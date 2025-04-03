@@ -20,14 +20,14 @@ export class UserService {
     const user = {
       ...userCreationDto,
       password: hashedPassword,
-      Role: { connect: { id: RoleIds.Employee } },
+      role: { connect: { id: RoleIds.Employee } },
     } as Prisma.UserCreateInput;
 
     const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
   }
 
-  async findByEmailAsync(email: string): Promise<User | null> {
+  async findByEmailAsync(email: string) {
     return this.userRepository.findByEmailAsync(email);
   }
 
