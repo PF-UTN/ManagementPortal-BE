@@ -68,6 +68,9 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       password: 'hashedPassword',
       id: 1,
+      role: {
+        rolePermissions: [],
+      },
     };
 
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
@@ -87,6 +90,9 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       password: 'hashedPassword',
       id: 1,
+      role: {
+        rolePermissions: [],
+      },
     };
 
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
