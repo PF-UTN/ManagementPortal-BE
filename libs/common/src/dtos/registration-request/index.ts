@@ -6,3 +6,4 @@ export * from './search-registration-request.response.dto';
 export * from './approve-registration-request.dto';
 export * from './reject-registration-request.dto';
 export * from './update-registration-request-status.dto';
+export * from './registration-request-details.dto';

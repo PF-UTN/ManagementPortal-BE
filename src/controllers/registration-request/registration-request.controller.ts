@@ -5,6 +5,7 @@ import {
   Param,
   ParseIntPipe,
   HttpCode,
+  Get,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -23,6 +24,7 @@ import { RequiredPermissions } from '@mp/common/decorators';
 import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
 import { ApproveRegistrationRequestCommand } from './command/approve-registration-request.command';
 import { RejectRegistrationRequestCommand } from './command/reject-registration-request.command';
+import { GetRegistrationRequestByIdQuery } from './query/get-registration-request-by-id.query';
 
 @Controller('registration-request')
 export class RegistrationRequestController {
@@ -85,5 +87,19 @@ export class RegistrationRequestController {
     return this.commandBus.execute(
       new RejectRegistrationRequestCommand(id, rejectRegistrationRequestDto),
     );
+  }
+
+  @Get(':id')
+  @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get a registration request by ID',
+    description: 'Retrieve a registration request with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'The ID of the registration request to retrieve',
+  })
+  getRegistrationRequestByIdAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.queryBus.execute(new GetRegistrationRequestByIdQuery(id));
   }
 }
