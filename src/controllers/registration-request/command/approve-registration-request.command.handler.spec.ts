@@ -133,6 +133,7 @@ describe('ApproveRegistrationRequestCommandHandler', () => {
       phone: '1234567890',
       documentNumber: '123456789',
       documentType: 'DNI',
+      roleId: 1,
     });
 
     // Act
@@ -180,6 +181,7 @@ describe('ApproveRegistrationRequestCommandHandler', () => {
       phone: '1234567890',
       documentNumber: '123456789',
       documentType: 'DNI',
+      roleId: 1,
     });
     jest
       .spyOn(mailingService, 'sendRegistrationRequestApprovedEmailAsync')

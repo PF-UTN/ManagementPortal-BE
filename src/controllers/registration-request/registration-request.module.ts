@@ -9,15 +9,21 @@ import { UserServiceModule } from '../../domain/service/user/user.service.module
 import { RejectRegistrationRequestCommandHandler } from './command/reject-registration-request.command.handler';
 import { GetRegistrationRequestByIdQueryHandler } from './query/get-registration-request-by-id.query.handler';
 
-const commandHandlers = [ApproveRegistrationRequestCommandHandler, RejectRegistrationRequestCommandHandler];
-const queryHandlers = [SearchRegistrationRequestQueryHandler, GetRegistrationRequestByIdQueryHandler];
+const commandHandlers = [
+  ApproveRegistrationRequestCommandHandler,
+  RejectRegistrationRequestCommandHandler,
+];
+const queryHandlers = [
+  SearchRegistrationRequestQueryHandler,
+  GetRegistrationRequestByIdQueryHandler,
+];
 
 @Module({
   imports: [
     RegistrationRequestDomainServiceModule,
     RegistrationRequestStatusServiceModule,
     UserServiceModule,
-    MailingServiceModule
+    MailingServiceModule,
   ],
   controllers: [RegistrationRequestController],
   providers: [...commandHandlers, ...queryHandlers],

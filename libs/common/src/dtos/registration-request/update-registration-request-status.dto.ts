@@ -12,7 +12,7 @@ export class UpdateRegistrationRequestStatusDto {
   @IsNumber()
   registrationRequestId: number;
   @IsNotEmpty()
-  status: Prisma.RegistrationRequestStatusCreateNestedOneWithoutRegistrationRequestInput;
+  status: Prisma.RegistrationRequestStatusCreateNestedOneWithoutRegistrationRequestsInput;
   @IsOptional()
   @IsString()
   @Length(0, 50)

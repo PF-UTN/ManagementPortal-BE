@@ -68,6 +68,9 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       password: 'hashedPassword',
       id: 1,
+      role: {
+        rolePermissions: [],
+      },
     };
 
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
@@ -87,6 +90,9 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       password: 'hashedPassword',
       id: 1,
+      role: {
+        rolePermissions: [],
+      },
     };
 
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
@@ -108,11 +114,21 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       password: 'hashedPassword',
       id: 1,
+      role: {
+        rolePermissions: [
+          { permission: { name: 'permission1' } },
+          { permission: { name: 'permission2' } },
+        ],
+      },
     };
 
     mockUserService.findByEmailAsync.mockResolvedValueOnce(mockUser);
     mockJwtService.signAsync.mockResolvedValueOnce('mockJwtToken');
     mockEncryptionService.compareAsync.mockResolvedValueOnce(true);
+
+    const expectedPermissions = mockUser.role.rolePermissions.map(
+      (rolePermission) => rolePermission.permission.name,
+    );
 
     // Act
     await service.signInAsync('test@test.com', 'password');
@@ -121,6 +137,7 @@ describe('AuthenticationService', () => {
     expect(mockJwtService.signAsync).toHaveBeenCalledWith({
       email: 'test@test.com',
       sub: 1,
+      permissions: expectedPermissions,
     });
   });
 });

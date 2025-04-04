@@ -1,4 +1,4 @@
-import { UserDto } from "./registration-request.dto";
+import { UserDto } from './registration-request.dto';
 
 export class RegistrationRequestDetailsDto {
   id: number;

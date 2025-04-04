@@ -6,6 +6,6 @@ export class RegistrationRequestCreationDto {
   @IsString()
   @Length(0, 50)
   note?: string;
-  status: Prisma.RegistrationRequestStatusCreateNestedOneWithoutRegistrationRequestInput;
+  status: Prisma.RegistrationRequestStatusCreateNestedOneWithoutRegistrationRequestsInput;
   user: Prisma.UserCreateNestedOneWithoutRegistrationRequestInput;
 }

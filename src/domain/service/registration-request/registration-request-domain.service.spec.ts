@@ -108,7 +108,9 @@ describe('RegistrationRequestDomainService', () => {
       const registrationRequestId = 1;
 
       // Act
-      await service.findRegistrationRequestWithDetailsByIdAsync(registrationRequestId);
+      await service.findRegistrationRequestWithDetailsByIdAsync(
+        registrationRequestId,
+      );
 
       // Assert
       expect(
