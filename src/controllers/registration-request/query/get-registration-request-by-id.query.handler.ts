@@ -11,28 +11,28 @@ export class GetRegistrationRequestByIdQueryHandler {
   ) {}
 
   async execute(query: GetRegistrationRequestByIdQuery) {
-    const foundedRegistrationRequest =
+    const foundRegistrationRequest =
       await this.registrationRequestService.findRegistrationRequestWithDetailsByIdAsync(
         query.id,
       );
 
-    if (!foundedRegistrationRequest) {
+    if (!foundRegistrationRequest) {
       throw new NotFoundException(
         `Registration request with ID ${query.id} not found`,
       );
     }
 
     const registrationRequest: RegistrationRequestDetailsDto = {
-      id: foundedRegistrationRequest.id,
-      requestDate: foundedRegistrationRequest.requestDate,
-      status: foundedRegistrationRequest.status.code,
-      note: foundedRegistrationRequest.note,
+      id: foundRegistrationRequest.id,
+      requestDate: foundRegistrationRequest.requestDate,
+      status: foundRegistrationRequest.status.code,
+      note: foundRegistrationRequest.note ?? undefined,
       user: {
-        fullNameOrBusinessName: `${foundedRegistrationRequest.user.firstName} ${foundedRegistrationRequest.user.lastName}`,
-        documentNumber: foundedRegistrationRequest.user.documentNumber,
-        documentType: foundedRegistrationRequest.user.documentType,
-        email: foundedRegistrationRequest.user.email,
-        phone: foundedRegistrationRequest.user.phone,
+        fullNameOrBusinessName: `${foundRegistrationRequest.user.firstName} ${foundRegistrationRequest.user.lastName}`,
+        documentNumber: foundRegistrationRequest.user.documentNumber,
+        documentType: foundRegistrationRequest.user.documentType,
+        email: foundRegistrationRequest.user.email,
+        phone: foundRegistrationRequest.user.phone,
       },
     };
 
