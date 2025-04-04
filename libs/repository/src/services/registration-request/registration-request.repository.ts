@@ -82,6 +82,15 @@ export class RegistrationRequestRepository {
     });
   }
 
+  async findRegistrationRequestWithDetailsByIdAsync(
+    registrationRequestId: number,
+  ) {
+    return this.prisma.registrationRequest.findUnique({
+      where: { id: registrationRequestId },
+      include: { status: true, user: true },
+    });
+  }
+
   async updateRegistrationRequestStatusAsync(
     registrationRequestId: number,
     data: Prisma.RegistrationRequestUpdateInput,

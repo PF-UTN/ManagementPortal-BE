@@ -148,89 +148,128 @@ describe('RegistrationRequestRepository', () => {
       );
     });
   });
-describe('createRegistrationRequestAsync', () => {
-  it('should create a new registration request', async () => {
-    // Arrange
-    const createData = {
-      user: {
-        connect: { id: 1 },
-      },
-      status: {
-        connect: { id: 1 },
-      },
-      requestDate: new Date(),
-      note: 'test',
-    };
-    const createdRequest = {
-      id: 1,
-      ...createData,
-    };
-    prismaService.registrationRequest.create = jest
-      .fn()
-      .mockResolvedValue(createdRequest);
+  describe('createRegistrationRequestAsync', () => {
+    it('should create a new registration request', async () => {
+      // Arrange
+      const createData = {
+        user: {
+          connect: { id: 1 },
+        },
+        status: {
+          connect: { id: 1 },
+        },
+        requestDate: new Date(),
+        note: 'test',
+      };
+      const createdRequest = {
+        id: 1,
+        ...createData,
+      };
+      prismaService.registrationRequest.create = jest
+        .fn()
+        .mockResolvedValue(createdRequest);
 
-    // Act
-    const result = await repository.createRegistrationRequestAsync(createData);
+      // Act
+      const result =
+        await repository.createRegistrationRequestAsync(createData);
 
-    // Assert
-    expect(prismaService.registrationRequest.create).toHaveBeenCalledWith({
-      data: createData,
+      // Assert
+      expect(prismaService.registrationRequest.create).toHaveBeenCalledWith({
+        data: createData,
+      });
+      expect(result).toEqual(createdRequest);
     });
-    expect(result).toEqual(createdRequest);
   });
-});
 
-describe('findRegistrationRequestWithStatusByIdAsync', () => {
-  it('should return the registration request with status by id', async () => {
-    // Arrange
-    const registrationRequestId = 1;
-    const registrationRequest = {
-      id: registrationRequestId,
-      status: { id: 1, code: 'Pending' },
-    };
-    prismaService.registrationRequest.findUnique = jest
-      .fn()
-      .mockResolvedValue(registrationRequest);
+  describe('findRegistrationRequestWithStatusByIdAsync', () => {
+    it('should return the registration request with status by id', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+      const registrationRequest = {
+        id: registrationRequestId,
+        status: { id: 1, code: 'Pending' },
+      };
+      prismaService.registrationRequest.findUnique = jest
+        .fn()
+        .mockResolvedValue(registrationRequest);
 
-    // Act
-    const result = await repository.findRegistrationRequestWithStatusByIdAsync(
-      registrationRequestId,
-    );
+      // Act
+      const result =
+        await repository.findRegistrationRequestWithStatusByIdAsync(
+          registrationRequestId,
+        );
 
-    // Assert
-    expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith({
-      where: { id: registrationRequestId },
-      include: { status: true },
+      // Assert
+      expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith(
+        {
+          where: { id: registrationRequestId },
+          include: { status: true },
+        },
+      );
+      expect(result).toEqual(registrationRequest);
     });
-    expect(result).toEqual(registrationRequest);
   });
-});
 
-describe('updateRegistrationRequestStatusAsync', () => {
-  it('should update the registration request status', async () => {
-    // Arrange
-    const registrationRequestId = 1;
-    const updateData = { status: { connect: { id: 2 } } };
-    const updatedRequest = {
-      id: registrationRequestId,
-      status: { id: 2, code: 'Approved' },
-    };
-    prismaService.registrationRequest.update = jest
-      .fn()
-      .mockResolvedValue(updatedRequest);
+  describe('findRegistrationRequestWithDetailsByIdAsync', () => {
+    it('should return the registration request with details by id', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+      const registrationRequest = {
+        id: registrationRequestId,
+        status: { id: 1, code: 'Pending' },
+        user: {
+          id: 1,
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+        },
+      };
+      prismaService.registrationRequest.findUnique = jest
+        .fn()
+        .mockResolvedValue(registrationRequest);
 
-    // Act
-    const result = await repository.updateRegistrationRequestStatusAsync(
-      registrationRequestId,
-      updateData,
-    );
+      // Act
+      const result =
+        await repository.findRegistrationRequestWithDetailsByIdAsync(
+          registrationRequestId,
+        );
 
-    // Assert
-    expect(prismaService.registrationRequest.update).toHaveBeenCalledWith({
-      where: { id: registrationRequestId },
-      data: updateData,
+      // Assert
+      expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith(
+        {
+          where: { id: registrationRequestId },
+          include: { status: true, user: true },
+        },
+      );
+      expect(result).toEqual(registrationRequest);
     });
-    expect(result).toEqual(updatedRequest);
   });
-});
+
+  describe('updateRegistrationRequestStatusAsync', () => {
+    it('should update the registration request status', async () => {
+      // Arrange
+      const registrationRequestId = 1;
+      const updateData = { status: { connect: { id: 2 } } };
+      const updatedRequest = {
+        id: registrationRequestId,
+        status: { id: 2, code: 'Approved' },
+      };
+      prismaService.registrationRequest.update = jest
+        .fn()
+        .mockResolvedValue(updatedRequest);
+
+      // Act
+      const result = await repository.updateRegistrationRequestStatusAsync(
+        registrationRequestId,
+        updateData,
+      );
+
+      // Assert
+      expect(prismaService.registrationRequest.update).toHaveBeenCalledWith({
+        where: { id: registrationRequestId },
+        data: updateData,
+      });
+      expect(result).toEqual(updatedRequest);
+    });
+  });
 });
