@@ -2,6 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { RegistrationRequestStatus } from '@mp/common/constants';
 import { MailingService } from '@mp/common/services';
+import {
+  MailingServiceMock,
+  RegistrationRequestDomainServiceMock,
+  RegistrationRequestStatusServiceMock,
+  UserServiceMock,
+} from '@mp/common/testing';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { RejectRegistrationRequestCommandHandler } from './reject-registration-request.command.handler';
 import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
@@ -10,43 +16,36 @@ import { RejectRegistrationRequestCommand } from './reject-registration-request.
 
 describe('RejectRegistrationRequestCommandHandler', () => {
   let handler: RejectRegistrationRequestCommandHandler;
-
-  const mockRegistrationRequestService = {
-    findRegistrationRequestByIdAsync: jest.fn(),
-    updateRegistrationRequestStatusAsync: jest.fn(),
-  };
-
-  const mockRegistrationRequestStatusService = {
-    findByCodeAsync: jest.fn(),
-  };
-
-  const mockUserService = {
-    findByIdAsync: jest.fn(),
-  };
-
-  const mockMailingService = {
-    sendRegistrationRequestRejectedEmailAsync: jest.fn(),
-  };
+  let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;
+  let registrationRequestStatusServiceMock: RegistrationRequestStatusServiceMock;
+  let userServiceMock: UserServiceMock;
+  let mailingServiceMock: MailingServiceMock;
 
   beforeEach(async () => {
+    registrationRequestServiceMock = new RegistrationRequestDomainServiceMock();
+    registrationRequestStatusServiceMock =
+      new RegistrationRequestStatusServiceMock();
+    userServiceMock = new UserServiceMock();
+    mailingServiceMock = new MailingServiceMock();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RejectRegistrationRequestCommandHandler,
         {
           provide: RegistrationRequestDomainService,
-          useValue: mockRegistrationRequestService,
+          useValue: registrationRequestServiceMock,
         },
         {
           provide: RegistrationRequestStatusService,
-          useValue: mockRegistrationRequestStatusService,
+          useValue: registrationRequestStatusServiceMock,
         },
         {
           provide: UserService,
-          useValue: mockUserService,
+          useValue: userServiceMock,
         },
         {
           provide: MailingService,
-          useValue: mockMailingService,
+          useValue: mailingServiceMock,
         },
       ],
     }).compile();
@@ -63,7 +62,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
   it('should throw NotFoundException if registration request does not exist', async () => {
     // Arrange
     jest
-      .spyOn(mockRegistrationRequestService, 'findRegistrationRequestByIdAsync')
+      .spyOn(registrationRequestServiceMock, 'findRegistrationRequestByIdAsync')
       .mockResolvedValue(null);
 
     // Act
@@ -76,7 +75,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
   it('should throw BadRequestException if registration request status is not pending', async () => {
     // Arrange
     jest
-      .spyOn(mockRegistrationRequestService, 'findRegistrationRequestByIdAsync')
+      .spyOn(registrationRequestServiceMock, 'findRegistrationRequestByIdAsync')
       .mockResolvedValue({ status: { code: 'Approved' } });
 
     // Act
@@ -93,19 +92,19 @@ describe('RejectRegistrationRequestCommandHandler', () => {
       userId: 1,
     };
     jest
-      .spyOn(mockRegistrationRequestService, 'findRegistrationRequestByIdAsync')
+      .spyOn(registrationRequestServiceMock, 'findRegistrationRequestByIdAsync')
       .mockResolvedValue(registrationRequest);
     jest
-      .spyOn(mockRegistrationRequestStatusService, 'findByCodeAsync')
+      .spyOn(registrationRequestStatusServiceMock, 'findByCodeAsync')
       .mockResolvedValue({ id: 3 });
     jest
       .spyOn(
-        mockRegistrationRequestService,
+        registrationRequestServiceMock,
         'updateRegistrationRequestStatusAsync',
       )
       .mockResolvedValue(registrationRequest);
 
-    jest.spyOn(mockUserService, 'findByIdAsync').mockResolvedValue({ id: 1 });
+    jest.spyOn(userServiceMock, 'findByIdAsync').mockResolvedValue({ id: 1 });
 
     const command = new RejectRegistrationRequestCommand(1, { note: 'test' });
 
@@ -114,7 +113,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
 
     // Assert
     expect(
-      mockRegistrationRequestService.updateRegistrationRequestStatusAsync,
+      registrationRequestServiceMock.updateRegistrationRequestStatusAsync,
     ).toHaveBeenCalledWith({
       registrationRequestId: 1,
       status: { connect: { id: 3 } },
@@ -125,7 +124,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
   it('should send email to user when registration request is rejected', async () => {
     // Arrange
     jest
-      .spyOn(mockRegistrationRequestService, 'findRegistrationRequestByIdAsync')
+      .spyOn(registrationRequestServiceMock, 'findRegistrationRequestByIdAsync')
       .mockResolvedValue({
         id: 1,
         statusId: 1,
@@ -136,7 +135,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
       });
 
     jest
-      .spyOn(mockRegistrationRequestStatusService, 'findByCodeAsync')
+      .spyOn(registrationRequestStatusServiceMock, 'findByCodeAsync')
       .mockResolvedValue({
         id: 3,
         code: RegistrationRequestStatus.Rejected,
@@ -144,7 +143,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
 
     jest
       .spyOn(
-        mockRegistrationRequestService,
+        registrationRequestServiceMock,
         'updateRegistrationRequestStatusAsync',
       )
       .mockResolvedValue({
@@ -153,13 +152,13 @@ describe('RejectRegistrationRequestCommandHandler', () => {
         userId: 1,
       });
 
-    jest.spyOn(mockUserService, 'findByIdAsync').mockResolvedValue({
+    jest.spyOn(userServiceMock, 'findByIdAsync').mockResolvedValue({
       id: 1,
       email: 'test@example.com',
     });
 
     jest
-      .spyOn(mockMailingService, 'sendRegistrationRequestRejectedEmailAsync')
+      .spyOn(mailingServiceMock, 'sendRegistrationRequestRejectedEmailAsync')
       .mockResolvedValue(undefined);
 
     const command = new RejectRegistrationRequestCommand(1, {
@@ -171,7 +170,7 @@ describe('RejectRegistrationRequestCommandHandler', () => {
 
     // Assert
     expect(
-      mockMailingService.sendRegistrationRequestRejectedEmailAsync,
+      mailingServiceMock.sendRegistrationRequestRejectedEmailAsync,
     ).toHaveBeenCalledWith('test@example.com', 'Test note');
   });
 });

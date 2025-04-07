@@ -1,7 +1,7 @@
 import { User } from '../../../../src/domain/entity/user.entity';
 import { UserCreationDto } from '../dtos';
 
-export const mockUserCreationDto: UserCreationDto = {
+export const userCreationDtoMock: UserCreationDto = {
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@test.com',
@@ -11,7 +11,7 @@ export const mockUserCreationDto: UserCreationDto = {
   documentType: 'DNI',
 };
 
-export const mockUser = new User({
+export const userMock = new User({
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@example.com',
@@ -20,3 +20,8 @@ export const mockUser = new User({
   documentNumber: '123456789',
   documentType: 'DNI',
 });
+
+export const userSignInDtoMock = {
+  email: 'john.doe@test.com',
+  password: 'password123',
+};

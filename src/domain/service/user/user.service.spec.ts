@@ -3,8 +3,8 @@ import { UserRepository } from '@mp/repository';
 import { EncryptionService } from '@mp/common/services';
 import {
   UserRepositoryMock,
-  mockUserCreationDto,
-  mockUser,
+  userCreationDtoMock,
+  userMock,
   EncryptionServiceMock,
 } from '@mp/common/testing';
 import { UserService } from '../user/user.service';
@@ -12,17 +12,17 @@ import { User } from '../../entity/user.entity';
 
 describe('UserService', () => {
   let service: UserService;
-  let mockUserRepository: UserRepositoryMock;
-  let mockEncryptionService: EncryptionServiceMock;
+  let userRepositoryMock: UserRepositoryMock;
+  let encryptionServiceMock: EncryptionServiceMock;
 
   beforeEach(async () => {
-    mockUserRepository = new UserRepositoryMock();
-    mockEncryptionService = new EncryptionServiceMock();
+    userRepositoryMock = new UserRepositoryMock();
+    encryptionServiceMock = new EncryptionServiceMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: UserRepository, useValue: mockUserRepository },
-        { provide: EncryptionService, useValue: mockEncryptionService },
+        { provide: UserRepository, useValue: userRepositoryMock },
+        { provide: EncryptionService, useValue: encryptionServiceMock },
       ],
     }).compile();
 
@@ -36,12 +36,12 @@ describe('UserService', () => {
   describe('createUserAsync', () => {
     it('should call createUserAsync with a hashed password', async () => {
       // Arrange
-      const userCreationDto = { ...mockUserCreationDto };
+      const userCreationDto = { ...userCreationDtoMock };
       const hashedPassword = 'hashedPassword123';
-      mockEncryptionService.hashAsync.mockResolvedValue(hashedPassword);
+      encryptionServiceMock.hashAsync.mockResolvedValue(hashedPassword);
 
       const expectedUser = new User({
-        ...mockUserCreationDto,
+        ...userCreationDtoMock,
         password: hashedPassword,
       });
 
@@ -49,20 +49,20 @@ describe('UserService', () => {
       await service.createUserAsync(userCreationDto);
 
       // Assert
-      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
+      expect(userRepositoryMock.createUserAsync).toHaveBeenCalledWith(
         expectedUser,
       );
     });
 
     it('should call hashAsync with the correct password', async () => {
       // Arrange
-      const userCreationDto = { ...mockUserCreationDto };
+      const userCreationDto = { ...userCreationDtoMock };
 
       // Act
       await service.createUserAsync(userCreationDto);
 
       // Assert
-      expect(mockEncryptionService.hashAsync).toHaveBeenCalledWith(
+      expect(encryptionServiceMock.hashAsync).toHaveBeenCalledWith(
         userCreationDto.password,
       );
     });
@@ -71,14 +71,14 @@ describe('UserService', () => {
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
       // Arrange
-      const user = { ...mockUser };
-      mockUserRepository.findByEmailAsync.mockResolvedValue(user);
+      const user = { ...userMock };
+      userRepositoryMock.findByEmailAsync.mockResolvedValue(user);
 
       // Act
       await service.findByEmailAsync('john.doe@example.com');
 
       // Assert
-      expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
+      expect(userRepositoryMock.findByEmailAsync).toHaveBeenCalledWith(
         'john.doe@example.com',
       );
     });
@@ -86,14 +86,14 @@ describe('UserService', () => {
   describe('findByIdAsync', () => {
     it('should call findByIdAsync with user id', async () => {
       // Arrange
-      const user = { ...mockUser };
-      mockUserRepository.findByIdAsync.mockResolvedValue(user);
+      const user = { ...userMock };
+      userRepositoryMock.findByIdAsync.mockResolvedValue(user);
 
       // Act
       await service.findByIdAsync(1);
 
       // Assert
-      expect(mockUserRepository.findByIdAsync).toHaveBeenCalledWith(1);
+      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(1);
     });
   });
 });
