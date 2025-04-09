@@ -105,7 +105,7 @@ describe('RegistrationRequestController', () => {
       await controller.getRegistrationRequestByIdAsync(registrationRequestId);
 
       // Assert
-      expect(queryBus.execute).toHaveBeenCalledWith(
+      expect(queryBusMock.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           id: registrationRequestId,
         }),
