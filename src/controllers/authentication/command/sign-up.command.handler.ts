@@ -19,7 +19,6 @@ export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
     await this.registrationRequestService.createRegistrationRequestAsync({
       user: { connect: { id: user.id } },
       status: { connect: { id: RegistrationRequestStatusId.Pending } },
-      note: '',
     });
 
     return user;

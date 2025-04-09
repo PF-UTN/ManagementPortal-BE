@@ -167,8 +167,9 @@ describe('createRegistrationRequestAsync', () => {
       .fn()
       .mockResolvedValue(createdRequest);
 
-    // Act
-    const result = await repository.createRegistrationRequestAsync(createData);
+      // Act
+      const result =
+        await repository.createRegistrationRequestAsync(createData);
 
     // Assert
     expect(prismaServiceMock.registrationRequest.create).toHaveBeenCalledWith({
@@ -190,10 +191,11 @@ describe('findRegistrationRequestWithStatusByIdAsync', () => {
       .fn()
       .mockResolvedValue(registrationRequest);
 
-    // Act
-    const result = await repository.findRegistrationRequestWithStatusByIdAsync(
-      registrationRequestId,
-    );
+      // Act
+      const result =
+        await repository.findRegistrationRequestWithStatusByIdAsync(
+          registrationRequestId,
+        );
 
     // Assert
     expect(prismaServiceMock.registrationRequest.findUnique).toHaveBeenCalledWith({
@@ -217,11 +219,11 @@ describe('updateRegistrationRequestStatusAsync', () => {
       .fn()
       .mockResolvedValue(updatedRequest);
 
-    // Act
-    const result = await repository.updateRegistrationRequestStatusAsync(
-      registrationRequestId,
-      updateData,
-    );
+      // Act
+      const result = await repository.updateRegistrationRequestStatusAsync(
+        registrationRequestId,
+        updateData,
+      );
 
     // Assert
     expect(prismaServiceMock.registrationRequest.update).toHaveBeenCalledWith({

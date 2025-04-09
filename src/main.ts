@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import {
   GlobalExceptionFilterConfiguration,
   SwaggerConfiguration,
+  GlobalPipesConfiguration,
 } from './configuration';
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
 
   SwaggerConfiguration(app);
   GlobalExceptionFilterConfiguration(app);
+  GlobalPipesConfiguration(app);
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
