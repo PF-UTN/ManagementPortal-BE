@@ -1,7 +1,7 @@
+import { RegistrationRequestStatusRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestStatusRepository } from '@mp/repository';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { RegistrationRequestStatusRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestStatusService } from './registration-request-status.service';
 
 describe('RegistrationRequestStatusService', () => {

@@ -1,8 +1,8 @@
+import { PrismaServiceMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { RegistrationRequestStatusRepository } from './registration-request-status.repository';
 import { PrismaService } from '../prisma.service';
-import { PrismaServiceMock } from '@mp/common/testing';
 
 describe('RegistrationRequestStatusService', () => {
   let service: RegistrationRequestStatusRepository;

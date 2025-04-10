@@ -1,13 +1,4 @@
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
-import { ConfigModule } from '@nestjs/config';
-import { CommandBus } from '@nestjs/cqrs';
-import { Test, TestingModule } from '@nestjs/testing';
-
-import { AuthenticationController } from './authentication.controller';
-import { UserServiceModule } from '../../domain/service/user/user.service.module';
-import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
-import { SignInCommand } from './command/sign-in.command';
-import { SignUpCommand } from './command/sign-up.command';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
@@ -17,12 +8,21 @@ import {
   UserServiceMock,
   userSignInDtoMock,
 } from '@mp/common/testing';
+import { ConfigModule } from '@nestjs/config';
+import { CommandBus } from '@nestjs/cqrs';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { AuthenticationController } from './authentication.controller';
+import { SignInCommand } from './command/sign-in.command';
+import { SignUpCommand } from './command/sign-up.command';
 import { AuthenticationService } from '../../domain/service/authentication/authentication.service';
-import { UserService } from '../../domain/service/user/user.service';
+import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { RegistrationRequestDomainService } from '../../domain/service/registration-request/registration-request-domain.service';
-import { RegistrationRequestStatusService } from '../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestDomainServiceModule } from '../../domain/service/registration-request/registration-request-domain.service.module';
+import { RegistrationRequestStatusService } from '../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
+import { UserService } from '../../domain/service/user/user.service';
+import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;

@@ -1,4 +1,5 @@
 import { User } from "@prisma/client";
+
 import { UserCreationDto } from '../dtos';
 
 export const userCreationDtoMock: UserCreationDto = {

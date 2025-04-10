@@ -1,15 +1,15 @@
 import { RoleIds } from '@mp/common/constants';
 import { EncryptionService } from '@mp/common/services';
-import { UserRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, User } from '@prisma/client';
-
 import {
   UserRepositoryMock,
   userCreationDtoMock,
   userMock,
   EncryptionServiceMock,
 } from '@mp/common/testing';
+import { UserRepository } from '@mp/repository';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+
 import { UserService } from '../user/user.service';
 
 describe('UserService', () => {

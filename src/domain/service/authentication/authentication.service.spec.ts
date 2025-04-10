@@ -1,13 +1,13 @@
 import { EncryptionService } from '@mp/common/services';
-import { UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import { Test, TestingModule } from '@nestjs/testing';
-
 import {
   EncryptionServiceMock,
   JwtServiceMock,
   UserServiceMock,
 } from '@mp/common/testing';
+import { UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AuthenticationService } from './authentication.service';
 import { UserService } from '../user/user.service';
 
