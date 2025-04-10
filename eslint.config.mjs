@@ -1,4 +1,4 @@
-import importPlugin from "eslint-plugin-import"; // Import the plugin
+import importPlugin from "eslint-plugin-import";
 import tseslint from "typescript-eslint";
 
 /** @type {import('eslint').Linter.Config[]} */
@@ -7,7 +7,7 @@ export default [
   { ignores: ['**/*.{js, mjs, cjs, json}', "dist/**", "node_modules/**"] },
   {
     plugins: {
-      import: importPlugin, // Use the plugin as an object
+      import: importPlugin,
     },
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
@@ -16,23 +16,31 @@ export default [
         'error',
         {
           groups: [
-            ['internal'], // Internal imports (e.g., @/...)
-            ['external'], // External imports from node_modules
-            ['parent', 'sibling', 'index'], // Relative imports (e.g., ./ or ../)
+            ['internal'],
+            ['external'],
+            ['parent', 'sibling', 'index'],
           ],
           pathGroups: [
             {
-              pattern: '@**', // Match internal imports starting with @/
+              pattern: '@**',
               group: 'internal',
               position: 'before',
             },
           ],
           pathGroupsExcludedImportTypes: ['builtin'],
-          'newlines-between': 'always', // Enforce newlines between groups
+          'newlines-between': 'always',
           alphabetize: {
-            order: 'asc', // Alphabetize imports
+            order: 'asc',
             caseInsensitive: true,
           },
+        },
+      ],
+      'no-multiple-empty-lines': [
+        'error',
+        {
+          max: 1,
+          maxEOF: 1,
+          maxBOF: 0,
         },
       ],
     },
