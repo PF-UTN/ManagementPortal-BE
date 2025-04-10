@@ -9,6 +9,6 @@ export * from './registration-request-domain.service.mock';
 export * from './registration-request-status.repository.mock';
 export * from './registration-request-status.service.mock';
 export * from './registration-request.repository.mock';
-export * from './user.mocks';
+export * from './user.mock';
 export * from './user.repository.mock';
 export * from './user.service.mock';

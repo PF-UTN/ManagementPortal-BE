@@ -1,4 +1,4 @@
-import { User } from '../../../../src/domain/entity/user.entity';
+import { User } from "@prisma/client";
 import { UserCreationDto } from '../dtos';
 
 export const userCreationDtoMock: UserCreationDto = {
@@ -11,7 +11,7 @@ export const userCreationDtoMock: UserCreationDto = {
   documentType: 'DNI',
 };
 
-export const userMock = new User({
+export const userMock = {
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@example.com',
@@ -19,7 +19,7 @@ export const userMock = new User({
   phone: '1234567890',
   documentNumber: '123456789',
   documentType: 'DNI',
-});
+} as User;
 
 export const userSignInDtoMock = {
   email: 'john.doe@test.com',

@@ -1,14 +1,30 @@
-import { Controller, Post, Body, Param, ParseIntPipe, HttpCode, Get } from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiBody, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { PermissionCodes } from '@mp/common/constants';
+import { RequiredPermissions } from '@mp/common/decorators';
 import {
   ApproveRegistrationRequestDto,
   RejectRegistrationRequestDto,
   SearchRegistrationRequestRequest,
 } from '@mp/common/dtos';
-import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
+import {
+  Controller,
+  Post,
+  Body,
+  Param,
+  ParseIntPipe,
+  HttpCode,
+  Get,
+} from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
+
 import { ApproveRegistrationRequestCommand } from './command/approve-registration-request.command';
 import { RejectRegistrationRequestCommand } from './command/reject-registration-request.command';
+import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
 import { GetRegistrationRequestByIdQuery } from './query/get-registration-request-by-id.query';
 
 @Controller('registration-request')
@@ -19,6 +35,8 @@ export class RegistrationRequestController {
   ) {}
 
   @Post('search')
+  @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Search registration requests for listing',
     description:

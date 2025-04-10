@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { CqrsModule } from '@nestjs/cqrs';
 import { ConfigModule } from '@nestjs/config';
+import { CqrsModule } from '@nestjs/cqrs';
+
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
 

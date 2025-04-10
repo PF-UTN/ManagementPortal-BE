@@ -1,9 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { RegistrationRequestController } from './registration-request.controller';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { SearchRegistrationRequestRequest } from '@mp/common/dtos';
 import { CommandBusMock, QueryBusMock } from '@mp/common/testing';
+import { Test, TestingModule } from '@nestjs/testing';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
+import { RegistrationRequestController } from './registration-request.controller';
 
 describe('RegistrationRequestController', () => {
   let controller: RegistrationRequestController;

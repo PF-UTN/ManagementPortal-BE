@@ -1,5 +1,5 @@
 model RegistrationRequestStatus {
-  id                  Int                   @id @unique
-  code                String                @unique @db.VarChar(8)
-  RegistrationRequest RegistrationRequest[]
+  id                   Int                   @id @unique
+  code                 String                @unique @db.VarChar(8)
+  registrationRequests RegistrationRequest[]
 }

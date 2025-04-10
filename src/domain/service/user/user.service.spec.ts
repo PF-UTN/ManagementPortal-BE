@@ -1,6 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserRepository } from '@mp/repository';
+import { RoleIds } from '@mp/common/constants';
 import { EncryptionService } from '@mp/common/services';
+import { UserRepository } from '@mp/repository';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+
 import {
   UserRepositoryMock,
   userCreationDtoMock,
@@ -8,7 +11,6 @@ import {
   EncryptionServiceMock,
 } from '@mp/common/testing';
 import { UserService } from '../user/user.service';
-import { User } from '../../entity/user.entity';
 
 describe('UserService', () => {
   let service: UserService;
@@ -40,10 +42,11 @@ describe('UserService', () => {
       const hashedPassword = 'hashedPassword123';
       encryptionServiceMock.hashAsync.mockResolvedValue(hashedPassword);
 
-      const expectedUser = new User({
+      const expectedUser = {
         ...userCreationDtoMock,
         password: hashedPassword,
-      });
+        role: { connect: { id: RoleIds.Employee } },
+      } as Prisma.UserCreateInput;
 
       // Act
       await service.createUserAsync(userCreationDto);
@@ -71,11 +74,11 @@ describe('UserService', () => {
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
       // Arrange
-      const user = { ...userMock };
+      const user = { ...userMock, roleId: 1 } as User;
       userRepositoryMock.findByEmailAsync.mockResolvedValue(user);
 
       // Act
-      await service.findByEmailAsync('john.doe@example.com');
+      await service.findByEmailAsync(userMock.email);
 
       // Assert
       expect(userRepositoryMock.findByEmailAsync).toHaveBeenCalledWith(
@@ -86,14 +89,14 @@ describe('UserService', () => {
   describe('findByIdAsync', () => {
     it('should call findByIdAsync with user id', async () => {
       // Arrange
-      const user = { ...userMock };
+      const user = { ...userMock, roleId: 1 } as User;
       userRepositoryMock.findByIdAsync.mockResolvedValue(user);
 
       // Act
-      await service.findByIdAsync(1);
+      await service.findByIdAsync(userMock.id);
 
       // Assert
-      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(1);
+      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(userMock.id);
     });
   });
 });

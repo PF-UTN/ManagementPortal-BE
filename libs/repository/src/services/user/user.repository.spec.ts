@@ -30,7 +30,7 @@ describe('UserRepository', () => {
   describe('createUserAsync', () => {
     it('should create a new user', async () => {
       // Arrange
-      const newUser = userMock;
+      const newUser = { ...userMock, role: { connect: { id: 1 } } };
       prismaServiceMock.user.create.mockResolvedValue(newUser);
 
       // Act

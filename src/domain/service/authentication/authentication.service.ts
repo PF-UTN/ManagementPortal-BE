@@ -1,6 +1,7 @@
+import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { EncryptionService } from '@mp/common/services';
+
 import { UserService } from '../user/user.service';
 
 @Injectable()
@@ -21,12 +22,21 @@ export class AuthenticationService {
       throw new UnauthorizedException();
     }
 
-    const isMatch = await this.encryptionService.compareAsync(password, user.password);
+    const isMatch = await this.encryptionService.compareAsync(
+      password,
+      user.password,
+    );
     if (!isMatch) {
       throw new UnauthorizedException();
     }
 
-    const payload = { email: user.email, sub: user.id };
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      permissions: user.role.rolePermissions.map(
+        (rolePermission) => rolePermission.permission.name,
+      ),
+    };
 
     return {
       access_token: await this.jwtService.signAsync(payload),

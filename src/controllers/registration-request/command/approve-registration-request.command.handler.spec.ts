@@ -1,7 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { MailingService } from '@mp/common/services';
 import { RegistrationRequestStatus } from '@mp/common/constants';
+import { MailingService } from '@mp/common/services';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import {
   MailingServiceMock,
   RegistrationRequestDomainServiceMock,
@@ -9,10 +8,11 @@ import {
   UserServiceMock,
 } from '@mp/common/testing';
 import { ApproveRegistrationRequestCommandHandler } from './approve-registration-request.command.handler';
-import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
-import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
+import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { UserService } from '../../../domain/service/user/user.service';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
 
 describe('ApproveRegistrationRequestCommandHandler', () => {
   let handler: ApproveRegistrationRequestCommandHandler;
@@ -130,6 +130,7 @@ describe('ApproveRegistrationRequestCommandHandler', () => {
       phone: '1234567890',
       documentNumber: '123456789',
       documentType: 'DNI',
+      roleId: 1,
     });
 
     // Act
@@ -180,6 +181,7 @@ describe('ApproveRegistrationRequestCommandHandler', () => {
       phone: '1234567890',
       documentNumber: '123456789',
       documentType: 'DNI',
+      roleId: 1,
     });
     jest
       .spyOn(mailingServiceMock, 'sendRegistrationRequestApprovedEmailAsync')
