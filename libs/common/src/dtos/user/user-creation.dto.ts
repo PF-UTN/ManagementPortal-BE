@@ -8,7 +8,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-import { UserDocumentTypes } from '../constants';
+import { UserDocumentTypes } from '../../constants';
 
 export class UserCreationDto {
   @ApiProperty({ example: 'john.doe@example.com' })

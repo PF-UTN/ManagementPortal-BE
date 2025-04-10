@@ -8,5 +8,5 @@ export * from './registration-request/approve-registration-request.dto';
 export * from './registration-request/reject-registration-request.dto';
 export * from './registration-request/update-registration-request-status.dto';
 export * from './registration-request/registration-request-details.dto';
-export * from './user-creation.dto';
-export * from './user-sign-in.dto';
+export * from './user/user-creation.dto';
+export * from './user/user-sign-in.dto';
