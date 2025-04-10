@@ -51,6 +51,8 @@ export class RegistrationRequestController {
   }
 
   @Post(':id/approve')
+  @RequiredPermissions(PermissionCodes.RegistrationRequest.UPDATE)
+  @ApiBearerAuth()
   @HttpCode(204)
   @ApiOperation({
     summary: 'Approve a registration request',
@@ -72,6 +74,8 @@ export class RegistrationRequestController {
 
   @Post(':id/reject')
   @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.RegistrationRequest.UPDATE)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Reject a registration request',
     description: 'Reject a registration request with the provided ID.',
@@ -92,6 +96,8 @@ export class RegistrationRequestController {
 
   @Get(':id')
   @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get a registration request by ID',
     description: 'Retrieve a registration request with the provided ID.',
