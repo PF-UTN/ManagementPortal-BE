@@ -1,9 +1,10 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthGuard } from './auth.guard';
-import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { AuthGuard } from './auth.guard';
 import { IS_PUBLIC_KEY, PERMISSIONS_KEY } from '../decorators';
 
 describe('AuthGuard', () => {

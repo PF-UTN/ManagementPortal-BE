@@ -1,6 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { RegistrationRequestRepository } from '@mp/repository';
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
+import { RegistrationRequestRepository } from '@mp/repository';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { RegistrationRequestDomainService } from './registration-request-domain.service';
 import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
 

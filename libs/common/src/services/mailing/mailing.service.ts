@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
+
 import {
   MAIL_FROM,
   MAIL_HOST,

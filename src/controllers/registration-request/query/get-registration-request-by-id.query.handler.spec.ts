@@ -1,9 +1,10 @@
+import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { GetRegistrationRequestByIdQuery } from './get-registration-request-by-id.query';
 import { GetRegistrationRequestByIdQueryHandler } from './get-registration-request-by-id.query.handler';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
-import { GetRegistrationRequestByIdQuery } from './get-registration-request-by-id.query';
-import { NotFoundException } from '@nestjs/common';
-import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
 
 const mockRegistrationRequestDomainService = {
   findRegistrationRequestWithDetailsByIdAsync: jest.fn(),

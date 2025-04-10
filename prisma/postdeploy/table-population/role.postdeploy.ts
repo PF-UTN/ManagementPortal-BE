@@ -1,4 +1,5 @@
 import { Role } from '@prisma/client';
+
 import { mergeTableData } from './generate-merge-data.script';
 
 export const rolePostDeployAsync = async () => {

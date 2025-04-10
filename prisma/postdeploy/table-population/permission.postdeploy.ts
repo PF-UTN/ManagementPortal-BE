@@ -1,4 +1,5 @@
 import { Permission } from '@prisma/client';
+
 import { mergeTableData } from './generate-merge-data.script';
 import { PermissionCodes } from '../../../libs/common/src/constants/permission-codes.constants';
 

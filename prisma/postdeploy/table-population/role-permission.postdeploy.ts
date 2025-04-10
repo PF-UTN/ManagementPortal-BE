@@ -1,4 +1,5 @@
 import { RolePermission } from '@prisma/client';
+
 import { mergeTableData } from './generate-merge-data.script';
 
 export const rolePermissionPostDeployAsync = async () => {

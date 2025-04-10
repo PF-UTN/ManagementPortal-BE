@@ -1,6 +1,7 @@
+import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { EncryptionService } from '@mp/common/services';
+
 import { UserService } from '../user/user.service';
 
 @Injectable()

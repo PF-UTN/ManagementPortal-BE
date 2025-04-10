@@ -1,10 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserRepository } from '@mp/repository';
+import { RoleIds } from '@mp/common/constants';
 import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
+import { UserRepository } from '@mp/repository';
+import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, User } from '@prisma/client';
+
 import { UserService } from '../user/user.service';
-import { RoleIds } from '@mp/common/constants';
 
 const mockUserRepository = {
   createUserAsync: jest.fn(),

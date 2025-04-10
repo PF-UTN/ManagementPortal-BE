@@ -1,16 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CommandBus } from '@nestjs/cqrs';
-import { ConfigModule } from '@nestjs/config';
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
+import { ConfigModule } from '@nestjs/config';
+import { CommandBus } from '@nestjs/cqrs';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { AuthenticationController } from './authentication.controller';
-import { UserServiceModule } from '../../domain/service/user/user.service.module';
-import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { SignInCommand } from './command/sign-in.command';
 import { SignInCommandHandler } from './command/sign-in.command.handler';
 import { SignUpCommand } from './command/sign-up.command';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
-import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
+import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { RegistrationRequestDomainServiceModule } from '../../domain/service/registration-request/registration-request-domain.service.module';
+import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
+import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;

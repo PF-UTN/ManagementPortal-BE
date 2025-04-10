@@ -1,8 +1,9 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RegistrationRequestStatusId } from '@mp/common/constants';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+
 import { SignUpCommand } from './sign-up.command';
-import { UserService } from '../../../domain/service/user/user.service';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
+import { UserService } from '../../../domain/service/user/user.service';
 
 @CommandHandler(SignUpCommand)
 export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {

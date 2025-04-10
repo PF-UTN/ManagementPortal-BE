@@ -1,4 +1,5 @@
 import { RegistrationRequestStatus } from '@prisma/client';
+
 import { mergeTableData } from './generate-merge-data.script';
 
 export const registrationRequestStatusPostDeployAsync = async () => {
@@ -8,8 +9,5 @@ export const registrationRequestStatusPostDeployAsync = async () => {
     { id: 3, code: 'Rejected' },
   ];
 
-  await mergeTableData(
-    'RegistrationRequestStatus',
-    sourceData,
-  );
+  await mergeTableData('RegistrationRequestStatus', sourceData);
 };

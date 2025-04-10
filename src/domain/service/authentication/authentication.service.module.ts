@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { EncryptionServiceModule } from '@mp/common/services';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+
 import { AuthenticationService } from './authentication.service';
 import { UserServiceModule } from '../user/user.service.module';
 

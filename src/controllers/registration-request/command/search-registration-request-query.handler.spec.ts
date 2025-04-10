@@ -1,8 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { SearchRegistrationRequestResponse } from '@mp/common/dtos';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { SearchRegistrationRequestQuery } from './search-registration-request-query';
 import { SearchRegistrationRequestQueryHandler } from './search-registration-request-query.handler';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
-import { SearchRegistrationRequestQuery } from './search-registration-request-query';
 
 describe('SearchRegistrationRequestQueryHandler', () => {
   let handler: SearchRegistrationRequestQueryHandler;

@@ -1,11 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { MailingService } from '@mp/common/services';
 import { RegistrationRequestStatus } from '@mp/common/constants';
-import { ApproveRegistrationRequestCommandHandler } from './approve-registration-request.command.handler';
+import { MailingService } from '@mp/common/services';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
-import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
+import { ApproveRegistrationRequestCommandHandler } from './approve-registration-request.command.handler';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
+import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { UserService } from '../../../domain/service/user/user.service';
 
 describe('ApproveRegistrationRequestCommandHandler', () => {
