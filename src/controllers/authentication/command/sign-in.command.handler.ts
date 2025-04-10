@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { SignInCommand } from '../command/sign-in.command';
+
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
+import { SignInCommand } from '../command/sign-in.command';
 
 @CommandHandler(SignInCommand)
 export class SignInCommandHandler implements ICommandHandler<SignInCommand> {

@@ -1,8 +1,9 @@
-import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import {
   RegistrationRequestDto,
   SearchRegistrationRequestResponse,
 } from '@mp/common/dtos';
+import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+
 import { SearchRegistrationRequestQuery } from './search-registration-request-query';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { User, Prisma } from '@prisma/client';
+
 import { PrismaService } from './prisma.service';
 
 @Injectable()
@@ -20,10 +21,19 @@ export class UserRepository {
     });
   }
 
-  async findByEmailAsync(email: string): Promise<User | null> {
+  async findByEmailAsync(email: string): Promise<Prisma.UserGetPayload<{
+    include: {
+      role: { include: { rolePermissions: { include: { permission: true } } } };
+    };
+  }> | null> {
     return this.prisma.user.findUnique({
       where: {
         email,
+      },
+      include: {
+        role: {
+          include: { rolePermissions: { include: { permission: true } } },
+        },
       },
     });
   }

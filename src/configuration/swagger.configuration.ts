@@ -6,6 +6,7 @@ export const SwaggerConfiguration = (app: INestApplication) => {
     .setTitle('Management Portal API')
     .setDescription('API documentation for the Management Portal')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
