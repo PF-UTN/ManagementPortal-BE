@@ -1,13 +1,23 @@
 import { Module } from '@nestjs/common';
+
 import {
   UserRepository,
   CountryRepository,
   PrismaService,
   RegistrationRequestRepository,
-  RegistrationRequestStatusRepository
+  RegistrationRequestStatusRepository,
 } from './services';
 @Module({
-  providers: [PrismaService, UserRepository, CountryRepository, RegistrationRequestRepository, RegistrationRequestStatusRepository],
-  exports: [UserRepository, CountryRepository, RegistrationRequestRepository, RegistrationRequestStatusRepository],
+  providers: [
+    PrismaService,
+    UserRepository,
+    RegistrationRequestRepository,
+    RegistrationRequestStatusRepository,
+  ],
+  exports: [
+    UserRepository,
+    RegistrationRequestRepository,
+    RegistrationRequestStatusRepository,
+  ],
 })
 export class RepositoryModule {}

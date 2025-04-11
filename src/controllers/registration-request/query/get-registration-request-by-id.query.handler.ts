@@ -1,8 +1,9 @@
+import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
+import { NotFoundException } from '@nestjs/common';
 import { QueryHandler } from '@nestjs/cqrs';
+
 import { GetRegistrationRequestByIdQuery } from './get-registration-request-by-id.query';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
-import { NotFoundException } from '@nestjs/common';
-import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
 
 @QueryHandler(GetRegistrationRequestByIdQuery)
 export class GetRegistrationRequestByIdQueryHandler {

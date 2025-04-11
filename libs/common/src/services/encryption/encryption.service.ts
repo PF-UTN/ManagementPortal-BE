@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+
 import { BCRYPT_ROUNDS } from './encryption.constants';
 
 @Injectable()
