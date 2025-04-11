@@ -1,8 +1,8 @@
 import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthenticationService {
@@ -41,5 +41,22 @@ export class AuthenticationService {
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
+  }
+
+  async requestPasswordResetAsync(email: string) {
+    const user = await this.userService.findByEmailAsync(email);
+
+    if (!user) {
+      return;
+    }
+
+    const payload = {
+      email: user.email,
+      sub: user.id,
+    };
+
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: '15m',
+    });
   }
 }

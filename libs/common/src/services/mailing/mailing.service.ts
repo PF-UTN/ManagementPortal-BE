@@ -51,4 +51,11 @@ export class MailingService {
 
     return await this.sendMailAsync(to, subject, text);
   }
+
+  async sendPasswordResetEmailAsync(to: string, url: string) {
+    const subject = 'Solicitud de Recuperación de Contraseña';
+    const text = `Has solicitado recuperar tu contraseña. Por favor, haz clic en el siguiente enlace para restablecerla: ${url}`;
+
+    return await this.sendMailAsync(to, subject, text);
+  }
 }

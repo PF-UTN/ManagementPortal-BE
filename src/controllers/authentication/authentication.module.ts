@@ -1,14 +1,17 @@
+import { MailingServiceModule } from '@mp/common/services';
 import { Module } from '@nestjs/common';
 
 import { AuthenticationController } from './authentication.controller';
 import { SignInCommandHandler } from './command/sign-in.command.handler';
 import { SignUpCommandHandler } from './command/sign-up.command.handler';
+import { ResetPasswordRequestQueryHandler } from './query/reset-password-request.query.handler';
 import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { RegistrationRequestDomainServiceModule } from '../../domain/service/registration-request/registration-request-domain.service.module';
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
 const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
+const queryHandlers = [ResetPasswordRequestQueryHandler];
 
 @Module({
   imports: [
@@ -16,8 +19,9 @@ const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
     UserServiceModule,
     RegistrationRequestDomainServiceModule,
     RegistrationRequestStatusServiceModule,
+    MailingServiceModule,
   ],
   controllers: [AuthenticationController],
-  providers: [...commandHandlers],
+  providers: [...commandHandlers, ...queryHandlers],
 })
 export class AuthenticationModule {}

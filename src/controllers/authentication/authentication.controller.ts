@@ -1,15 +1,23 @@
 import { Public } from '@mp/common/decorators';
-import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
+import {
+  UserCreationDto,
+  UserSignInDto,
+  ResetPasswordRequestDto,
+} from '@mp/common/dtos';
 import { Body, Controller, Post } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
 
 import { SignInCommand } from './command/sign-in.command';
 import { SignUpCommand } from './command/sign-up.command';
+import { ResetPasswordRequestQuery } from './query/reset-password-request.query';
 
 @Controller('authentication')
 export class AuthenticationController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Public()
   @Post('signup')
@@ -30,5 +38,21 @@ export class AuthenticationController {
     @Body() userSignInDto: UserSignInDto,
   ): Promise<{ access_token: string }> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
+  }
+
+  @Public()
+  @Post('reset-password/request')
+  @ApiOperation({
+    summary: 'Request password recovery',
+    description:
+      'Sends a password recovery email to the user with the provided email address.',
+  })
+  @ApiBody({ type: ResetPasswordRequestDto })
+  async requestPasswordRecoveryAsync(
+    @Body() resetPasswordRequestDto: ResetPasswordRequestDto,
+  ) {
+    return this.queryBus.execute(
+      new ResetPasswordRequestQuery(resetPasswordRequestDto),
+    );
   }
 }
