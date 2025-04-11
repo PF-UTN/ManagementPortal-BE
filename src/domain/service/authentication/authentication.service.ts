@@ -1,8 +1,8 @@
 import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthenticationService {
