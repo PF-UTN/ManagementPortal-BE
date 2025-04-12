@@ -18,7 +18,8 @@ export class ResetPasswordRequestQueryHandler
       query.resetPasswordRequestDto.email,
     );
 
-    const url = process.env.BASE_URL + '/reset-password/' + token;
+    const frontendBaseUrl = process.env.FRONTEND_BASE_URL ?? 'http://localhost:4200';
+    const url = frontendBaseUrl + '/reset-password/' + token;
 
     await this.mailingService.sendPasswordResetEmailAsync(
       query.resetPasswordRequestDto.email,
