@@ -3,4 +3,5 @@ export class UserServiceMock {
   findByEmailAsync = jest.fn();
   hashPasswordAsync = jest.fn();
   findByIdAsync = jest.fn();
+  updateUserByIdAsync = jest.fn();
 }

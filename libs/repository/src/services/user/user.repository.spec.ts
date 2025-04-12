@@ -91,4 +91,20 @@ describe('UserRepository', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('updateUserByIdAsync', () => {
+    it('should update a user by ID', async () => {
+      // Arrange
+      const updatedUser = { ...userMock, firstName: 'Updated Name' };
+      prismaServiceMock.user.update.mockResolvedValue(updatedUser);
+
+      // Act
+      const result = await repository.updateUserByIdAsync(userMock.id, {
+        firstName: 'Updated Name',
+      });
+
+      // Assert
+      expect(result).toEqual(updatedUser);
+    });
+  });
 });

@@ -19,6 +19,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { AuthenticationController } from './authentication.controller';
+import { ResetPasswordCommand } from './command/reset-password.command';
 import { SignInCommand } from './command/sign-in.command';
 import { SignUpCommand } from './command/sign-up.command';
 import { ResetPasswordRequestQuery } from './query/reset-password-request.query';
@@ -145,6 +146,24 @@ describe('AuthenticationController', () => {
 
       // Assert
       expect(queryBusMock.execute).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('resetPasswordAsync', () => {
+    it('should call commandBus.execute with ResetPasswordCommand when resetPasswordAsync is called', async () => {
+      // Arrange
+      const token = 'mockToken';
+      const resetPasswordDto = { password: 'newPassword' };
+      const executeSpy = jest
+        .spyOn(commandBusMock, 'execute')
+        .mockResolvedValueOnce(undefined);
+      const expectedCommand = new ResetPasswordCommand(token, resetPasswordDto);
+
+      // Act
+      await controller.resetPasswordAsync(token, resetPasswordDto);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });

@@ -172,4 +172,51 @@ describe('AuthenticationService', () => {
       expect(result).toBeUndefined();
     });
   });
+
+  describe('resetPasswordAsync', () => {
+    it('should update the user if token and user are valid', async () => {
+      // Arrange
+      const token = 'valid-token';
+      const password = 'new-password';
+      const payload = { sub: 1, email: 'test@test.com' };
+      const user = { id: 1, email: payload.email };
+
+      jwtServiceMock.verifyAsync.mockResolvedValue(payload);
+      userServiceMock.findByIdAsync.mockResolvedValue(user);
+      encryptionServiceMock.hashAsync.mockResolvedValue('hashed-password');
+
+      // Act
+      await service.resetPasswordAsync(token, password);
+
+      // Assert
+      expect(userServiceMock.updateUserByIdAsync).toHaveBeenCalledWith(
+        user.id,
+        {
+          ...user,
+          password: 'hashed-password',
+        },
+      );
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      // Arrange
+      jwtServiceMock.verifyAsync.mockResolvedValue(null);
+      
+      // Act & Assert
+      await expect(
+        service.resetPasswordAsync('invalid-token', 'pass'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if user is not found', async () => {
+      // Arrange
+      jwtServiceMock.verifyAsync.mockResolvedValue({ sub: 99 });
+      userServiceMock.findByIdAsync.mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.resetPasswordAsync('valid-token', 'pass'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
 });
