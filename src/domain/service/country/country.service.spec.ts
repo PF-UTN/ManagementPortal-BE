@@ -1,7 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CountryService } from './country.service';
 import { CountryRepository } from '@mp/repository';
-import { Country } from '../../entity/country.entity';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { CountryService } from './country.service';
+import { Country } from '@prisma/client';
 
 const mockCountryRepository = {
   findAllAsync: jest.fn(),
@@ -36,7 +37,7 @@ describe('CountryService', () => {
       mockCountryRepository.findAllAsync.mockResolvedValue(mockCountries);
 
       // Act
-      const result = await service.getAllCountries();
+      const result = await service.getAllCountriesAsync();
 
       // Assert
       expect(result).toEqual(mockCountries);
@@ -48,7 +49,7 @@ describe('CountryService', () => {
       mockCountryRepository.findAllAsync.mockResolvedValue([]);
 
       // Act
-      const result = await service.getAllCountries();
+      const result = await service.getAllCountriesAsync();
 
       // Assert
       expect(result).toEqual([]);
@@ -60,7 +61,7 @@ describe('CountryService', () => {
       mockCountryRepository.findAllAsync.mockResolvedValue(null);
 
       // Act
-      const result = await service.getAllCountries();
+      const result = await service.getAllCountriesAsync();
 
       // Assert
       expect(result).toBeNull();

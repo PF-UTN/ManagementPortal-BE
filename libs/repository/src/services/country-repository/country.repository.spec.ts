@@ -1,7 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Country } from '@prisma/client';
+
 import { CountryRepository } from './country.repository';
 import { PrismaService } from '../prisma.service';
-import { Country } from '@prisma/client';
 
 describe('CountryRepository', () => {
     let repository: CountryRepository;
