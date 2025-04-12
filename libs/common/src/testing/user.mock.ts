@@ -1,6 +1,6 @@
-import { User } from "@prisma/client";
+import { User } from '@prisma/client';
 
-import { UserCreationDto } from '../dtos';
+import { ResetPasswordRequestDto, UserCreationDto } from '../dtos';
 
 export const userCreationDtoMock: UserCreationDto = {
   firstName: 'John',
@@ -25,4 +25,8 @@ export const userMock = {
 export const userSignInDtoMock = {
   email: 'john.doe@test.com',
   password: 'password123',
+};
+
+export const resetPasswordRequestDtoMock: ResetPasswordRequestDto = {
+  email: 'john.doe@test.com',
 };
