@@ -38,4 +38,8 @@ export class UserService {
   async findByIdAsync(id: number): Promise<User | null> {
     return this.userRepository.findByIdAsync(id);
   }
+
+  async updateUserByIdAsync(id: number, userUpdateDto: Prisma.UserUpdateInput) {
+    return this.userRepository.updateUserByIdAsync(id, userUpdateDto);
+  }
 }

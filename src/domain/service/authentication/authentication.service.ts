@@ -59,4 +59,24 @@ export class AuthenticationService {
       expiresIn: '15m',
     });
   }
+
+  async resetPasswordAsync(token: string, password: string) {
+    const payload = await this.jwtService.verifyAsync(token);
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const user = await this.userService.findByIdAsync(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hashedPassword = await this.encryptionService.hashAsync(password);
+    await this.userService.updateUserByIdAsync(user.id, {
+      ...user,
+      password: hashedPassword,
+    });
+  }
 }

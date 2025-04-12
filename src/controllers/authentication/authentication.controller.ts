@@ -3,11 +3,13 @@ import {
   UserCreationDto,
   UserSignInDto,
   ResetPasswordRequestDto,
+  ResetPasswordDto,
 } from '@mp/common/dtos';
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Param, Post } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 
+import { ResetPasswordCommand } from './command/reset-password.command';
 import { SignInCommand } from './command/sign-in.command';
 import { SignUpCommand } from './command/sign-up.command';
 import { ResetPasswordRequestQuery } from './query/reset-password-request.query';
@@ -54,5 +56,20 @@ export class AuthenticationController {
     return this.queryBus.execute(
       new ResetPasswordRequestQuery(resetPasswordRequestDto),
     );
+  }
+
+  @Public()
+  @Post('reset-password/:token')
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Resets the password for the user with the provided token.',
+  })
+  @ApiParam({
+    name: 'token',
+    description: 'Password reset token'
+  })
+  @ApiBody({ type: ResetPasswordDto })
+  async resetPasswordAsync(@Param('token') token: string, @Body() resetPasswordDto: ResetPasswordDto) {
+    return this.commandBus.execute(new ResetPasswordCommand(token, resetPasswordDto));
   }
 }
