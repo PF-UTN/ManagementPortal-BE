@@ -2,6 +2,7 @@ import { EncryptionService } from '@mp/common/services';
 import {
   EncryptionServiceMock,
   JwtServiceMock,
+  userMock,
   UserServiceMock,
 } from '@mp/common/testing';
 import { UnauthorizedException } from '@nestjs/common';
@@ -139,6 +140,36 @@ describe('AuthenticationService', () => {
       email: 'test@test.com',
       sub: 1,
       permissions: expectedPermissions,
+    });
+  });
+
+  describe('requestPasswordResetAsync', () => {
+    it('should return a JWT token when user is found', async () => {
+      // Arrange
+      const user = { ...userMock, id: 1 };
+      const expectedToken = 'mocked-jwt';
+
+      userServiceMock.findByEmailAsync.mockResolvedValue(user);
+      jwtServiceMock.signAsync.mockResolvedValue(expectedToken);
+
+      // Act
+      const result = await service.requestPasswordResetAsync(user.email);
+
+      // Assert
+      expect(result).toBe(expectedToken);
+    });
+
+    it('should return undefined when user is not found', async () => {
+      // Arrange
+      userServiceMock.findByEmailAsync.mockResolvedValue(null);
+
+      // Act
+      const result = await service.requestPasswordResetAsync(
+        'nonexistent@test.com',
+      );
+
+      // Assert
+      expect(result).toBeUndefined();
     });
   });
 });
