@@ -1,24 +1,44 @@
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
+import {
+  AuthenticationServiceMock,
+  CommandBusMock,
+  RegistrationRequestDomainServiceMock,
+  RegistrationRequestStatusServiceMock,
+  userCreationDtoMock,
+  UserServiceMock,
+  userSignInDtoMock,
+} from '@mp/common/testing';
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { AuthenticationController } from './authentication.controller';
 import { SignInCommand } from './command/sign-in.command';
-import { SignInCommandHandler } from './command/sign-in.command.handler';
 import { SignUpCommand } from './command/sign-up.command';
-import { SignUpCommandHandler } from './command/sign-up.command.handler';
+import { AuthenticationService } from '../../domain/service/authentication/authentication.service';
 import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
+import { RegistrationRequestDomainService } from '../../domain/service/registration-request/registration-request-domain.service';
 import { RegistrationRequestDomainServiceModule } from '../../domain/service/registration-request/registration-request-domain.service.module';
+import { RegistrationRequestStatusService } from '../../domain/service/registration-request-status/registration-request-status.service';
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
+import { UserService } from '../../domain/service/user/user.service';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
 describe('AuthenticationController', () => {
   let controller: AuthenticationController;
-  let commandBus: CommandBus;
+  let authenticationServiceMock: AuthenticationServiceMock;
+  let userServiceMock: UserServiceMock;
+  let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;
+  let registrationRequestStatusServiceMock: RegistrationRequestStatusServiceMock;
+  let commandBusMock: CommandBusMock;
 
   beforeEach(async () => {
-    const commandHandlers = [SignUpCommandHandler, SignInCommandHandler];
+    authenticationServiceMock = new AuthenticationServiceMock();
+    userServiceMock = new UserServiceMock();
+    registrationRequestServiceMock = new RegistrationRequestDomainServiceMock();
+    registrationRequestStatusServiceMock =
+      new RegistrationRequestStatusServiceMock();
+    commandBusMock = new CommandBusMock();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -33,13 +53,30 @@ describe('AuthenticationController', () => {
       ],
       controllers: [AuthenticationController],
       providers: [
-        ...commandHandlers,
-        { provide: CommandBus, useValue: { execute: jest.fn() } },
+        {
+          provide: CommandBus,
+          useValue: commandBusMock,
+        },
+        {
+          provide: AuthenticationService,
+          useValue: authenticationServiceMock,
+        },
+        {
+          provide: UserService,
+          useValue: userServiceMock,
+        },
+        {
+          provide: RegistrationRequestDomainService,
+          useValue: registrationRequestServiceMock,
+        },
+        {
+          provide: RegistrationRequestStatusService,
+          useValue: registrationRequestStatusServiceMock,
+        },
       ],
     }).compile();
 
     controller = module.get<AuthenticationController>(AuthenticationController);
-    commandBus = module.get<CommandBus>(CommandBus);
   });
 
   it('should be defined', () => {
@@ -49,20 +86,14 @@ describe('AuthenticationController', () => {
   describe('signUpAsync', () => {
     it('should call commandBus.execute with SignUpCommand when signUpAsync is called', async () => {
       // Arrange
-      const userCreationDto: UserCreationDto = {
-        firstName: 'testFirstName',
-        lastName: 'testLastName',
-        email: 'testEmail@test.com',
-        password: 'testPass',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      };
+      const userCreationDto: UserCreationDto = { ...userCreationDtoMock };
       const executeSpy = jest
-        .spyOn(commandBus, 'execute')
+        .spyOn(commandBusMock, 'execute')
         .mockResolvedValueOnce(undefined);
       const expectedCommand = new SignUpCommand(userCreationDto);
 
+      // Act
+      await controller.signUpAsync(userCreationDto);
       // Act
       await controller.signUpAsync(userCreationDto);
 
@@ -74,15 +105,14 @@ describe('AuthenticationController', () => {
   describe('signInAsync', () => {
     it('should call commandBus.execute with SignInCommand when signInAsync is called', async () => {
       // Arrange
-      const userSignInDto: UserSignInDto = {
-        email: 'testEmail@test.com',
-        password: 'testPass',
-      };
+      const userSignInDto: UserSignInDto = { ...userSignInDtoMock };
       const executeSpy = jest
-        .spyOn(commandBus, 'execute')
+        .spyOn(commandBusMock, 'execute')
         .mockResolvedValueOnce(undefined);
       const expectedCommand = new SignInCommand(userSignInDto);
 
+      // Act
+      await controller.signInAsync(userSignInDto);
       // Act
       await controller.signInAsync(userSignInDto);
 

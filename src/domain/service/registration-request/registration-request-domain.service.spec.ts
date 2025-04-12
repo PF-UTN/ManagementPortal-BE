@@ -1,4 +1,5 @@
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
+import { RegistrationRequestRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestRepository } from '@mp/repository';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -7,30 +8,19 @@ import { SearchRegistrationRequestQuery } from '../../../controllers/registratio
 
 describe('RegistrationRequestDomainService', () => {
   let service: RegistrationRequestDomainService;
-  let repository: RegistrationRequestRepository;
+  let registrationRequestRepositoryMock: RegistrationRequestRepositoryMock;
 
   beforeEach(async () => {
+    registrationRequestRepositoryMock = new RegistrationRequestRepositoryMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestDomainService,
-        {
-          provide: RegistrationRequestRepository,
-          useValue: {
-            searchWithFiltersAsync: jest.fn(),
-            createRegistrationRequestAsync: jest.fn(),
-            findRegistrationRequestWithStatusByIdAsync: jest.fn(),
-            updateRegistrationRequestStatusAsync: jest.fn(),
-            findRegistrationRequestWithDetailsByIdAsync: jest.fn(),
-          },
-        },
+        { provide: RegistrationRequestRepository, useValue: registrationRequestRepositoryMock },
       ],
     }).compile();
 
     service = module.get<RegistrationRequestDomainService>(
       RegistrationRequestDomainService,
-    );
-    repository = module.get<RegistrationRequestRepository>(
-      RegistrationRequestRepository,
     );
   });
 
@@ -58,7 +48,7 @@ describe('RegistrationRequestDomainService', () => {
       await service.searchWithFiltersAsync(query);
 
       // Assert
-      expect(repository.searchWithFiltersAsync).toHaveBeenCalledWith(
+      expect(registrationRequestRepositoryMock.searchWithFiltersAsync).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
         query.page,
@@ -82,7 +72,7 @@ describe('RegistrationRequestDomainService', () => {
       );
 
       // Assert
-      expect(repository.createRegistrationRequestAsync).toHaveBeenCalledWith(
+      expect(registrationRequestRepositoryMock.createRegistrationRequestAsync).toHaveBeenCalledWith(
         registrationRequestCreationDto,
       );
     });
@@ -98,24 +88,7 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        repository.findRegistrationRequestWithStatusByIdAsync,
-      ).toHaveBeenCalledWith(registrationRequestId);
-    });
-  });
-
-  describe('findRegistrationRequestWithDetailsByIdAsync', () => {
-    it('should call findRegistrationRequestWithDetailsByIdAsync on the repository with correct parameters', async () => {
-      // Arrange
-      const registrationRequestId = 1;
-
-      // Act
-      await service.findRegistrationRequestWithDetailsByIdAsync(
-        registrationRequestId,
-      );
-
-      // Assert
-      expect(
-        repository.findRegistrationRequestWithDetailsByIdAsync,
+        registrationRequestRepositoryMock.findRegistrationRequestWithStatusByIdAsync,
       ).toHaveBeenCalledWith(registrationRequestId);
     });
   });
@@ -136,7 +109,7 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        repository.updateRegistrationRequestStatusAsync,
+        registrationRequestRepositoryMock.updateRegistrationRequestStatusAsync,
       ).toHaveBeenCalledWith(
         updateRegistrationRequestStatusDto.registrationRequestId,
         {

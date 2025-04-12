@@ -18,6 +18,7 @@
     "@mp/common/constants": "<rootDir>/../libs/common/src/constants",
     "@mp/common/domain": "<rootDir>/../libs/common/src/domain",    
     "@mp/common/guards": "<rootDir>/../libs/common/src/guards", 
-    "@mp/common/decorators": "<rootDir>/../libs/common/src/decorators"
+    "@mp/common/decorators": "<rootDir>/../libs/common/src/decorators",
+    "@mp/common/testing": "<rootDir>/../libs/common/src/testing"
   }
 }

@@ -40,6 +40,9 @@
       "@mp/common/decorators": [
         "libs/common/src/decorators"
       ],
+      "@mp/common/testing": [
+        "libs/common/src/testing"
+      ],
     }
   }
 }

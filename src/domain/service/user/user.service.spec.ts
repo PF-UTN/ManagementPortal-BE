@@ -1,31 +1,30 @@
 import { RoleIds } from '@mp/common/constants';
-import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
+import {
+  UserRepositoryMock,
+  userCreationDtoMock,
+  userMock,
+  EncryptionServiceMock,
+} from '@mp/common/testing';
 import { UserRepository } from '@mp/repository';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, User } from '@prisma/client';
 
 import { UserService } from '../user/user.service';
 
-const mockUserRepository = {
-  createUserAsync: jest.fn(),
-  findByEmailAsync: jest.fn(),
-  findByIdAsync: jest.fn(),
-};
-
-const mockEncryptionService = {
-  hashAsync: jest.fn(),
-};
-
 describe('UserService', () => {
   let service: UserService;
+  let userRepositoryMock: UserRepositoryMock;
+  let encryptionServiceMock: EncryptionServiceMock;
 
   beforeEach(async () => {
+    userRepositoryMock = new UserRepositoryMock();
+    encryptionServiceMock = new EncryptionServiceMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: UserRepository, useValue: mockUserRepository },
-        { provide: EncryptionService, useValue: mockEncryptionService },
+        { provide: UserRepository, useValue: userRepositoryMock },
+        { provide: EncryptionService, useValue: encryptionServiceMock },
       ],
     }).compile();
 
@@ -39,21 +38,12 @@ describe('UserService', () => {
   describe('createUserAsync', () => {
     it('should call createUserAsync with a hashed password', async () => {
       // Arrange
-      const userCreationDto: UserCreationDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      };
-
+      const userCreationDto = { ...userCreationDtoMock };
       const hashedPassword = 'hashedPassword123';
-      mockEncryptionService.hashAsync.mockResolvedValue(hashedPassword);
+      encryptionServiceMock.hashAsync.mockResolvedValue(hashedPassword);
 
       const expectedUser = {
-        ...userCreationDto,
+        ...userCreationDtoMock,
         password: hashedPassword,
         role: { connect: { id: RoleIds.Employee } },
       } as Prisma.UserCreateInput;
@@ -62,28 +52,20 @@ describe('UserService', () => {
       await service.createUserAsync(userCreationDto);
 
       // Assert
-      expect(mockUserRepository.createUserAsync).toHaveBeenCalledWith(
+      expect(userRepositoryMock.createUserAsync).toHaveBeenCalledWith(
         expectedUser,
       );
     });
 
     it('should call hashAsync with the correct password', async () => {
       // Arrange
-      const userCreationDto: UserCreationDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-      };
+      const userCreationDto = { ...userCreationDtoMock };
 
       // Act
       await service.createUserAsync(userCreationDto);
 
       // Assert
-      expect(mockEncryptionService.hashAsync).toHaveBeenCalledWith(
+      expect(encryptionServiceMock.hashAsync).toHaveBeenCalledWith(
         userCreationDto.password,
       );
     });
@@ -92,49 +74,29 @@ describe('UserService', () => {
   describe('findByEmailAsync', () => {
     it('should call findByEmailAsync with user email', async () => {
       // Arrange
-      const mockUser = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-        roleId: 1,
-      } as User;
-      mockUserRepository.findByEmailAsync.mockResolvedValue(mockUser);
+      const user = { ...userMock, roleId: 1 } as User;
+      userRepositoryMock.findByEmailAsync.mockResolvedValue(user);
 
       // Act
-      await service.findByEmailAsync(mockUser.email);
+      await service.findByEmailAsync(userMock.email);
 
       // Assert
-      expect(mockUserRepository.findByEmailAsync).toHaveBeenCalledWith(
-        mockUser.email,
+      expect(userRepositoryMock.findByEmailAsync).toHaveBeenCalledWith(
+        'john.doe@example.com',
       );
     });
   });
   describe('findByIdAsync', () => {
     it('should call findByIdAsync with user id', async () => {
       // Arrange
-      const mockUser = {
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        password: 'password123',
-        phone: '1234567890',
-        documentNumber: '123456789',
-        documentType: 'DNI',
-        roleId: 1,
-      } as User;
-      mockUserRepository.findByIdAsync.mockResolvedValue(mockUser);
+      const user = { ...userMock, roleId: 1 } as User;
+      userRepositoryMock.findByIdAsync.mockResolvedValue(user);
 
       // Act
-      await service.findByIdAsync(mockUser.id);
+      await service.findByIdAsync(userMock.id);
 
       // Assert
-      expect(mockUserRepository.findByIdAsync).toHaveBeenCalledWith(
-        mockUser.id,
-      );
+      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(userMock.id);
     });
   });
 });

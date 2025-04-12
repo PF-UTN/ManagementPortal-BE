@@ -1,4 +1,5 @@
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
+import { PrismaServiceMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { PrismaService } from '../prisma.service';
@@ -6,19 +7,17 @@ import { RegistrationRequestRepository } from './registration-request.repository
 
 describe('RegistrationRequestRepository', () => {
   let repository: RegistrationRequestRepository;
-  let prismaService: PrismaService;
+  let prismaServiceMock: PrismaServiceMock;
 
   beforeEach(async () => {
+    prismaServiceMock = new PrismaServiceMock();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestRepository,
         {
           provide: PrismaService,
-          useValue: {
-            registrationRequest: {
-              findMany: jest.fn(),
-            },
-          },
+          useValue: prismaServiceMock,
         },
       ],
     }).compile();
@@ -26,7 +25,6 @@ describe('RegistrationRequestRepository', () => {
     repository = module.get<RegistrationRequestRepository>(
       RegistrationRequestRepository,
     );
-    prismaService = module.get<PrismaService>(PrismaService);
   });
 
   it('should be defined', () => {
@@ -52,7 +50,9 @@ describe('RegistrationRequestRepository', () => {
       );
 
       // Assert
-      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+      expect(
+        prismaServiceMock.registrationRequest.findMany,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             AND: [
@@ -86,7 +86,9 @@ describe('RegistrationRequestRepository', () => {
       );
 
       // Assert
-      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+      expect(
+        prismaServiceMock.registrationRequest.findMany,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
             AND: [
@@ -141,7 +143,9 @@ describe('RegistrationRequestRepository', () => {
       );
 
       // Assert
-      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+      expect(
+        prismaServiceMock.registrationRequest.findMany,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({
           skip: (page - 1) * pageSize,
           take: pageSize,
@@ -166,7 +170,7 @@ describe('RegistrationRequestRepository', () => {
         id: 1,
         ...createData,
       };
-      prismaService.registrationRequest.create = jest
+      prismaServiceMock.registrationRequest.create = jest
         .fn()
         .mockResolvedValue(createdRequest);
 
@@ -175,9 +179,11 @@ describe('RegistrationRequestRepository', () => {
         await repository.createRegistrationRequestAsync(createData);
 
       // Assert
-      expect(prismaService.registrationRequest.create).toHaveBeenCalledWith({
-        data: createData,
-      });
+      expect(prismaServiceMock.registrationRequest.create).toHaveBeenCalledWith(
+        {
+          data: createData,
+        },
+      );
       expect(result).toEqual(createdRequest);
     });
   });
@@ -190,7 +196,7 @@ describe('RegistrationRequestRepository', () => {
         id: registrationRequestId,
         status: { id: 1, code: 'Pending' },
       };
-      prismaService.registrationRequest.findUnique = jest
+      prismaServiceMock.registrationRequest.findUnique = jest
         .fn()
         .mockResolvedValue(registrationRequest);
 
@@ -201,12 +207,12 @@ describe('RegistrationRequestRepository', () => {
         );
 
       // Assert
-      expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith(
-        {
-          where: { id: registrationRequestId },
-          include: { status: true },
-        },
-      );
+      expect(
+        prismaServiceMock.registrationRequest.findUnique,
+      ).toHaveBeenCalledWith({
+        where: { id: registrationRequestId },
+        include: { status: true },
+      });
       expect(result).toEqual(registrationRequest);
     });
   });
@@ -225,7 +231,7 @@ describe('RegistrationRequestRepository', () => {
           email: 'john.doe@example.com',
         },
       };
-      prismaService.registrationRequest.findUnique = jest
+      prismaServiceMock.registrationRequest.findUnique = jest
         .fn()
         .mockResolvedValue(registrationRequest);
 
@@ -236,12 +242,12 @@ describe('RegistrationRequestRepository', () => {
         );
 
       // Assert
-      expect(prismaService.registrationRequest.findUnique).toHaveBeenCalledWith(
-        {
-          where: { id: registrationRequestId },
-          include: { status: true, user: true },
-        },
-      );
+      expect(
+        prismaServiceMock.registrationRequest.findUnique,
+      ).toHaveBeenCalledWith({
+        where: { id: registrationRequestId },
+        include: { status: true, user: true },
+      });
       expect(result).toEqual(registrationRequest);
     });
   });
@@ -255,7 +261,7 @@ describe('RegistrationRequestRepository', () => {
         id: registrationRequestId,
         status: { id: 2, code: 'Approved' },
       };
-      prismaService.registrationRequest.update = jest
+      prismaServiceMock.registrationRequest.update = jest
         .fn()
         .mockResolvedValue(updatedRequest);
 
@@ -266,10 +272,12 @@ describe('RegistrationRequestRepository', () => {
       );
 
       // Assert
-      expect(prismaService.registrationRequest.update).toHaveBeenCalledWith({
-        where: { id: registrationRequestId },
-        data: updateData,
-      });
+      expect(prismaServiceMock.registrationRequest.update).toHaveBeenCalledWith(
+        {
+          where: { id: registrationRequestId },
+          data: updateData,
+        },
+      );
       expect(result).toEqual(updatedRequest);
     });
   });

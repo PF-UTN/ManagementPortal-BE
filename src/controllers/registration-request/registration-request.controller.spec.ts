@@ -1,4 +1,5 @@
 import { SearchRegistrationRequestRequest } from '@mp/common/dtos';
+import { CommandBusMock, QueryBusMock } from '@mp/common/testing';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -7,24 +8,22 @@ import { RegistrationRequestController } from './registration-request.controller
 
 describe('RegistrationRequestController', () => {
   let controller: RegistrationRequestController;
-  let queryBus: QueryBus;
-  let commandBus: CommandBus;
+  let queryBusMock: QueryBusMock;
+  let commandBusMock: CommandBusMock;
 
   beforeEach(async () => {
+    queryBusMock = new QueryBusMock();
+    commandBusMock = new CommandBusMock();
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RegistrationRequestController],
       providers: [
         {
           provide: QueryBus,
-          useValue: {
-            execute: jest.fn(),
-          },
+          useValue: queryBusMock,
         },
         {
           provide: CommandBus,
-          useValue: {
-            execute: jest.fn(),
-          },
+          useValue: commandBusMock,
         },
       ],
     }).compile();
@@ -32,8 +31,6 @@ describe('RegistrationRequestController', () => {
     controller = module.get<RegistrationRequestController>(
       RegistrationRequestController,
     );
-    queryBus = module.get<QueryBus>(QueryBus);
-    commandBus = module.get<CommandBus>(CommandBus);
   });
 
   it('should be defined', () => {
@@ -50,7 +47,7 @@ describe('RegistrationRequestController', () => {
 
       await controller.searchAsync(request);
 
-      expect(queryBus.execute).toHaveBeenCalledWith(
+      expect(queryBusMock.execute).toHaveBeenCalledWith(
         new SearchRegistrationRequestQuery(request),
       );
     });
@@ -69,7 +66,7 @@ describe('RegistrationRequestController', () => {
       );
 
       // Assert
-      expect(commandBus.execute).toHaveBeenCalledWith(
+      expect(commandBusMock.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           registrationRequestId,
           approveRegistrationRequestDto,
@@ -90,7 +87,7 @@ describe('RegistrationRequestController', () => {
         );
 
         // Assert
-        expect(commandBus.execute).toHaveBeenCalledWith(
+        expect(commandBusMock.execute).toHaveBeenCalledWith(
           expect.objectContaining({
             registrationRequestId,
             rejectRegistrationRequestDto,
@@ -109,7 +106,7 @@ describe('RegistrationRequestController', () => {
       await controller.getRegistrationRequestByIdAsync(registrationRequestId);
 
       // Assert
-      expect(queryBus.execute).toHaveBeenCalledWith(
+      expect(queryBusMock.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           id: registrationRequestId,
         }),
