@@ -11,3 +11,4 @@ export * from './registration-request/registration-request-details.dto';
 export * from './user/user-creation.dto';
 export * from './user/user-sign-in.dto';
 export * from './user/reset-password-request.dto';
+export * from './user/reset-password.dto';
