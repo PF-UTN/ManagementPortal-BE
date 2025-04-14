@@ -1,5 +1,6 @@
 import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
@@ -10,6 +11,7 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly encryptionService: EncryptionService,
+    private readonly configService: ConfigService,
   ) {}
 
   async signInAsync(
@@ -56,7 +58,7 @@ export class AuthenticationService {
     };
 
     return await this.jwtService.signAsync(payload, {
-      expiresIn: '15m',
+      expiresIn: this.configService.get<string>('JWT_RESET_PASSWORD_EXPIRATION'),
     });
   }
 
