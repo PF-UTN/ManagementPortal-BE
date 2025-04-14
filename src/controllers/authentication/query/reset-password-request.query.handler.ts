@@ -18,6 +18,10 @@ export class ResetPasswordRequestQueryHandler
       query.resetPasswordRequestDto.email,
     );
 
+    if(!token) {
+      return;
+    }
+
     const frontendBaseUrl = process.env.FRONTEND_BASE_URL ?? 'http://localhost:4200';
     const url = frontendBaseUrl + '/reset-password/' + token;
 
