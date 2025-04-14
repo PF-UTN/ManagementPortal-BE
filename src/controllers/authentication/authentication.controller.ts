@@ -5,7 +5,7 @@ import {
   ResetPasswordRequestDto,
   ResetPasswordDto,
 } from '@mp/common/dtos';
-import { Body, Controller, Param, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 
@@ -43,6 +43,7 @@ export class AuthenticationController {
   }
 
   @Public()
+  @HttpCode(200)
   @Post('reset-password/request')
   @ApiOperation({
     summary: 'Request password recovery',
@@ -59,6 +60,7 @@ export class AuthenticationController {
   }
 
   @Public()
+  @HttpCode(200)
   @Post('reset-password/:token')
   @ApiOperation({
     summary: 'Reset password',
