@@ -1,11 +1,13 @@
 import { EncryptionService } from '@mp/common/services';
 import {
+  ConfigServiceMock,
   EncryptionServiceMock,
   JwtServiceMock,
   userMock,
   UserServiceMock,
 } from '@mp/common/testing';
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -17,11 +19,13 @@ describe('AuthenticationService', () => {
   let userServiceMock: UserServiceMock;
   let jwtServiceMock: JwtServiceMock;
   let encryptionServiceMock: EncryptionServiceMock;
+  let configServiceMock: ConfigServiceMock;
 
   beforeEach(async () => {
     userServiceMock = new UserServiceMock();
     jwtServiceMock = new JwtServiceMock();
     encryptionServiceMock = new EncryptionServiceMock();
+    configServiceMock = new ConfigServiceMock();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -29,6 +33,7 @@ describe('AuthenticationService', () => {
         { provide: UserService, useValue: userServiceMock },
         { provide: JwtService, useValue: jwtServiceMock },
         { provide: EncryptionService, useValue: encryptionServiceMock },
+        { provide: ConfigService, useValue: configServiceMock },
       ],
     }).compile();
 
