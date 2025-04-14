@@ -153,7 +153,7 @@ describe('AuthenticationController', () => {
     it('should call commandBus.execute with ResetPasswordCommand when resetPasswordAsync is called', async () => {
       // Arrange
       const token = 'mockToken';
-      const resetPasswordDto = { password: 'newPassword' };
+      const resetPasswordDto = { password: 'newPassword', confirmPassword: 'newPassword' };
       const executeSpy = jest
         .spyOn(commandBusMock, 'execute')
         .mockResolvedValueOnce(undefined);
