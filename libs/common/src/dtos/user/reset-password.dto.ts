@@ -7,4 +7,10 @@ export class ResetPasswordDto {
   @MaxLength(255)
   @IsNotEmpty()
   password: string;
+
+  @ApiProperty({ example: 'password123' })
+  @IsString()
+  @MaxLength(255)
+  @IsNotEmpty()
+  confirmPassword: string;
 }

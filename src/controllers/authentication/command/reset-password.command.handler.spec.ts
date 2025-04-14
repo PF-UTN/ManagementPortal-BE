@@ -37,6 +37,7 @@ describe('ResetPasswordCommandHandler', () => {
       const token = 'mocked-token';
       const resetPasswordDto = {
         password: 'new-password',
+        confirmPassword: 'new-password',
       };
 
       const query = new ResetPasswordCommand(token, resetPasswordDto);

@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { ResetPasswordCommand } from './reset-password.command';
@@ -11,6 +12,11 @@ export class ResetPasswordCommandHandler
 
     async execute(command: ResetPasswordCommand) {
         const { token, resetPasswordDto } = command;
+
+        if(resetPasswordDto.password !== resetPasswordDto.confirmPassword) {
+          throw new BadRequestException('Passwords do not match');
+        }
+
         await this.service.resetPasswordAsync(token, resetPasswordDto.password);
     }
 }
