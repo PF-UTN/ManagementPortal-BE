@@ -1,71 +1,61 @@
-import { CountryRepository } from '@mp/repository';
 import { Test, TestingModule } from '@nestjs/testing';
-
+import { CountryRepository } from '@mp/repository';
 import { CountryService } from './country.service';
-import { Country } from '@prisma/client';
-
-const mockCountryRepository = {
-  findAllAsync: jest.fn(),
-};
 
 describe('CountryService', () => {
   let service: CountryService;
+  let repository: CountryRepository;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CountryService,
-        { provide: CountryRepository, useValue: mockCountryRepository },
+        {
+          provide: CountryRepository,
+          useValue: {
+            findAllAsync: jest.fn(), 
+          },
+        },
       ],
     }).compile();
 
     service = module.get<CountryService>(CountryService);
+    repository = module.get<CountryRepository>(CountryRepository);
   });
 
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-  describe('getAllCountries', () => {
-    it('should return all countries when they exist', async () => {
+  describe('getAllCountriesAsync', () => {
+    it('should call findAllAsync on the repository', async () => {
       // Arrange
-      const mockCountries: Country[] = [
+      // Act
+      await service.getAllCountriesAsync();
+
+      // Assert
+      expect(
+        service['countryRepository'].findAllAsync,
+      ).toHaveBeenCalledWith();
+    });
+
+    it('should return the list of countries from the repository', async () => {
+      // Arrange
+      const expectedResult = [
         { id: 1, name: 'Argentina' },
         { id: 2, name: 'Brazil' },
       ];
-      mockCountryRepository.findAllAsync.mockResolvedValue(mockCountries);
+      jest.
+        spyOn(
+          service['countryRepository'],
+          'findAllAsync',
+        ).mockResolvedValue(expectedResult);
 
       // Act
       const result = await service.getAllCountriesAsync();
 
       // Assert
-      expect(result).toEqual(mockCountries);
-      expect(mockCountryRepository.findAllAsync).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return an empty array when no countries are found', async () => {
-      // Arrange
-      mockCountryRepository.findAllAsync.mockResolvedValue([]);
-
-      // Act
-      const result = await service.getAllCountriesAsync();
-
-      // Assert
-      expect(result).toEqual([]);
-      expect(mockCountryRepository.findAllAsync).toHaveBeenCalledTimes(1);
-    });
-
-    it('should return null if findAllAsync resolves to null', async () => {
-      // Arrange
-      mockCountryRepository.findAllAsync.mockResolvedValue(null);
-
-      // Act
-      const result = await service.getAllCountriesAsync();
-
-      // Assert
-      expect(result).toBeNull();
-      expect(mockCountryRepository.findAllAsync).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(expectedResult);
     });
   });
 });

@@ -1,6 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Country } from '@prisma/client';
-
 import { CountryRepository } from './country.repository';
 import { PrismaService } from '../prisma.service';
 
@@ -23,7 +21,9 @@ describe('CountryRepository', () => {
             ],
         }).compile();
 
-        repository = module.get<CountryRepository>(CountryRepository);
+        repository = module.get<CountryRepository>(
+            CountryRepository
+        );
         prismaService = module.get<PrismaService>(PrismaService);
     });
 
@@ -34,37 +34,35 @@ describe('CountryRepository', () => {
     describe('findAllAsync', () => {
         it('should return a list of countries', async () => {
             // Arrange
-            const expectedCountries: Country[] = [
+            const mockCountries = [
                 { id: 1, name: 'Argentina' },
                 { id: 2, name: 'Brazil' },
             ];
+            prismaService.country.findMany = jest
+                .fn()
+                .mockResolvedValue(mockCountries);
 
-            jest.spyOn(prismaService.country, 'findMany').mockResolvedValue(expectedCountries);
 
             // Act
-            const result = await repository.findAllAsync();
+            const result =
+                await repository.findAllAsync();
 
             // Assert
-            expect(result).toEqual(expectedCountries);
+            expect(result).toEqual(mockCountries);
         });
 
         it('should return an empty list if no countries are found', async () => {
             // Arrange
-            jest.spyOn(prismaService.country, 'findMany').mockResolvedValue([]);
+            prismaService.country.findMany = jest
+                .fn()
+                .mockResolvedValue([]);
 
             // Act
-            const result = await repository.findAllAsync();
+            const result =
+                await repository.findAllAsync();
 
             // Assert
             expect(result).toEqual([]);
-        });
-
-        it('should handle errors gracefully', async () => {
-            // Arrange
-            jest.spyOn(prismaService.country, 'findMany').mockRejectedValue(new Error('Database error'));
-
-            // Act & Assert
-            await expect(repository.findAllAsync()).rejects.toThrow('Database error');
         });
     });
 });

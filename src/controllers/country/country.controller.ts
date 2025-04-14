@@ -4,6 +4,7 @@ import { ApiOperation } from '@nestjs/swagger';
 import { GetAllCountriesQuery } from './query/get-all-countries.query';
 import { Public } from '@mp/common/decorators';
 
+
 @Controller('countries')
 export class CountryController {
   constructor(private readonly queryBus: QueryBus) { }
