@@ -28,8 +28,8 @@
       "@mp/common/constants": [
         "libs/common/src/constants"
       ],
-      "@mp/common/domain": [
-        "libs/common/src/domain"
+      "@mp/common/models": [
+        "libs/common/src/models"
       ],
       "@mp/common/services": [
         "libs/common/src/services"

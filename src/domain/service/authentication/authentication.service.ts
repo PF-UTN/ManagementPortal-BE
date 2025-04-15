@@ -1,3 +1,4 @@
+import { TokenPayload } from '@mp/common/models';
 import { EncryptionService } from '@mp/common/services';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -12,10 +13,7 @@ export class AuthenticationService {
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async signInAsync(
-    email: string,
-    password: string,
-  ): Promise<{ access_token: string }> {
+  async signInAsync(email: string, password: string): Promise<string> {
     const user = await this.userService.findByEmailAsync(email);
 
     if (!user) {
@@ -30,16 +28,14 @@ export class AuthenticationService {
       throw new UnauthorizedException();
     }
 
-    const payload = {
+    const payload = new TokenPayload({
       email: user.email,
       sub: user.id,
       permissions: user.role.rolePermissions.map(
         (rolePermission) => rolePermission.permission.name,
       ),
-    };
+    });
 
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    return await this.jwtService.signAsync(payload);
   }
 }
