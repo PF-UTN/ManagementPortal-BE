@@ -82,7 +82,7 @@ describe('AuthenticationService', () => {
     const result = await service.signInAsync('test@test.com', 'password');
 
     // Assert
-    expect(result).toEqual({ access_token: 'mockJwtToken' });
+    expect(result).toEqual('mockJwtToken');
   });
 
   it('should call compareAsync with correct arguments', async () => {

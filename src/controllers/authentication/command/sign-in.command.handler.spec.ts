@@ -1,3 +1,4 @@
+import { UserSignInResponse } from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
   userSignInDtoMock,
@@ -35,8 +36,12 @@ describe('SignInCommandHandler', () => {
   it('should call signInAsync with correct parameters', async () => {
     // Arrange
     const command = new SignInCommand(userSignInDtoMock);
-    const expectedResponse = { token: 'mocked-token' };
-    authenticationServiceMock.signInAsync.mockResolvedValue(expectedResponse);
+    const expectedResponse = new UserSignInResponse({
+      access_token: 'mocked-token',
+    });
+    authenticationServiceMock.signInAsync.mockResolvedValue(
+      expectedResponse.access_token,
+    );
 
     // Act
     await handler.execute(command);
@@ -51,8 +56,12 @@ describe('SignInCommandHandler', () => {
   it('should return a token if signInAsync is successful', async () => {
     // Arrange
     const command = new SignInCommand(userSignInDtoMock);
-    const expectedResponse = { token: 'mocked-token' };
-    authenticationServiceMock.signInAsync.mockResolvedValue(expectedResponse);
+    const expectedResponse = new UserSignInResponse({
+      access_token: 'mocked-token',
+    });
+    authenticationServiceMock.signInAsync.mockResolvedValue(
+      expectedResponse.access_token,
+    );
 
     // Act
     const result = await handler.execute(command);
