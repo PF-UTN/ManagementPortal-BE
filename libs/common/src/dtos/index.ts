@@ -11,3 +11,4 @@ export * from './registration-request/registration-request-details.dto';
 export * from './user-creation.dto';
 export * from './user-sign-in.dto';
 export * from './country.dto';
+export * from './province.dto';

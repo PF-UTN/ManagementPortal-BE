@@ -1,0 +1,6 @@
+model Province {
+    id                  Int                  @id @default(autoincrement())
+    name                String               @db.VarChar(56)
+    countryId           Int
+    country            Country               @relation(fields: [countryId], references: [id])
+}
