@@ -1,4 +1,5 @@
 import { SearchRegistrationRequestResponse } from '@mp/common/dtos';
+import { RegistrationRequestDomainServiceMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { SearchRegistrationRequestQuery } from './search-registration-request-query';
@@ -7,26 +8,22 @@ import { RegistrationRequestDomainService } from '../../../domain/service/regist
 
 describe('SearchRegistrationRequestQueryHandler', () => {
   let handler: SearchRegistrationRequestQueryHandler;
-  let service: RegistrationRequestDomainService;
+  let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;
 
   beforeEach(async () => {
+    registrationRequestServiceMock = new RegistrationRequestDomainServiceMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SearchRegistrationRequestQueryHandler,
         {
           provide: RegistrationRequestDomainService,
-          useValue: {
-            searchWithFiltersAsync: jest.fn(),
-          },
+          useValue: registrationRequestServiceMock,
         },
       ],
     }).compile();
 
     handler = module.get<SearchRegistrationRequestQueryHandler>(
       SearchRegistrationRequestQueryHandler,
-    );
-    service = module.get<RegistrationRequestDomainService>(
-      RegistrationRequestDomainService,
     );
   });
 
@@ -43,13 +40,17 @@ describe('SearchRegistrationRequestQueryHandler', () => {
       filters: { status: ['Pending'] },
     });
 
-    jest.spyOn(service, 'searchWithFiltersAsync').mockResolvedValue([]);
+    jest
+      .spyOn(registrationRequestServiceMock, 'searchWithFiltersAsync')
+      .mockResolvedValue([]);
 
     // Act
     await handler.execute(query);
 
     // Assert
-    expect(service.searchWithFiltersAsync).toHaveBeenCalledWith(query);
+    expect(
+      registrationRequestServiceMock.searchWithFiltersAsync,
+    ).toHaveBeenCalledWith(query);
   });
 
   it('should map the response correctly', async () => {
@@ -100,7 +101,9 @@ describe('SearchRegistrationRequestQueryHandler', () => {
       })),
     });
 
-    jest.spyOn(service, 'searchWithFiltersAsync').mockResolvedValue(result);
+    jest
+      .spyOn(registrationRequestServiceMock, 'searchWithFiltersAsync')
+      .mockResolvedValue(result);
 
     // Act
     const response = await handler.execute(query);

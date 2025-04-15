@@ -1,3 +1,4 @@
+import { PrismaServiceMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
 
 import { RegistrationRequestStatusRepository } from './registration-request-status.repository';
@@ -5,18 +6,17 @@ import { PrismaService } from '../prisma.service';
 
 describe('RegistrationRequestStatusService', () => {
   let service: RegistrationRequestStatusRepository;
+  let prismaServiceMock: PrismaServiceMock;
 
   beforeEach(async () => {
+    prismaServiceMock = new PrismaServiceMock();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestStatusRepository,
         {
           provide: PrismaService,
-          useValue: {
-            registrationRequestStatus: {
-              findUnique: jest.fn(),
-            },
-          },
+          useValue: prismaServiceMock,
         },
       ],
     }).compile();
