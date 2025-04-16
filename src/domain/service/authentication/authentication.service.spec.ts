@@ -1,9 +1,10 @@
-import { EncryptionService } from '@mp/common/services';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Permission, Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
+
+import { EncryptionService } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
 import { UserService } from '../user/user.service';

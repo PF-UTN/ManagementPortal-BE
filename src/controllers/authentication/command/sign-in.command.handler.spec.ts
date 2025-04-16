@@ -1,9 +1,10 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { UserSignInResponse } from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
   userSignInDtoMock,
 } from '@mp/common/testing';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { SignInCommand } from './sign-in.command';
 import { SignInCommandHandler } from './sign-in.command.handler';

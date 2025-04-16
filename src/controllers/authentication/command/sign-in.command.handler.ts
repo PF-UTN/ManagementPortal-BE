@@ -1,5 +1,6 @@
-import { UserSignInResponse } from '@mp/common/dtos';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+
+import { UserSignInResponse } from '@mp/common/dtos';
 
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
 import { SignInCommand } from '../command/sign-in.command';

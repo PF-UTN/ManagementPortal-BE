@@ -1,3 +1,7 @@
+import { ConfigModule } from '@nestjs/config';
+import { CommandBus } from '@nestjs/cqrs';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
@@ -8,9 +12,6 @@ import {
   UserServiceMock,
   userSignInDtoMock,
 } from '@mp/common/testing';
-import { ConfigModule } from '@nestjs/config';
-import { CommandBus } from '@nestjs/cqrs';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { AuthenticationController } from './authentication.controller';
 import { SignInCommand } from './command/sign-in.command';

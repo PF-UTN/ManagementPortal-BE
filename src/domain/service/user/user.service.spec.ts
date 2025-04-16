@@ -1,3 +1,6 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+
 import { RoleIds } from '@mp/common/constants';
 import { EncryptionService } from '@mp/common/services';
 import {
@@ -7,8 +10,6 @@ import {
   EncryptionServiceMock,
 } from '@mp/common/testing';
 import { UserRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, User } from '@prisma/client';
 
 import { UserService } from '../user/user.service';
 
@@ -96,7 +97,9 @@ describe('UserService', () => {
       await service.findByIdAsync(userMock.id);
 
       // Assert
-      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(userMock.id);
+      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(
+        userMock.id,
+      );
     });
   });
 });

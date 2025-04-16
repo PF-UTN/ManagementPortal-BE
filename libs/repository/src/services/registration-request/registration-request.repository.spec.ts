@@ -1,6 +1,7 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { PrismaServiceMock } from '@mp/common/testing';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { PrismaService } from '../prisma.service';
 import { RegistrationRequestRepository } from './registration-request.repository';
