@@ -3,6 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
 import { ResetPasswordRequestQuery } from './reset-password-request.query';
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
+import { ConfigService } from '@nestjs/config';
 
 @QueryHandler(ResetPasswordRequestQuery)
 export class ResetPasswordRequestQueryHandler
@@ -11,6 +12,7 @@ export class ResetPasswordRequestQueryHandler
   constructor(
     private readonly authenticationService: AuthenticationService,
     private readonly mailingService: MailingService,
+    private readonly configService: ConfigService
   ) {}
 
   async execute(query: ResetPasswordRequestQuery) {
@@ -22,7 +24,7 @@ export class ResetPasswordRequestQueryHandler
       return;
     }
 
-    const frontendBaseUrl = process.env.FRONTEND_BASE_URL ?? 'http://localhost:4200';
+    const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
     const url = frontendBaseUrl + '/reset-password/' + token;
 
     await this.mailingService.sendPasswordResetEmailAsync(
