@@ -13,10 +13,6 @@ export class ResetPasswordCommandHandler
     async execute(command: ResetPasswordCommand) {
         const { token, resetPasswordDto } = command;
 
-        if(resetPasswordDto.password !== resetPasswordDto.confirmPassword) {
-          throw new BadRequestException('Passwords do not match');
-        }
-
         await this.service.resetPasswordAsync(token, resetPasswordDto.password);
     }
 }
