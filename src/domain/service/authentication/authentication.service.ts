@@ -29,13 +29,13 @@ export class AuthenticationService {
       throw new UnauthorizedException();
     }
 
-    const payload = new TokenPayload({
+    const payload = {
       email: user.email,
       sub: user.id,
       permissions: user.role.rolePermissions.map(
         (rolePermission) => rolePermission.permission.name,
       ),
-    });
+    } as TokenPayload;
 
     return await this.jwtService.signAsync(payload);
   }
