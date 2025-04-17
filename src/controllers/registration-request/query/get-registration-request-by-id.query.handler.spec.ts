@@ -1,6 +1,7 @@
-import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { RegistrationRequestDetailsDto } from '@mp/common/dtos';
 
 import { GetRegistrationRequestByIdQuery } from './get-registration-request-by-id.query';
 import { GetRegistrationRequestByIdQueryHandler } from './get-registration-request-by-id.query.handler';

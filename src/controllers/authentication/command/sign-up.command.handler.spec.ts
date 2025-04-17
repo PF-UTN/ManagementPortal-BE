@@ -1,10 +1,11 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { RegistrationRequestStatusId } from '@mp/common/constants';
 import {
   RegistrationRequestDomainServiceMock,
   userCreationDtoMock,
   UserServiceMock,
 } from '@mp/common/testing';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { SignUpCommand } from './sign-up.command';
 import { SignUpCommandHandler } from './sign-up.command.handler';

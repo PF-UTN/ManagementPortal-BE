@@ -1,8 +1,13 @@
-import { Public } from '@mp/common/decorators';
-import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
 import { Body, Controller, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBody } from '@nestjs/swagger';
+
+import { Public } from '@mp/common/decorators';
+import {
+  UserCreationDto,
+  UserSignInDto,
+  UserSignInResponse,
+} from '@mp/common/dtos';
 
 import { SignInCommand } from './command/sign-in.command';
 import { SignUpCommand } from './command/sign-up.command';
@@ -28,7 +33,7 @@ export class AuthenticationController {
   @ApiBody({ type: UserSignInDto })
   async signInAsync(
     @Body() userSignInDto: UserSignInDto,
-  ): Promise<{ access_token: string }> {
+  ): Promise<UserSignInResponse> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }
 }

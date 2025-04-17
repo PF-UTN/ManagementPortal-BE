@@ -1,37 +1,73 @@
-import { EncryptionService } from '@mp/common/services';
-import {
-  EncryptionServiceMock,
-  JwtServiceMock,
-  UserServiceMock,
-} from '@mp/common/testing';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Permission, Prisma } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
+
+import { EncryptionService } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
 import { UserService } from '../user/user.service';
 
 describe('AuthenticationService', () => {
   let service: AuthenticationService;
-  let userServiceMock: UserServiceMock;
-  let jwtServiceMock: JwtServiceMock;
-  let encryptionServiceMock: EncryptionServiceMock;
+  let userService: jest.Mocked<UserService>;
+  let jwtService: JwtService;
+  let encryptionService: EncryptionService;
+  let user: ReturnType<
+    typeof mockDeep<
+      Prisma.UserGetPayload<{
+        include: {
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true;
+                };
+              };
+            };
+          };
+        };
+      }>
+    >
+  >;
 
   beforeEach(async () => {
-    userServiceMock = new UserServiceMock();
-    jwtServiceMock = new JwtServiceMock();
-    encryptionServiceMock = new EncryptionServiceMock();
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthenticationService,
-        { provide: UserService, useValue: userServiceMock },
-        { provide: JwtService, useValue: jwtServiceMock },
-        { provide: EncryptionService, useValue: encryptionServiceMock },
+        { provide: UserService, useValue: mockDeep(UserService) },
+        { provide: JwtService, useValue: mockDeep(JwtService) },
+        { provide: EncryptionService, useValue: mockDeep(EncryptionService) },
       ],
     }).compile();
 
+    userService = module.get(UserService);
+    jwtService = module.get<JwtService>(JwtService);
+    encryptionService = module.get<EncryptionService>(EncryptionService);
+
     service = module.get<AuthenticationService>(AuthenticationService);
+
+    user = mockDeep<
+      Prisma.UserGetPayload<{
+        include: {
+          role: {
+            include: {
+              rolePermissions: {
+                include: {
+                  permission: true;
+                };
+              };
+            };
+          };
+        };
+      }>
+    >();
+
+    user.email = 'test@test.com';
+    user.password = 'hashedPassword';
+    user.id = 1;
+    user.role.rolePermissions = [];
   });
 
   it('should be defined', () => {
@@ -41,7 +77,7 @@ describe('AuthenticationService', () => {
   describe('signInAsync', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       // Arrange
-      userServiceMock.findByEmailAsync.mockResolvedValueOnce(null);
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(null);
 
       // Act
       const action = service.signInAsync('test@test.com', 'password');
@@ -52,8 +88,8 @@ describe('AuthenticationService', () => {
 
     it('should throw UnauthorizedException if password is incorrect', async () => {
       // Arrange
-      const mockUser = { email: 'test@test.com', password: 'wrongPassword' };
-      userServiceMock.findByEmailAsync.mockResolvedValueOnce(mockUser);
+      user.password = 'wrongPassword';
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
 
       // Act
       const action = service.signInAsync('test@test.com', 'password');
@@ -61,84 +97,75 @@ describe('AuthenticationService', () => {
       // Assert
       await expect(action).rejects.toThrow(UnauthorizedException);
     });
-  });
 
-  it('should return a JWT token if credentials are correct', async () => {
-    // Arrange
-    const mockUser = {
-      email: 'test@test.com',
-      password: 'hashedPassword',
-      id: 1,
-      role: {
-        rolePermissions: [],
-      },
-    };
+    it('should return a JWT token if credentials are correct', async () => {
+      // Arrange
+      user.password = 'hashedPassword';
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
+      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('mockJwtToken');
+      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(true);
 
-    userServiceMock.findByEmailAsync.mockResolvedValueOnce(mockUser);
-    jwtServiceMock.signAsync.mockResolvedValueOnce('mockJwtToken');
-    encryptionServiceMock.compareAsync.mockResolvedValueOnce(true);
+      // Act
+      const result = await service.signInAsync('test@test.com', 'password');
 
-    // Act
-    const result = await service.signInAsync('test@test.com', 'password');
+      // Assert
+      expect(result).toEqual('mockJwtToken');
+    });
 
-    // Assert
-    expect(result).toEqual({ access_token: 'mockJwtToken' });
-  });
+    it('should call compareAsync with correct arguments', async () => {
+      // Arrange
+      user.password = 'hashedPassword';
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
 
-  it('should call compareAsync with correct arguments', async () => {
-    // Arrange
-    const mockUser = {
-      email: 'test@test.com',
-      password: 'hashedPassword',
-      id: 1,
-      role: {
-        rolePermissions: [],
-      },
-    };
+      const compareAsyncSpy = jest
+        .spyOn(encryptionService, 'compareAsync')
+        .mockResolvedValueOnce(true);
 
-    userServiceMock.findByEmailAsync.mockResolvedValueOnce(mockUser);
-    encryptionServiceMock.compareAsync.mockResolvedValueOnce(true);
+      // Act
+      await service.signInAsync('test@test.com', 'password');
 
-    // Act
-    await service.signInAsync('test@test.com', 'password');
+      // Assert
+      expect(compareAsyncSpy).toHaveBeenCalledWith(
+        'password',
+        'hashedPassword',
+      );
+    });
 
-    // Assert
-    expect(encryptionServiceMock.compareAsync).toHaveBeenCalledWith(
-      'password',
-      'hashedPassword',
-    );
-  });
+    it('should call signAsync with correct payload', async () => {
+      // Arrange
+      const mockRolePermission1 = mockDeep<
+        Prisma.RolePermissionGetPayload<{ include: { permission: true } }>
+      >({
+        permission: mockDeep<Permission>({ name: 'permission1' }),
+      });
 
-  it('should call signAsync with correct payload', async () => {
-    // Arrange
-    const mockUser = {
-      email: 'test@test.com',
-      password: 'hashedPassword',
-      id: 1,
-      role: {
-        rolePermissions: [
-          { permission: { name: 'permission1' } },
-          { permission: { name: 'permission2' } },
-        ],
-      },
-    };
+      const mockRolePermission2 = mockDeep<
+        Prisma.RolePermissionGetPayload<{ include: { permission: true } }>
+      >({
+        permission: mockDeep<Permission>({ name: 'permission2' }),
+      });
 
-    userServiceMock.findByEmailAsync.mockResolvedValueOnce(mockUser);
-    jwtServiceMock.signAsync.mockResolvedValueOnce('mockJwtToken');
-    encryptionServiceMock.compareAsync.mockResolvedValueOnce(true);
+      user.role.rolePermissions = [mockRolePermission1, mockRolePermission2];
 
-    const expectedPermissions = mockUser.role.rolePermissions.map(
-      (rolePermission) => rolePermission.permission.name,
-    );
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
+      const signInSpy = jest
+        .spyOn(jwtService, 'signAsync')
+        .mockResolvedValueOnce('mockJwtToken');
+      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(true);
 
-    // Act
-    await service.signInAsync('test@test.com', 'password');
+      const expectedPermissions = user.role.rolePermissions.map(
+        (rolePermission) => rolePermission.permission.name,
+      );
 
-    // Assert
-    expect(jwtServiceMock.signAsync).toHaveBeenCalledWith({
-      email: 'test@test.com',
-      sub: 1,
-      permissions: expectedPermissions,
+      // Act
+      await service.signInAsync('test@test.com', 'password');
+
+      // Assert
+      expect(signInSpy).toHaveBeenCalledWith({
+        email: 'test@test.com',
+        sub: 1,
+        permissions: expectedPermissions,
+      });
     });
   });
 });
