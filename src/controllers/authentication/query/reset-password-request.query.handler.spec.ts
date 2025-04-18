@@ -9,11 +9,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ResetPasswordRequestQuery } from './reset-password-request.query';
 import { ResetPasswordRequestQueryHandler } from './reset-password-request.query.handler';
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
+import { ConfigService } from '@nestjs/config';
+import { mockDeep } from 'jest-mock-extended';
 
 describe('ResetPasswordRequestQueryHandler', () => {
   let handler: ResetPasswordRequestQueryHandler;
   let authenticationServiceMock: AuthenticationServiceMock;
   let mailingServiceMock: MailingServiceMock;
+  let configService: ConfigService;
 
   beforeEach(async () => {
     authenticationServiceMock = new AuthenticationServiceMock();
@@ -30,8 +33,14 @@ describe('ResetPasswordRequestQueryHandler', () => {
           provide: MailingService,
           useValue: mailingServiceMock,
         },
+        {
+          provide: ConfigService,
+          useValue: mockDeep(ConfigService)
+        }
       ],
     }).compile();
+
+    configService = module.get<ConfigService>(ConfigService);
 
     handler = module.get<ResetPasswordRequestQueryHandler>(
       ResetPasswordRequestQueryHandler,
@@ -67,7 +76,7 @@ describe('ResetPasswordRequestQueryHandler', () => {
       };
       const token = 'mocked-token';
       authenticationServiceMock.requestPasswordResetAsync.mockResolvedValue(token);
-      const frontendBaseUrl = process.env.FRONTEND_BASE_URL ?? 'http://localhost:4200';
+      const frontendBaseUrl = configService.get<string>('FRONTEND_BASE_URL');
       const url = `${frontendBaseUrl}/reset-password/${token}`;
 
       const query = new ResetPasswordRequestQuery(resetPasswordRequestDto);

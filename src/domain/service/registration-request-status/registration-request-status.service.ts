@@ -1,5 +1,6 @@
-import { RegistrationRequestStatusRepository } from '@mp/repository';
 import { Injectable } from '@nestjs/common';
+
+import { RegistrationRequestStatusRepository } from '@mp/repository';
 
 @Injectable()
 export class RegistrationRequestStatusService {

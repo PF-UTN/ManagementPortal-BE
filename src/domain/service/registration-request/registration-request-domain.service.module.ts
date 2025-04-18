@@ -1,5 +1,6 @@
-import { RepositoryModule } from '@mp/repository';
 import { Module } from '@nestjs/common';
+
+import { RepositoryModule } from '@mp/repository';
 
 import { RegistrationRequestDomainService } from './registration-request-domain.service';
 

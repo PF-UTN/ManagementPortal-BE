@@ -1,13 +1,15 @@
+import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
+
 import { Public } from '@mp/common/decorators';
 import {
   UserCreationDto,
   UserSignInDto,
+  UserSignInResponse,
   ResetPasswordRequestDto,
   ResetPasswordDto,
 } from '@mp/common/dtos';
-import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 
 import { ResetPasswordCommand } from './command/reset-password.command';
 import { SignInCommand } from './command/sign-in.command';
@@ -38,7 +40,7 @@ export class AuthenticationController {
   @ApiBody({ type: UserSignInDto })
   async signInAsync(
     @Body() userSignInDto: UserSignInDto,
-  ): Promise<{ access_token: string }> {
+  ): Promise<UserSignInResponse> {
     return this.commandBus.execute(new SignInCommand(userSignInDto));
   }
 

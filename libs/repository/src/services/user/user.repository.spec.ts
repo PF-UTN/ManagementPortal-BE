@@ -1,5 +1,6 @@
-import { PrismaServiceMock, userMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { PrismaServiceMock, userMock } from '@mp/common/testing';
 
 import { UserRepository } from './user.repository';
 import { PrismaService } from '../prisma.service';

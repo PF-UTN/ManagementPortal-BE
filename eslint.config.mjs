@@ -16,18 +16,18 @@ export default [
         'error',
         {
           groups: [
+            ['unknown', 'external', 'builtin'],
             ['internal'],
-            ['external'],
-            ['parent', 'sibling', 'index'],
+            ['parent', 'sibling', 'index'], 
           ],
           pathGroups: [
             {
-              pattern: '@**',
+              pattern: '@mp/**',
               group: 'internal',
-              position: 'before',
+              position: 'after',
             },
           ],
-          pathGroupsExcludedImportTypes: ['builtin'],
+          pathGroupsExcludedImportTypes: [],
           'newlines-between': 'always',
           alphabetize: {
             order: 'asc',

@@ -1,8 +1,8 @@
-import {
-  ResetPasswordRequestDto,
-  UserCreationDto,
-  UserSignInDto,
-} from '@mp/common/dtos';
+import { ConfigModule } from '@nestjs/config';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { UserCreationDto, UserSignInDto, ResetPasswordRequestDto } from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
@@ -14,9 +14,6 @@ import {
   UserServiceMock,
   userSignInDtoMock,
 } from '@mp/common/testing';
-import { ConfigModule } from '@nestjs/config';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { AuthenticationController } from './authentication.controller';
 import { ResetPasswordCommand } from './command/reset-password.command';
