@@ -1,4 +1,3 @@
-import { BadRequestException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
 import { ResetPasswordCommand } from './reset-password.command';
