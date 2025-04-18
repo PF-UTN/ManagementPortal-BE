@@ -102,4 +102,25 @@ describe('UserService', () => {
       );
     });
   });
+
+  describe('updateUserByIdAsync', () => {
+    it('should call updateUserByIdAsync with user id and update data', async () => {
+      // Arrange
+      const userId = 1;
+      const userUpdateDto = {
+        ...userMock,
+        roleId: 1,
+      } as Prisma.UserUpdateInput;
+      userRepositoryMock.updateUserByIdAsync.mockResolvedValue(userUpdateDto);
+
+      // Act
+      await service.updateUserByIdAsync(userId, userUpdateDto);
+
+      // Assert
+      expect(userRepositoryMock.updateUserByIdAsync).toHaveBeenCalledWith(
+        userId,
+        userUpdateDto,
+      );
+    });
+  });
 });

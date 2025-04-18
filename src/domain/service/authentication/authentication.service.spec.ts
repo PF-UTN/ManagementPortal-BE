@@ -1,4 +1,5 @@
 import { UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Permission, Prisma } from '@prisma/client';
@@ -39,6 +40,7 @@ describe('AuthenticationService', () => {
         { provide: UserService, useValue: mockDeep(UserService) },
         { provide: JwtService, useValue: mockDeep(JwtService) },
         { provide: EncryptionService, useValue: mockDeep(EncryptionService) },
+        { provide: ConfigService, useValue: mockDeep(ConfigService) },
       ],
     }).compile();
 
@@ -166,6 +168,79 @@ describe('AuthenticationService', () => {
         sub: 1,
         permissions: expectedPermissions,
       });
+    });
+  });
+
+  describe('requestPasswordResetAsync', () => {
+    it('should return a JWT token when user is found', async () => {
+      // Arrange
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
+      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('mockJwtToken');
+
+      // Act
+      const result = await service.requestPasswordResetAsync(user.email);
+
+      // Assert
+      expect(result).toBe('mockJwtToken');
+    });
+
+    it('should return undefined when user is not found', async () => {
+      // Arrange
+      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(null);
+
+      // Act
+      const result = await service.requestPasswordResetAsync(
+        'nonexistent@test.com',
+      );
+
+      // Assert
+      expect(result).toBeUndefined();
+    });
+  });
+
+  describe('resetPasswordAsync', () => {
+    it('should update the user if token and user are valid', async () => {
+      // Arrange
+      const token = 'mockJwtToken';
+      const password = 'mockPassword';
+      const payload = { sub: user.id, email: user.email };
+
+      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
+      jest.spyOn(userService, 'findByIdAsync').mockResolvedValueOnce(user);
+      jest.spyOn(encryptionService, 'hashAsync').mockResolvedValueOnce('hashedPassword');
+      const updateUserByIdAsyncSpy = jest
+        .spyOn(userService, 'updateUserByIdAsync')
+        .mockResolvedValueOnce(user);
+
+      // Act
+      await service.resetPasswordAsync(token, password);
+
+      // Assert
+      expect(updateUserByIdAsyncSpy).toHaveBeenCalledWith(user.id, {
+        ...user,
+        password: 'hashedPassword',
+      });
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      // Arrange
+      jest.spyOn(jwtService, 'verifyAsync').mockRejectedValueOnce(new UnauthorizedException());
+      
+      // Act & Assert
+      await expect(
+        service.resetPasswordAsync('invalid-token', 'pass'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if user is not found', async () => {
+      // Arrange
+      jest.spyOn(jwtService, 'verifyAsync').mockResolvedValue({ sub: 99 });
+      jest.spyOn(userService, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.resetPasswordAsync('valid-token', 'pass'),
+      ).rejects.toThrow(UnauthorizedException);
     });
   });
 });

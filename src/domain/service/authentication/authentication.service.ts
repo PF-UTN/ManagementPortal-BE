@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
 import { TokenPayload } from '@mp/common/models';
@@ -12,6 +13,7 @@ export class AuthenticationService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly encryptionService: EncryptionService,
+    private readonly configService: ConfigService,
   ) {}
 
   async signInAsync(email: string, password: string): Promise<string> {
@@ -38,5 +40,42 @@ export class AuthenticationService {
     } as TokenPayload;
 
     return await this.jwtService.signAsync(payload);
+  }
+
+  async requestPasswordResetAsync(email: string) {
+    const user = await this.userService.findByEmailAsync(email);
+
+    if (!user) {
+      return;
+    }
+
+    const payload = {
+      email: user.email,
+      sub: user.id,
+    };
+
+    return await this.jwtService.signAsync(payload, {
+      expiresIn: this.configService.get<string>('JWT_RESET_PASSWORD_EXPIRATION'),
+    });
+  }
+
+  async resetPasswordAsync(token: string, password: string) {
+    const payload = await this.jwtService.verifyAsync(token);
+
+    if (!payload) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
+
+    const user = await this.userService.findByIdAsync(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const hashedPassword = await this.encryptionService.hashAsync(password);
+    await this.userService.updateUserByIdAsync(user.id, {
+      ...user,
+      password: hashedPassword,
+    });
   }
 }

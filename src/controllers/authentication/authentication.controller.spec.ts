@@ -1,21 +1,25 @@
 import { ConfigModule } from '@nestjs/config';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
-import { UserCreationDto, UserSignInDto } from '@mp/common/dtos';
+import { UserCreationDto, UserSignInDto, ResetPasswordRequestDto } from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
+  QueryBusMock,
   RegistrationRequestDomainServiceMock,
   RegistrationRequestStatusServiceMock,
+  resetPasswordRequestDtoMock,
   userCreationDtoMock,
   UserServiceMock,
   userSignInDtoMock,
 } from '@mp/common/testing';
 
 import { AuthenticationController } from './authentication.controller';
+import { ResetPasswordCommand } from './command/reset-password.command';
 import { SignInCommand } from './command/sign-in.command';
 import { SignUpCommand } from './command/sign-up.command';
+import { ResetPasswordRequestQuery } from './query/reset-password-request.query';
 import { AuthenticationService } from '../../domain/service/authentication/authentication.service';
 import { AuthenticationServiceModule } from '../../domain/service/authentication/authentication.service.module';
 import { RegistrationRequestDomainService } from '../../domain/service/registration-request/registration-request-domain.service';
@@ -32,6 +36,7 @@ describe('AuthenticationController', () => {
   let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;
   let registrationRequestStatusServiceMock: RegistrationRequestStatusServiceMock;
   let commandBusMock: CommandBusMock;
+  let queryBusMock: QueryBusMock;
 
   beforeEach(async () => {
     authenticationServiceMock = new AuthenticationServiceMock();
@@ -40,6 +45,7 @@ describe('AuthenticationController', () => {
     registrationRequestStatusServiceMock =
       new RegistrationRequestStatusServiceMock();
     commandBusMock = new CommandBusMock();
+    queryBusMock = new QueryBusMock();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -57,6 +63,10 @@ describe('AuthenticationController', () => {
         {
           provide: CommandBus,
           useValue: commandBusMock,
+        },
+        {
+          provide: QueryBus,
+          useValue: queryBusMock,
         },
         {
           provide: AuthenticationService,
@@ -95,8 +105,6 @@ describe('AuthenticationController', () => {
 
       // Act
       await controller.signUpAsync(userCreationDto);
-      // Act
-      await controller.signUpAsync(userCreationDto);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
@@ -114,8 +122,42 @@ describe('AuthenticationController', () => {
 
       // Act
       await controller.signInAsync(userSignInDto);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('requestPasswordRecoveryAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const resetPasswordRequestDto: ResetPasswordRequestDto = {
+        ...resetPasswordRequestDtoMock,
+      };
+      const expectedCommand = new ResetPasswordRequestQuery(
+        resetPasswordRequestDto,
+      );
+
       // Act
-      await controller.signInAsync(userSignInDto);
+      await controller.requestPasswordRecoveryAsync(resetPasswordRequestDto);
+
+      // Assert
+      expect(queryBusMock.execute).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('resetPasswordAsync', () => {
+    it('should call commandBus.execute with ResetPasswordCommand when resetPasswordAsync is called', async () => {
+      // Arrange
+      const token = 'mockToken';
+      const resetPasswordDto = { password: 'newPassword', confirmPassword: 'newPassword' };
+      const executeSpy = jest
+        .spyOn(commandBusMock, 'execute')
+        .mockResolvedValueOnce(undefined);
+      const expectedCommand = new ResetPasswordCommand(token, resetPasswordDto);
+
+      // Act
+      await controller.resetPasswordAsync(token, resetPasswordDto);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
