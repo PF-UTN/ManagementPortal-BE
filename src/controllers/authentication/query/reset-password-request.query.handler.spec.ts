@@ -1,16 +1,17 @@
+import { ConfigService } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
+
 import { MailingService } from '@mp/common/services';
 import {
   AuthenticationServiceMock,
   MailingServiceMock,
   resetPasswordRequestDtoMock,
 } from '@mp/common/testing';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { ResetPasswordRequestQuery } from './reset-password-request.query';
 import { ResetPasswordRequestQueryHandler } from './reset-password-request.query.handler';
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
-import { ConfigService } from '@nestjs/config';
-import { mockDeep } from 'jest-mock-extended';
 
 describe('ResetPasswordRequestQueryHandler', () => {
   let handler: ResetPasswordRequestQueryHandler;

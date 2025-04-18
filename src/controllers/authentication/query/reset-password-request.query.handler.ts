@@ -1,9 +1,10 @@
-import { MailingService } from '@mp/common/services';
+import { ConfigService } from '@nestjs/config';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
+
+import { MailingService } from '@mp/common/services';
 
 import { ResetPasswordRequestQuery } from './reset-password-request.query';
 import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
-import { ConfigService } from '@nestjs/config';
 
 @QueryHandler(ResetPasswordRequestQuery)
 export class ResetPasswordRequestQueryHandler

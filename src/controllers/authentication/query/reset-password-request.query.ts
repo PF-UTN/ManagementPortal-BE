@@ -1,5 +1,6 @@
-import { ResetPasswordRequestDto } from '@mp/common/dtos';
 import { Query } from '@nestjs/cqrs';
+
+import { ResetPasswordRequestDto } from '@mp/common/dtos';
 
 export class ResetPasswordRequestQuery extends Query<void> {
   constructor(

@@ -1,5 +1,6 @@
-import { AuthenticationServiceMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { AuthenticationServiceMock } from '@mp/common/testing';
 
 import { ResetPasswordCommand } from './reset-password.command';
 import { ResetPasswordCommandHandler } from './reset-password.command.handler';

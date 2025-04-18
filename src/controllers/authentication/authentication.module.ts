@@ -1,5 +1,6 @@
-import { MailingServiceModule } from '@mp/common/services';
 import { Module } from '@nestjs/common';
+
+import { MailingServiceModule } from '@mp/common/services';
 
 import { AuthenticationController } from './authentication.controller';
 import { ResetPasswordCommandHandler } from './command/reset-password.command.handler';
