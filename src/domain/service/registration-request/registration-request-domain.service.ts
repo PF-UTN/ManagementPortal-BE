@@ -1,9 +1,10 @@
+import { Injectable } from '@nestjs/common';
+
 import {
   RegistrationRequestCreationDto,
   UpdateRegistrationRequestStatusDto,
 } from '@mp/common/dtos';
 import { RegistrationRequestRepository } from '@mp/repository';
-import { Injectable } from '@nestjs/common';
 
 import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
 

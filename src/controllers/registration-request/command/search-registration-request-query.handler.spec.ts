@@ -1,6 +1,7 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { SearchRegistrationRequestResponse } from '@mp/common/dtos';
 import { RegistrationRequestDomainServiceMock } from '@mp/common/testing';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { SearchRegistrationRequestQuery } from './search-registration-request-query';
 import { SearchRegistrationRequestQueryHandler } from './search-registration-request-query.handler';

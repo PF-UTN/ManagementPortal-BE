@@ -1,10 +1,8 @@
-import {
-  EncryptionServiceModule,
-  MailingServiceModule,
-} from '@mp/common/services';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+
+import { EncryptionServiceModule, MailingServiceModule } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
 import { UserServiceModule } from '../user/user.service.module';

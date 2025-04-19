@@ -1,3 +1,6 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+
 import { RoleIds } from '@mp/common/constants';
 import { EncryptionService } from '@mp/common/services';
 import {
@@ -7,8 +10,6 @@ import {
   EncryptionServiceMock,
 } from '@mp/common/testing';
 import { UserRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, User } from '@prisma/client';
 
 import { UserService } from '../user/user.service';
 
@@ -97,6 +98,7 @@ describe('UserService', () => {
 
       // Assert
       expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(
+        
         userMock.id,
       );
     });
@@ -149,7 +151,29 @@ describe('UserService', () => {
       // Assert
       expect(
         userRepositoryMock.resetFailedLoginAttemptsAndLockedUntilAsync,
-      ).toHaveBeenCalledWith(userMock.id);
+      ).toHaveBeenCalledWith(userMock.id,
+      );
+    });
+  });
+
+  describe('updateUserByIdAsync', () => {
+    it('should call updateUserByIdAsync with user id and update data', async () => {
+      // Arrange
+      const userId = 1;
+      const userUpdateDto = {
+        ...userMock,
+        roleId: 1,
+      } as Prisma.UserUpdateInput;
+      userRepositoryMock.updateUserByIdAsync.mockResolvedValue(userUpdateDto);
+
+      // Act
+      await service.updateUserByIdAsync(userId, userUpdateDto);
+
+      // Assert
+      expect(userRepositoryMock.updateUserByIdAsync).toHaveBeenCalledWith(
+        userId,
+        userUpdateDto,
+      );
     });
   });
 });

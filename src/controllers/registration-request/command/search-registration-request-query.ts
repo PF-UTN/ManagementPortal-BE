@@ -1,9 +1,10 @@
+import { Query } from '@nestjs/cqrs';
+
 import {
   SearchRegistrationRequestFiltersDto,
   SearchRegistrationRequestRequest,
   SearchRegistrationRequestResponse,
 } from '@mp/common/dtos';
-import { Query } from '@nestjs/cqrs';
 
 export class SearchRegistrationRequestQuery extends Query<SearchRegistrationRequestResponse> {
   searchText: string;

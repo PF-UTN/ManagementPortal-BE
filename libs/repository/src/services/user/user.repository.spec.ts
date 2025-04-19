@@ -1,5 +1,6 @@
-import { PrismaServiceMock, userMock } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { PrismaServiceMock, userMock } from '@mp/common/testing';
 
 import { UserRepository } from './user.repository';
 import { PrismaService } from '../prisma.service';
@@ -89,6 +90,22 @@ describe('UserRepository', () => {
 
       // Assert
       expect(result).toBeNull();
+    });
+  });
+
+  describe('updateUserByIdAsync', () => {
+    it('should update a user by ID', async () => {
+      // Arrange
+      const updatedUser = { ...userMock, firstName: 'Updated Name' };
+      prismaServiceMock.user.update.mockResolvedValue(updatedUser);
+
+      // Act
+      const result = await repository.updateUserByIdAsync(userMock.id, {
+        firstName: 'Updated Name',
+      });
+
+      // Assert
+      expect(result).toEqual(updatedUser);
     });
   });
 

@@ -1,3 +1,6 @@
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { RegistrationRequestStatus } from '@mp/common/constants';
 import { MailingService } from '@mp/common/services';
 import {
@@ -6,8 +9,6 @@ import {
   RegistrationRequestStatusServiceMock,
   UserServiceMock,
 } from '@mp/common/testing';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
 import { RejectRegistrationRequestCommandHandler } from './reject-registration-request.command.handler';

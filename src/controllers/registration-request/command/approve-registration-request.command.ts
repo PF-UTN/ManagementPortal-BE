@@ -1,5 +1,6 @@
-import { ApproveRegistrationRequestDto } from '@mp/common/dtos';
 import { Command } from '@nestjs/cqrs';
+
+import { ApproveRegistrationRequestDto } from '@mp/common/dtos';
 
 export class ApproveRegistrationRequestCommand extends Command<void> {
   constructor(

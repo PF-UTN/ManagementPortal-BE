@@ -1,10 +1,3 @@
-import { PermissionCodes } from '@mp/common/constants';
-import { RequiredPermissions } from '@mp/common/decorators';
-import {
-  ApproveRegistrationRequestDto,
-  RejectRegistrationRequestDto,
-  SearchRegistrationRequestRequest,
-} from '@mp/common/dtos';
 import {
   Controller,
   Post,
@@ -21,6 +14,14 @@ import {
   ApiOperation,
   ApiParam,
 } from '@nestjs/swagger';
+
+import { PermissionCodes } from '@mp/common/constants';
+import { RequiredPermissions } from '@mp/common/decorators';
+import {
+  ApproveRegistrationRequestDto,
+  RejectRegistrationRequestDto,
+  SearchRegistrationRequestRequest,
+} from '@mp/common/dtos';
 
 import { ApproveRegistrationRequestCommand } from './command/approve-registration-request.command';
 import { RejectRegistrationRequestCommand } from './command/reject-registration-request.command';

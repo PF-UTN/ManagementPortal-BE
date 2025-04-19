@@ -1,7 +1,8 @@
-import { RegistrationRequestStatusId } from '@mp/common/constants';
-import { MailingService } from '@mp/common/services';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+
+import { RegistrationRequestStatusId } from '@mp/common/constants';
+import { MailingService } from '@mp/common/services';
 
 import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
