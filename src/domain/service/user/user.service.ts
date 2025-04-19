@@ -1,9 +1,10 @@
+import { Injectable } from '@nestjs/common';
+import { Prisma, User } from '@prisma/client';
+
 import { RoleIds } from '@mp/common/constants';
 import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import { UserRepository } from '@mp/repository';
-import { Injectable } from '@nestjs/common';
-import { Prisma, User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -37,5 +38,22 @@ export class UserService {
 
   async findByIdAsync(id: number): Promise<User | null> {
     return this.userRepository.findByIdAsync(id);
+  }
+
+  async updateUserByIdAsync(id: number, userUpdateDto: Prisma.UserUpdateInput) {
+    return this.userRepository.updateUserByIdAsync(id, userUpdateDto);
+  }
+
+  async incrementFailedLoginAttemptsAsync(id: number) {
+    const user = await this.userRepository.incrementFailedLoginAttemptsAsync(id);
+    return user.failedLoginAttempts;
+  }
+
+  async updateAccountLockedUntilAsync(id: number, lockedUntil: Date) {
+    return this.userRepository.updateAccountLockedUntilAsync(id, lockedUntil);
+  }
+
+  async resetFailedLoginAttemptsAndLockedUntilAsync(id: number) {
+    return this.userRepository.resetFailedLoginAttemptsAndLockedUntilAsync(id);
   }
 }

@@ -1,5 +1,6 @@
-import { MailingServiceModule } from '@mp/common/services';
 import { Module } from '@nestjs/common';
+
+import { MailingServiceModule } from '@mp/common/services';
 
 import { ApproveRegistrationRequestCommandHandler } from './command/approve-registration-request.command.handler';
 import { RejectRegistrationRequestCommandHandler } from './command/reject-registration-request.command.handler';

@@ -1,3 +1,6 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+
 import { RoleIds } from '@mp/common/constants';
 import { EncryptionService } from '@mp/common/services';
 import {
@@ -7,8 +10,6 @@ import {
   EncryptionServiceMock,
 } from '@mp/common/testing';
 import { UserRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, User } from '@prisma/client';
 
 import { UserService } from '../user/user.service';
 
@@ -96,7 +97,83 @@ describe('UserService', () => {
       await service.findByIdAsync(userMock.id);
 
       // Assert
-      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(userMock.id);
+      expect(userRepositoryMock.findByIdAsync).toHaveBeenCalledWith(
+        
+        userMock.id,
+      );
+    });
+  });
+
+  describe('incrementFailedLoginAttemptsAsync', () => {
+    it('should call incrementFailedLoginAttemptsAsync with user id', async () => {
+      // Arrange
+      const user = { ...userMock, roleId: 1 } as User;
+      userRepositoryMock.incrementFailedLoginAttemptsAsync.mockResolvedValue(
+        user,
+      );
+
+      // Act
+      await service.incrementFailedLoginAttemptsAsync(userMock.id);
+
+      // Assert
+      expect(
+        userRepositoryMock.incrementFailedLoginAttemptsAsync,
+      ).toHaveBeenCalledWith(userMock.id);
+    });
+  });
+
+  describe('updateAccountLockedUntilAsync', () => {
+    it('should call updateAccountLockedUntilAsync with user id and locked until date', async () => {
+      // Arrange
+      const lockedUntil = new Date();
+
+      // Act
+      await service.updateAccountLockedUntilAsync(userMock.id, lockedUntil);
+
+      // Assert
+      expect(
+        userRepositoryMock.updateAccountLockedUntilAsync,
+      ).toHaveBeenCalledWith(userMock.id, lockedUntil);
+    });
+  });
+
+  describe('resetFailedLoginAttemptsAndLockedUntilAsync', () => {
+    it('should call resetFailedLoginAttemptsAndLockedUntilAsync with user id', async () => {
+      // Arrange
+      const user = { ...userMock, roleId: 1 } as User;
+      userRepositoryMock.resetFailedLoginAttemptsAndLockedUntilAsync.mockResolvedValue(
+        user,
+      );
+
+      // Act
+      await service.resetFailedLoginAttemptsAndLockedUntilAsync(userMock.id);
+
+      // Assert
+      expect(
+        userRepositoryMock.resetFailedLoginAttemptsAndLockedUntilAsync,
+      ).toHaveBeenCalledWith(userMock.id,
+      );
+    });
+  });
+
+  describe('updateUserByIdAsync', () => {
+    it('should call updateUserByIdAsync with user id and update data', async () => {
+      // Arrange
+      const userId = 1;
+      const userUpdateDto = {
+        ...userMock,
+        roleId: 1,
+      } as Prisma.UserUpdateInput;
+      userRepositoryMock.updateUserByIdAsync.mockResolvedValue(userUpdateDto);
+
+      // Act
+      await service.updateUserByIdAsync(userId, userUpdateDto);
+
+      // Assert
+      expect(userRepositoryMock.updateUserByIdAsync).toHaveBeenCalledWith(
+        userId,
+        userUpdateDto,
+      );
     });
   });
 });

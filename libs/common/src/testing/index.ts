@@ -1,5 +1,6 @@
 export * from './authentication.service.mock';
 export * from './command-bus.mock';
+export * from './config.service.mock';
 export * from './encryption.service.mock';
 export * from './jwt.service.mock';
 export * from './mailing.service.mock';

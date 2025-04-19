@@ -1,5 +1,6 @@
-import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 
 import { SignUpCommand } from './sign-up.command';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';

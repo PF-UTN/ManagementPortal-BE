@@ -1,7 +1,8 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
 import { RegistrationRequestRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { RegistrationRequestDomainService } from './registration-request-domain.service';
 import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
@@ -15,7 +16,10 @@ describe('RegistrationRequestDomainService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestDomainService,
-        { provide: RegistrationRequestRepository, useValue: registrationRequestRepositoryMock },
+        {
+          provide: RegistrationRequestRepository,
+          useValue: registrationRequestRepositoryMock,
+        },
       ],
     }).compile();
 
@@ -48,7 +52,9 @@ describe('RegistrationRequestDomainService', () => {
       await service.searchWithFiltersAsync(query);
 
       // Assert
-      expect(registrationRequestRepositoryMock.searchWithFiltersAsync).toHaveBeenCalledWith(
+      expect(
+        registrationRequestRepositoryMock.searchWithFiltersAsync,
+      ).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
         query.page,
@@ -72,9 +78,9 @@ describe('RegistrationRequestDomainService', () => {
       );
 
       // Assert
-      expect(registrationRequestRepositoryMock.createRegistrationRequestAsync).toHaveBeenCalledWith(
-        registrationRequestCreationDto,
-      );
+      expect(
+        registrationRequestRepositoryMock.createRegistrationRequestAsync,
+      ).toHaveBeenCalledWith(registrationRequestCreationDto);
     });
   });
 

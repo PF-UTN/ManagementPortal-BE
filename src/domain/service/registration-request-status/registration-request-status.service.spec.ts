@@ -1,6 +1,7 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { RegistrationRequestStatusRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestStatusRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { RegistrationRequestStatusService } from './registration-request-status.service';
 
@@ -9,11 +10,15 @@ describe('RegistrationRequestStatusService', () => {
   let registrationRequestStatusRepositoryMock: RegistrationRequestStatusRepositoryMock;
 
   beforeEach(async () => {
-    registrationRequestStatusRepositoryMock = new RegistrationRequestStatusRepositoryMock();
+    registrationRequestStatusRepositoryMock =
+      new RegistrationRequestStatusRepositoryMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestStatusService,
-        { provide: RegistrationRequestStatusRepository, useValue: registrationRequestStatusRepositoryMock}
+        {
+          provide: RegistrationRequestStatusRepository,
+          useValue: registrationRequestStatusRepositoryMock,
+        },
       ],
     }).compile();
 

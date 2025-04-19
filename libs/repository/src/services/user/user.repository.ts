@@ -37,4 +37,51 @@ export class UserRepository {
       },
     });
   }
+
+  async updateUserByIdAsync(
+    id: number,
+    data: Prisma.UserUpdateInput,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: {
+        id,
+      },
+      data,
+    });
+  }
+
+  async incrementFailedLoginAttemptsAsync(id: number): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        failedLoginAttempts: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async updateAccountLockedUntilAsync(
+    id: number,
+    lockedUntil: Date,
+  ): Promise<User> {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        accountLockedUntil: lockedUntil,
+      },
+    });
+  }
+
+  async resetFailedLoginAttemptsAndLockedUntilAsync(
+    id: number,
+  ) {
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        failedLoginAttempts: 0,
+        accountLockedUntil: null,
+      },
+    });
+  }
 }

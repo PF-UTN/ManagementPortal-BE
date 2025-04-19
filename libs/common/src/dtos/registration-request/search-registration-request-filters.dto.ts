@@ -1,6 +1,7 @@
-import { RegistrationRequestStatus } from '@mp/common/constants';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEnum, ValidateIf } from 'class-validator';
+
+import { RegistrationRequestStatus } from '@mp/common/constants';
 
 export class SearchRegistrationRequestFiltersDto {
   @ApiProperty({
