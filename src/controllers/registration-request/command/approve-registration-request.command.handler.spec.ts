@@ -15,8 +15,6 @@ import { RegistrationRequestDomainService } from '../../../domain/service/regist
 import { RegistrationRequestStatusService } from '../../../domain/service/registration-request-status/registration-request-status.service';
 import { UserService } from '../../../domain/service/user/user.service';
 
-
-
 describe('ApproveRegistrationRequestCommandHandler', () => {
   let handler: ApproveRegistrationRequestCommandHandler;
   let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;

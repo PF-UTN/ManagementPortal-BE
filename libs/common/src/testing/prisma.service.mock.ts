@@ -9,4 +9,6 @@ export class PrismaServiceMock {
   user = createPrismaModelMock();
   registrationRequest = createPrismaModelMock();
   registrationRequestStatus = createPrismaModelMock();
+  town = createPrismaModelMock();
 }
+

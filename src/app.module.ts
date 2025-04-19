@@ -4,6 +4,7 @@ import { CqrsModule } from '@nestjs/cqrs';
 
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
+import { TownModule } from './controllers/town/town.controller.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { RegistrationRequestModule } from './controllers/registration-request/re
     }),
     AuthenticationModule,
     RegistrationRequestModule,
+    TownModule,
   ],
   controllers: [],
   providers: [],
