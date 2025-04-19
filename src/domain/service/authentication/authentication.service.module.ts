@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 
-import { EncryptionServiceModule } from '@mp/common/services';
+import { EncryptionServiceModule, MailingServiceModule } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
 import { UserServiceModule } from '../user/user.service.module';
@@ -12,6 +12,7 @@ import { UserServiceModule } from '../user/user.service.module';
     UserServiceModule,
     EncryptionServiceModule,
     ConfigModule,
+    MailingServiceModule,
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

@@ -108,4 +108,53 @@ describe('UserRepository', () => {
       expect(result).toEqual(updatedUser);
     });
   });
+
+  describe('incrementFailedLoginAttemptsAsync', () => {
+    it('should increment failed login attempts', async () => {
+      // Arrange
+      const userId = 1;
+      const updatedUser = { ...userMock, failedLoginAttempts: 1 };
+      prismaServiceMock.user.update.mockResolvedValue(updatedUser);
+
+      // Act
+      const result = await repository.incrementFailedLoginAttemptsAsync(userId);
+
+      // Assert
+      expect(result).toEqual(updatedUser);
+    });
+  });
+
+  describe('updateAccountLockedUntilAsync', () => {
+    it('should update account locked until date', async () => {
+      // Arrange
+      const userId = 1;
+      const lockedUntil = new Date(Date.now() + 3600 * 1000);
+      const updatedUser = { ...userMock, accountLockedUntil: lockedUntil };
+      prismaServiceMock.user.update.mockResolvedValue(updatedUser);
+
+      // Act
+      const result = await repository.updateAccountLockedUntilAsync(
+        userId,
+        lockedUntil,
+      );
+
+      // Assert
+      expect(result).toEqual(updatedUser);
+    });
+  });
+
+  describe('resetFailedLoginAttemptsAndLockedUntilAsync', () => {
+    it('should reset failed login attempts and locked until date', async () => {
+      // Arrange
+      const userId = 1;
+      const updatedUser = { ...userMock, failedLoginAttempts: 0, accountLockedUntil: null };
+      prismaServiceMock.user.update.mockResolvedValue(updatedUser);
+
+      // Act
+      const result = await repository.resetFailedLoginAttemptsAndLockedUntilAsync(userId);
+
+      // Assert
+      expect(result).toEqual(updatedUser);
+    });
+  });
 });

@@ -3,4 +3,5 @@ export class MailingServiceMock {
   sendRegistrationRequestApprovedEmailAsync = jest.fn();
   sendRegistrationRequestRejectedEmailAsync = jest.fn();
   sendPasswordResetEmailAsync = jest.fn();
+  sendAccountLockedEmailAsync = jest.fn();
 }
