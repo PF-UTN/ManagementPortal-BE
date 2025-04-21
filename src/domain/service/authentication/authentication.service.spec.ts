@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Permission, Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { EncryptionService, MailingService } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
@@ -30,6 +31,7 @@ describe('AuthenticationService', () => {
               };
             };
           };
+          registrationRequest: true;
         };
       }>
     >
@@ -67,6 +69,7 @@ describe('AuthenticationService', () => {
               };
             };
           };
+          registrationRequest: true;
         };
       }>
     >();
@@ -75,6 +78,13 @@ describe('AuthenticationService', () => {
     user.password = 'hashedPassword';
     user.id = 1;
     user.role.rolePermissions = [];
+    user.registrationRequest = {
+      id: 1,
+      statusId: RegistrationRequestStatusId.Approved,
+      userId: 1,
+      requestDate: mockDeep<Date>(new Date()),
+      note: null,
+    };
   });
 
   it('should be defined', () => {
@@ -167,11 +177,11 @@ describe('AuthenticationService', () => {
       // Act
       await service.signInAsync('test@test.com', 'password');
 
-        // Assert
-        expect(signInSpy).toHaveBeenCalledWith({
-          email: 'test@test.com',
-          sub: 1,
-          permissions: expectedPermissions,
+      // Assert
+      expect(signInSpy).toHaveBeenCalledWith({
+        email: 'test@test.com',
+        sub: 1,
+        permissions: expectedPermissions,
       });
     });
   });
@@ -212,7 +222,9 @@ describe('AuthenticationService', () => {
 
       jest.spyOn(jwtService, 'verifyAsync').mockResolvedValueOnce(payload);
       jest.spyOn(userService, 'findByIdAsync').mockResolvedValueOnce(user);
-      jest.spyOn(encryptionService, 'hashAsync').mockResolvedValueOnce('hashedPassword');
+      jest
+        .spyOn(encryptionService, 'hashAsync')
+        .mockResolvedValueOnce('hashedPassword');
       const updateUserByIdAsyncSpy = jest
         .spyOn(userService, 'updateUserByIdAsync')
         .mockResolvedValueOnce(user);
@@ -229,8 +241,10 @@ describe('AuthenticationService', () => {
 
     it('should throw UnauthorizedException if token is invalid', async () => {
       // Arrange
-      jest.spyOn(jwtService, 'verifyAsync').mockRejectedValueOnce(new UnauthorizedException());
-      
+      jest
+        .spyOn(jwtService, 'verifyAsync')
+        .mockRejectedValueOnce(new UnauthorizedException());
+
       // Act & Assert
       await expect(
         service.resetPasswordAsync('invalid-token', 'pass'),
@@ -246,102 +260,149 @@ describe('AuthenticationService', () => {
       await expect(
         service.resetPasswordAsync('valid-token', 'pass'),
       ).rejects.toThrow(UnauthorizedException);
-      });
-    });
-
-    it('should throw UnauthorizedException if account is currently locked', async () => {
-      // Arrange
-      const futureDate = new Date(Date.now() + 60 * 60 * 1000);
-      const mockedUser = {
-        ...user,
-        accountLockedUntil: futureDate,
-      }
-      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(mockedUser);
-
-      // Act
-      const action = service.signInAsync(user.email, user.password);
-
-      // Assert
-      await expect(action).rejects.toThrow(UnauthorizedException);
-    });
-
-    it('should reset login attempts if lock expired', async () => {
-      // Arrange
-      const pastDate = new Date(Date.now() - 60 * 60 * 1000);
-      const mockedUser = {
-        ...user,
-        accountLockedUntil: pastDate,
-      };
-      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(mockedUser);
-      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(true);
-      jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('mockJwtToken');
-      const resetFailedLoginAttemptsAndLockedUntilAsyncSpy = jest
-        .spyOn(userService, 'resetFailedLoginAttemptsAndLockedUntilAsync')
-        .mockResolvedValueOnce(mockedUser);
-
-      // Act
-      await service.signInAsync(user.email, user.password);
-
-      // Assert
-      expect(
-        resetFailedLoginAttemptsAndLockedUntilAsyncSpy,
-      ).toHaveBeenCalledWith(user.id);
-    });
-
-    it('should lock account after max failed attempts', async () => {
-      // Arrange
-      const MAX_LOGIN_ATTEMPTS = configService.get<number>('MAX_LOGIN_ATTEMPTS') || 5;
-      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
-      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
-      jest.spyOn(userService, 'incrementFailedLoginAttemptsAsync').mockResolvedValueOnce(MAX_LOGIN_ATTEMPTS);
-      const updateAccountLockedUntilAsyncSpy = jest
-        .spyOn(userService, 'updateAccountLockedUntilAsync')
-        .mockResolvedValueOnce({
-          ...user,
-          accountLockedUntil: new Date(Date.now() + 60 * 60 * 1000),
-        });
-
-      // Act & Assert
-      await expect(
-        service.signInAsync('test@test.com', 'wrongPassword'),
-      ).rejects.toThrow(UnauthorizedException);
-      expect(updateAccountLockedUntilAsyncSpy).toHaveBeenCalled();
-    });
-
-    it('should call mailingService.sendAccountLockedEmailAsync when account is locked due to failed attempts', async () => {
-      // Arrange
-      const MAX_LOGIN_ATTEMPTS = configService.get<number>('MAX_LOGIN_ATTEMPTS') || 5;
-      const mockedUser = {
-        ...user,
-        accountLockedUntil: null,
-      };
-    
-      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(mockedUser);
-      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
-      jest.spyOn(userService, 'incrementFailedLoginAttemptsAsync').mockResolvedValueOnce(MAX_LOGIN_ATTEMPTS);
-      
-      const sendAccountLockedEmailAsyncSpy = jest
-        .spyOn(mailingService, 'sendAccountLockedEmailAsync')
-        .mockResolvedValueOnce(undefined);
-    
-      jest.spyOn(userService, 'updateAccountLockedUntilAsync').mockResolvedValueOnce({ ...mockedUser });
-    
-      // Act & Assert
-      await expect(service.signInAsync(user.email, 'wrongPassword')).rejects.toThrow(UnauthorizedException);
-    
-      expect(sendAccountLockedEmailAsyncSpy).toHaveBeenCalled();
-    });    
-    
-    it('should return remaining attempts when credentials are incorrect', async () => {
-      // Arrange
-      jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
-      jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
-      jest.spyOn(userService, 'incrementFailedLoginAttemptsAsync').mockResolvedValueOnce(1);
-
-      // Act
-      const action = service.signInAsync('test@test.com', 'wrongPassword');
-
-      // Assert
-      await expect(action).rejects.toThrow(UnauthorizedException);
     });
   });
+
+  it('should throw UnauthorizedException if account is currently locked', async () => {
+    // Arrange
+    const futureDate = new Date(Date.now() + 60 * 60 * 1000);
+    const mockedUser = {
+      ...user,
+      accountLockedUntil: futureDate,
+    };
+    jest
+      .spyOn(userService, 'findByEmailAsync')
+      .mockResolvedValueOnce(mockedUser);
+
+    // Act
+    const action = service.signInAsync(user.email, user.password);
+
+    // Assert
+    await expect(action).rejects.toThrow(UnauthorizedException);
+  });
+
+  it('should reset login attempts if lock expired', async () => {
+    // Arrange
+    const pastDate = new Date(Date.now() - 60 * 60 * 1000);
+    const mockedUser = {
+      ...user,
+      accountLockedUntil: pastDate,
+    };
+    jest
+      .spyOn(userService, 'findByEmailAsync')
+      .mockResolvedValueOnce(mockedUser);
+    jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(true);
+    jest.spyOn(jwtService, 'signAsync').mockResolvedValueOnce('mockJwtToken');
+    const resetFailedLoginAttemptsAndLockedUntilAsyncSpy = jest
+      .spyOn(userService, 'resetFailedLoginAttemptsAndLockedUntilAsync')
+      .mockResolvedValueOnce(mockedUser);
+
+    // Act
+    await service.signInAsync(user.email, user.password);
+
+    // Assert
+    expect(resetFailedLoginAttemptsAndLockedUntilAsyncSpy).toHaveBeenCalledWith(
+      user.id,
+    );
+  });
+
+  it('should lock account after max failed attempts', async () => {
+    // Arrange
+    const MAX_LOGIN_ATTEMPTS =
+      configService.get<number>('MAX_LOGIN_ATTEMPTS') ?? 5;
+    jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
+    jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
+    jest
+      .spyOn(userService, 'incrementFailedLoginAttemptsAsync')
+      .mockResolvedValueOnce(MAX_LOGIN_ATTEMPTS);
+    const updateAccountLockedUntilAsyncSpy = jest
+      .spyOn(userService, 'updateAccountLockedUntilAsync')
+      .mockResolvedValueOnce({
+        ...user,
+        accountLockedUntil: new Date(Date.now() + 60 * 60 * 1000),
+      });
+
+    // Act & Assert
+    await expect(
+      service.signInAsync('test@test.com', 'wrongPassword'),
+    ).rejects.toThrow(UnauthorizedException);
+    expect(updateAccountLockedUntilAsyncSpy).toHaveBeenCalled();
+  });
+
+  it('should call mailingService.sendAccountLockedEmailAsync when account is locked due to failed attempts', async () => {
+    // Arrange
+    const MAX_LOGIN_ATTEMPTS =
+      configService.get<number>('MAX_LOGIN_ATTEMPTS') ?? 5;
+    const mockedUser = {
+      ...user,
+      accountLockedUntil: null,
+    };
+
+    jest
+      .spyOn(userService, 'findByEmailAsync')
+      .mockResolvedValueOnce(mockedUser);
+    jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
+    jest
+      .spyOn(userService, 'incrementFailedLoginAttemptsAsync')
+      .mockResolvedValueOnce(MAX_LOGIN_ATTEMPTS);
+
+    const sendAccountLockedEmailAsyncSpy = jest
+      .spyOn(mailingService, 'sendAccountLockedEmailAsync')
+      .mockResolvedValueOnce(undefined);
+
+    jest
+      .spyOn(userService, 'updateAccountLockedUntilAsync')
+      .mockResolvedValueOnce({ ...mockedUser });
+
+    // Act & Assert
+    await expect(
+      service.signInAsync(user.email, 'wrongPassword'),
+    ).rejects.toThrow(UnauthorizedException);
+
+    expect(sendAccountLockedEmailAsyncSpy).toHaveBeenCalled();
+  });
+
+  it('should return remaining attempts when credentials are incorrect', async () => {
+    // Arrange
+    jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
+    jest.spyOn(encryptionService, 'compareAsync').mockResolvedValueOnce(false);
+    jest
+      .spyOn(userService, 'incrementFailedLoginAttemptsAsync')
+      .mockResolvedValueOnce(1);
+
+    // Act
+    const action = service.signInAsync('test@test.com', 'wrongPassword');
+
+    // Assert
+    await expect(action).rejects.toThrow(UnauthorizedException);
+  });
+
+  describe('checkRegistrationRequestStatusAsync', () => {
+    it('should throw UnauthorizedException if registration request status is Pending', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Pending,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if registration request status is Rejected', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Rejected,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should not throw if registration request is Approved', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Approved,
+        ),
+      ).resolves.not.toThrow();
+    });
+  });
+});
