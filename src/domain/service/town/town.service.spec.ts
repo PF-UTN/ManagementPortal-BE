@@ -1,6 +1,7 @@
+import { Test, TestingModule } from '@nestjs/testing';
+
 import { TownRepositoryMock, townMockData } from '@mp/common/testing';
 import { TownRepository } from '@mp/repository';
-import { Test, TestingModule } from '@nestjs/testing';
 
 import { TownService } from './town.service';
 

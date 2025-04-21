@@ -1,7 +1,8 @@
-import { townMockData, QueryBusMock } from '@mp/common/testing';
 import { ConfigModule } from '@nestjs/config';
 import { QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { townMockData, QueryBusMock } from '@mp/common/testing';
 
 import { GetTownsByTextQuery } from './query/get-towns-by-text.query';
 import { TownController } from './town.controller';

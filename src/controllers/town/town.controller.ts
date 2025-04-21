@@ -1,7 +1,8 @@
-import { Public } from '@mp/common/decorators';
 import { Controller, Get, Query } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+
+import { Public } from '@mp/common/decorators';
 
 import { GetTownsByTextQuery } from './query/get-towns-by-text.query';
 

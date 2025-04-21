@@ -1,5 +1,6 @@
-import { TownServiceMock, townMockData } from '@mp/common/testing';
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { TownServiceMock, townMockData } from '@mp/common/testing';
 
 import { GetTownByTextQueryHandler } from './get-towns-by-text.query.handler';
 import { TownService } from '../../../domain/service/town/town.service';

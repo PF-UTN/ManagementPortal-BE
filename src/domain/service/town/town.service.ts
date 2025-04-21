@@ -1,5 +1,6 @@
-import { TownRepository } from '@mp/repository';
 import { Injectable } from '@nestjs/common';
+
+import { TownRepository } from '@mp/repository';
 
 @Injectable()
 export class TownService {

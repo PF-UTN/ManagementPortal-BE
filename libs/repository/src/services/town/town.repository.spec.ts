@@ -1,5 +1,6 @@
-import { PrismaServiceMock, townMockData } from '@mp/common/testing'; 
 import { Test, TestingModule } from '@nestjs/testing';
+
+import { PrismaServiceMock, townMockData } from '@mp/common/testing'; 
 
 import { TownRepository } from './town.repository';
 import { PrismaService } from '../prisma.service';
