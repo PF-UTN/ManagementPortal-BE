@@ -236,6 +236,8 @@ describe('AuthenticationService', () => {
       expect(updateUserByIdAsyncSpy).toHaveBeenCalledWith(user.id, {
         ...user,
         password: 'hashedPassword',
+        accountLockedUntil: null,
+        failedLoginAttempts: 0,
       });
     });
 

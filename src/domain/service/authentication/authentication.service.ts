@@ -35,7 +35,8 @@ export class AuthenticationService {
       );
     }
 
-    const MAX_LOGIN_ATTEMPTS = Number(process.env.MAX_LOGIN_ATTEMPTS) || 3;
+    const MAX_LOGIN_ATTEMPTS =
+      this.configService.get<number>('MAX_LOGIN_ATTEMPTS') ?? 5;
 
     const isMatch = await this.encryptionService.compareAsync(
       password,
@@ -122,6 +123,8 @@ export class AuthenticationService {
     await this.userService.updateUserByIdAsync(user.id, {
       ...user,
       password: hashedPassword,
+      accountLockedUntil: null,
+      failedLoginAttempts: 0,
     });
   }
 
