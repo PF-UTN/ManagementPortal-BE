@@ -5,6 +5,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Permission, Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { EncryptionService, MailingService } from '@mp/common/services';
 
 import { AuthenticationService } from './authentication.service';
@@ -30,6 +31,7 @@ describe('AuthenticationService', () => {
               };
             };
           };
+          registrationRequest: true;
         };
       }>
     >
@@ -67,6 +69,7 @@ describe('AuthenticationService', () => {
               };
             };
           };
+          registrationRequest: true;
         };
       }>
     >();
@@ -75,6 +78,13 @@ describe('AuthenticationService', () => {
     user.password = 'hashedPassword';
     user.id = 1;
     user.role.rolePermissions = [];
+    user.registrationRequest = {
+      id: 1,
+      statusId: RegistrationRequestStatusId.Approved,
+      userId: 1,
+      requestDate: mockDeep<Date>(new Date()),
+      note: null,
+    };
   });
 
   it('should be defined', () => {
@@ -367,5 +377,34 @@ describe('AuthenticationService', () => {
 
     // Assert
     await expect(action).rejects.toThrow(UnauthorizedException);
+  });
+
+  describe('checkRegistrationRequestStatusAsync', () => {
+    it('should throw UnauthorizedException if registration request status is Pending', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Pending,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if registration request status is Rejected', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Rejected,
+        ),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should not throw if registration request is Approved', async () => {
+      // Act & Assert
+      await expect(
+        service.checkRegistrationRequestStatusAsync(
+          RegistrationRequestStatusId.Approved,
+        ),
+      ).resolves.not.toThrow();
+    });
   });
 });

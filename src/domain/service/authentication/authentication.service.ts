@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { TokenPayload } from '@mp/common/models';
 import { EncryptionService, MailingService } from '@mp/common/services';
 
@@ -71,6 +72,10 @@ export class AuthenticationService {
 
     await this.userService.resetFailedLoginAttemptsAndLockedUntilAsync(user.id);
 
+    await this.checkRegistrationRequestStatusAsync(
+      user.registrationRequest?.statusId,
+    );
+
     const payload = {
       email: user.email,
       sub: user.id,
@@ -121,5 +126,24 @@ export class AuthenticationService {
       accountLockedUntil: null,
       failedLoginAttempts: 0,
     });
+  }
+
+  async checkRegistrationRequestStatusAsync(statusId: number | undefined) {
+    switch (statusId) {
+      case RegistrationRequestStatusId.Approved:
+        return;
+      case RegistrationRequestStatusId.Pending:
+        throw new UnauthorizedException(
+          `Tu solicitud de registro todavía está siendo procesada. Para más información, por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+      case RegistrationRequestStatusId.Rejected:
+        throw new UnauthorizedException(
+          `Lamentablemente, tu solicitud de registro fue rechazada. Para más información, por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+      default:
+        throw new UnauthorizedException(
+          `Hubo un error con tu solicitud de registro. Por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+    }
   }
 }
