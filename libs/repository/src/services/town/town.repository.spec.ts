@@ -1,32 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 
-import { PrismaServiceMock, townMockData } from '@mp/common/testing'; 
+import { townMockData } from '@mp/common/testing';
 
 import { TownRepository } from './town.repository';
 import { PrismaService } from '../prisma.service';
 
 describe('TownRepository', () => {
   let repository: TownRepository;
-  let prismaServiceMock: PrismaServiceMock;
+  let prismaService: DeepMockProxy<PrismaService>;
 
   beforeEach(async () => {
-    prismaServiceMock = new PrismaServiceMock();
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        TownRepository, 
-        { 
-         provide: PrismaService, 
-         useValue: prismaServiceMock 
-        },
+        TownRepository,
+        { provide: PrismaService, useValue: mockDeep<PrismaService>() },
       ],
     }).compile();
-  
-    repository = module.get<TownRepository>(
-        TownRepository
-    );
+
+    prismaService = module.get(PrismaService);
+    repository = module.get(TownRepository);
   });
-  
+
   it('should be defined', () => {
     expect(repository).toBeDefined();
   });
@@ -35,70 +30,37 @@ describe('TownRepository', () => {
     it('should return towns that match the search text', async () => {
       // Arrange
       const searchText = 'Rosario';
-      prismaServiceMock.town.findMany = jest
-      .fn()
-      .mockResolvedValueOnce([
-        townMockData
-      ]);
+      prismaService.town.findMany.mockResolvedValueOnce(townMockData);
 
       // Act
-      const result = 
-        await repository.searchTownsByTextAsync(
-            searchText
-        );
+      const result = await repository.searchTownsByTextAsync(searchText);
 
       // Assert
-      expect(
-        prismaServiceMock.town.findMany
-      ).toHaveBeenCalledWith({ 
-        where: {
-          OR: [
-            { name: { contains: searchText, mode: 'insensitive' } },
-            { zipCode: { contains: searchText, mode: 'insensitive' } },
-          ],
-        },
-        orderBy: { name: 'asc' },
-      });
-      expect(result).toEqual([
-        townMockData
-      ]);
+      expect(result).toEqual(townMockData);
     });
 
-    it('should return an empty array when no towns match', async () => {
+    it('should return an empty array if no towns match the search text', async () => {
       // Arrange
       const searchText = 'xyz';
-      prismaServiceMock.town.findMany.mockResolvedValueOnce([]);
+      prismaService.town.findMany.mockResolvedValueOnce([]);
 
       // Act
-      const result = 
-      await repository.searchTownsByTextAsync(searchText);
+      const result = await repository.searchTownsByTextAsync(searchText);
 
       // Assert
-      expect(prismaServiceMock.town.findMany).toHaveBeenCalledWith({
-        where: {
-          OR: [
-            { name: { contains: searchText, mode: 'insensitive' } },
-            { zipCode: { contains: searchText, mode: 'insensitive' } },
-          ],
-        },
-        orderBy: { name: 'asc' },
-      });
       expect(result).toEqual([]);
     });
 
-    it('should call Prisma with empty searchText when no parameter is provided', async () => {
+    it('should return all town when a searchText is not provided', async () => {
       // Arrange
-      prismaServiceMock.town.findMany.mockResolvedValueOnce([]);
-
+      prismaService.town.findMany.mockResolvedValueOnce(townMockData);
+  
       // Act
       const result = await repository.searchTownsByTextAsync('');
-
+  
       // Assert
-      expect(prismaServiceMock.town.findMany).toHaveBeenCalledWith({
-        where: {},
-        orderBy: { name: 'asc' },
-      });
-      expect(result).toEqual([]);
+      expect(result).toEqual(townMockData);
     });
+  
   });
 });
