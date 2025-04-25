@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import {
   RegistrationRequestCreationDto,
@@ -25,9 +26,11 @@ export class RegistrationRequestDomainService {
 
   async createRegistrationRequestAsync(
     registrationRequestCreationDto: RegistrationRequestCreationDto,
+    tx?: Prisma.TransactionClient,
   ) {
     return await this.registrationRequestRepository.createRegistrationRequestAsync(
       registrationRequestCreationDto,
+      tx,
     );
   }
 

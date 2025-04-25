@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { MailingServiceModule } from '@mp/common/services';
+import { PrismaService } from '@mp/repository';
 
 import { AuthenticationController } from './authentication.controller';
 import { ResetPasswordCommandHandler } from './command/reset-password.command.handler';
@@ -12,7 +13,11 @@ import { RegistrationRequestDomainServiceModule } from '../../domain/service/reg
 import { RegistrationRequestStatusServiceModule } from '../../domain/service/registration-request-status/registration-request-status.service.module';
 import { UserServiceModule } from '../../domain/service/user/user.service.module';
 
-const commandHandlers = [SignUpCommandHandler, SignInCommandHandler, ResetPasswordCommandHandler];
+const commandHandlers = [
+  SignUpCommandHandler,
+  SignInCommandHandler,
+  ResetPasswordCommandHandler,
+];
 const queryHandlers = [ResetPasswordRequestQueryHandler];
 
 @Module({
@@ -24,6 +29,6 @@ const queryHandlers = [ResetPasswordRequestQueryHandler];
     MailingServiceModule,
   ],
   controllers: [AuthenticationController],
-  providers: [...commandHandlers, ...queryHandlers],
+  providers: [...commandHandlers, ...queryHandlers, PrismaService],
 })
 export class AuthenticationModule {}

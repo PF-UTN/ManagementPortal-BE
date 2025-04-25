@@ -13,7 +13,10 @@ export class UserService {
     private readonly encryptionService: EncryptionService,
   ) {}
 
-  async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
+  async createUserAsync(
+    userCreationDto: UserCreationDto,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User> {
     const hashedPassword = await this.hashPasswordAsync(
       userCreationDto.password,
     );
@@ -24,7 +27,7 @@ export class UserService {
       role: { connect: { id: RoleIds.Employee } },
     } as Prisma.UserCreateInput;
 
-    const newUser = await this.userRepository.createUserAsync(user);
+    const newUser = await this.userRepository.createUserAsync(user, tx);
     return newUser;
   }
 
@@ -45,7 +48,8 @@ export class UserService {
   }
 
   async incrementFailedLoginAttemptsAsync(id: number) {
-    const user = await this.userRepository.incrementFailedLoginAttemptsAsync(id);
+    const user =
+      await this.userRepository.incrementFailedLoginAttemptsAsync(id);
     return user.failedLoginAttempts;
   }
 

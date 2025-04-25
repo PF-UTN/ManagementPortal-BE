@@ -7,8 +7,12 @@ import { PrismaService } from '../prisma.service';
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createUserAsync(data: Prisma.UserCreateInput): Promise<User> {
-    return this.prisma.user.create({
+  async createUserAsync(
+    data: Prisma.UserCreateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<User> {
+    const client = tx ?? this.prisma;
+    return client.user.create({
       data,
     });
   }
