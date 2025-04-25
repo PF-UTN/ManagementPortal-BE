@@ -67,6 +67,6 @@ export class AuthGuard implements CanActivate {
       userPermissions.includes(permission),
     );
 
-    if (!hasPermissions) throw new UnauthorizedException('Access denied');
+    if (!hasPermissions) throw new UnauthorizedException('Acceso denegado');
   }
 }

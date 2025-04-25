@@ -26,13 +26,13 @@ export class ApproveRegistrationRequestCommandHandler
 
     if (!registrationRequest) {
       throw new NotFoundException(
-        `Cannot find a registration request with id ${command.registrationRequestId}`,
+        `No se puede encontrar una solicitud de registro con ID ${command.registrationRequestId}.`,
       );
     }
 
     if (registrationRequest.statusId !== RegistrationRequestStatusId.Pending) {
       throw new BadRequestException(
-        'The registration request status cannot be modified.',
+        'El estado de la solicitud de registro no puede ser modificado.',
       );
     }
 
@@ -51,7 +51,7 @@ export class ApproveRegistrationRequestCommandHandler
 
     if (!user) {
       throw new NotFoundException(
-        `Cannot find a user with id ${updatedRegistrationRequest.userId}`,
+        `No se puede encontrar un usuario con ID ${updatedRegistrationRequest.userId}.`,
       );
     }
 

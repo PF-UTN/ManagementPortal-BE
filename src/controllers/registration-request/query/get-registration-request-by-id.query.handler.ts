@@ -20,7 +20,7 @@ export class GetRegistrationRequestByIdQueryHandler {
 
     if (!foundRegistrationRequest) {
       throw new NotFoundException(
-        `Registration request with ID ${query.id} not found`,
+        `Solicitud de registro con ID ${query.id} no encontrada.`,
       );
     }
 

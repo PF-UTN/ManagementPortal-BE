@@ -27,7 +27,7 @@ export class AuthenticationService {
 
     if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
       throw new UnauthorizedException(
-        'Account is locked due to too many failed login attempts. Please try again later or reset your password.',
+        'La cuenta está bloqueada por demasiados intentos fallidos de inicio de sesión. Por favor, intentá nuevamente más tarde o restablecé tu contraseña.',
       );
     } else if (user.accountLockedUntil) {
       await this.userService.resetFailedLoginAttemptsAndLockedUntilAsync(
@@ -61,12 +61,12 @@ export class AuthenticationService {
         );
 
         throw new UnauthorizedException(
-          'Account is locked due to too many failed login attempts. Please try again later or reset your password.',
+          'La cuenta está bloqueada por demasiados intentos fallidos de inicio de sesión. Por favor, intentá nuevamente más tarde o restablecé tu contraseña.',
         );
       }
 
       throw new UnauthorizedException(
-        `Invalid credentials. You have ${MAX_LOGIN_ATTEMPTS - loginAttempts} login attempts left.`,
+        `Credenciales inválidas. Te quedan ${MAX_LOGIN_ATTEMPTS - loginAttempts} intentos de inicio de sesión.`,
       );
     }
 
@@ -110,13 +110,13 @@ export class AuthenticationService {
     const payload = await this.jwtService.verifyAsync(token);
 
     if (!payload) {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Token inválido o expirado.');
     }
 
     const user = await this.userService.findByIdAsync(payload.sub);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Usuario no encontrado.');
     }
 
     const hashedPassword = await this.encryptionService.hashAsync(password);
