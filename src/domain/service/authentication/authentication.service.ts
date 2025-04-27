@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
+import { RegistrationRequestStatusId } from '@mp/common/constants';
 import { TokenPayload } from '@mp/common/models';
 import { EncryptionService, MailingService } from '@mp/common/services';
 
@@ -26,7 +27,7 @@ export class AuthenticationService {
 
     if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
       throw new UnauthorizedException(
-        'Account is locked due to too many failed login attempts. Please try again later or reset your password.',
+        'La cuenta está bloqueada por demasiados intentos fallidos de inicio de sesión. Por favor, intentá nuevamente más tarde o restablecé tu contraseña.',
       );
     } else if (user.accountLockedUntil) {
       await this.userService.resetFailedLoginAttemptsAndLockedUntilAsync(
@@ -60,16 +61,20 @@ export class AuthenticationService {
         );
 
         throw new UnauthorizedException(
-          'Account is locked due to too many failed login attempts. Please try again later or reset your password.',
+          'La cuenta está bloqueada por demasiados intentos fallidos de inicio de sesión. Por favor, intentá nuevamente más tarde o restablecé tu contraseña.',
         );
       }
 
       throw new UnauthorizedException(
-        `Invalid credentials. You have ${MAX_LOGIN_ATTEMPTS - loginAttempts} login attempts left.`,
+        `Credenciales inválidas. Te quedan ${MAX_LOGIN_ATTEMPTS - loginAttempts} intentos de inicio de sesión.`,
       );
     }
 
     await this.userService.resetFailedLoginAttemptsAndLockedUntilAsync(user.id);
+
+    await this.checkRegistrationRequestStatusAsync(
+      user.registrationRequest?.statusId,
+    );
 
     const payload = {
       email: user.email,
@@ -105,13 +110,13 @@ export class AuthenticationService {
     const payload = await this.jwtService.verifyAsync(token);
 
     if (!payload) {
-      throw new UnauthorizedException('Invalid or expired token');
+      throw new UnauthorizedException('Token inválido o expirado.');
     }
 
     const user = await this.userService.findByIdAsync(payload.sub);
 
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Usuario no encontrado.');
     }
 
     const hashedPassword = await this.encryptionService.hashAsync(password);
@@ -121,5 +126,24 @@ export class AuthenticationService {
       accountLockedUntil: null,
       failedLoginAttempts: 0,
     });
+  }
+
+  async checkRegistrationRequestStatusAsync(statusId: number | undefined) {
+    switch (statusId) {
+      case RegistrationRequestStatusId.Approved:
+        return;
+      case RegistrationRequestStatusId.Pending:
+        throw new UnauthorizedException(
+          `Tu solicitud de registro todavía está siendo procesada. Para más información, por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+      case RegistrationRequestStatusId.Rejected:
+        throw new UnauthorizedException(
+          `Lamentablemente, tu solicitud de registro fue rechazada. Para más información, por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+      default:
+        throw new UnauthorizedException(
+          `Hubo un error con tu solicitud de registro. Por favor contactá al soporte: ${this.configService.get('SUPPORT_EMAIL')}`,
+        );
+    }
   }
 }

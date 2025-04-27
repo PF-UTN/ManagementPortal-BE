@@ -24,6 +24,7 @@ export class UserRepository {
   async findByEmailAsync(email: string): Promise<Prisma.UserGetPayload<{
     include: {
       role: { include: { rolePermissions: { include: { permission: true } } } };
+      registrationRequest: true;
     };
   }> | null> {
     return this.prisma.user.findUnique({
@@ -34,6 +35,7 @@ export class UserRepository {
         role: {
           include: { rolePermissions: { include: { permission: true } } },
         },
+        registrationRequest: true,
       },
     });
   }
@@ -73,9 +75,7 @@ export class UserRepository {
     });
   }
 
-  async resetFailedLoginAttemptsAndLockedUntilAsync(
-    id: number,
-  ) {
+  async resetFailedLoginAttemptsAndLockedUntilAsync(id: number) {
     return this.prisma.user.update({
       where: { id },
       data: {
