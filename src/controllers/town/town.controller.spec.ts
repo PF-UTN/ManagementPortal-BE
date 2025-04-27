@@ -1,4 +1,3 @@
-import { ConfigModule } from '@nestjs/config';
 import { QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
@@ -15,12 +14,6 @@ describe('TownController', () => {
     queryBusMock = new QueryBusMock();
 
     const module: TestingModule = await Test.createTestingModule({
-      imports: [
-        ConfigModule.forRoot({
-          isGlobal: true,
-          envFilePath: `${process.env.NODE_ENV ? '.' + process.env.NODE_ENV : ''}.env`,
-        }),
-      ],
       controllers: [TownController],
       providers: [
         { provide: QueryBus, useValue: queryBusMock }, 

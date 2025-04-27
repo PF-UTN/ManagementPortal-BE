@@ -39,6 +39,25 @@ describe('TownRepository', () => {
       expect(result).toEqual(townMockData);
     });
 
+    it('should call findMany on prismaService.town.', async () => {
+      // Arrange
+      const searchText = 'Ros';
+      prismaService.town.findMany.mockResolvedValueOnce(townMockData);
+      // Act
+      await repository.searchTownsByTextAsync(searchText);
+
+      // Assert
+      expect(prismaService.town.findMany).toHaveBeenLastCalledWith({
+        where: {
+          OR: [
+            { name: { contains: searchText, mode: 'insensitive' } },
+            { zipCode: { contains: searchText, mode: 'insensitive' } },
+          ],
+        },
+        orderBy: { name: 'asc' },
+      });
+    })
+
     it('should return an empty array if no towns match the search text', async () => {
       // Arrange
       const searchText = 'xyz';

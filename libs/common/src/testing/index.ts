@@ -14,5 +14,6 @@ export * from './user.mock';
 export * from './user.repository.mock';
 export * from './user.service.mock';
 export * from './town.service.mock';
-export * from './town.data.mock'
-export * from './town.repository.mock'
+export * from './town.data.mock';
+export * from './town.repository.mock';
+
