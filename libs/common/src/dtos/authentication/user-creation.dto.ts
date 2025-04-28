@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsNumberString,
   IsString,
   Length,
   MaxLength,
@@ -41,9 +42,9 @@ export class UserCreationDto {
   phone: string;
 
   @ApiProperty({ example: '11222333' })
-  @IsString()
+  @IsNumberString()
   @IsNotEmpty()
-  @MaxLength(11)
+  @Length(7, 11)
   documentNumber: string;
 
   @ApiProperty({ example: 'DNI' })
