@@ -1,7 +1,8 @@
 import { Query } from '@nestjs/cqrs';
-import { Town } from '@prisma/client'
 
-export class GetTownsByTextQuery extends Query<Town[]> {
+import { TownDto } from '@mp/common/dtos';
+
+export class GetTownsByTextQuery extends Query<TownDto[]> {
     constructor(public readonly searchText: string) {
         super();
     }

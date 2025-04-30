@@ -28,7 +28,19 @@ describe('GetTownByTextQueryHandler', () => {
   });
 
   describe('execute', () => {
-    it('should return town data when towns are found', async () => {
+    it('should call searchTownsByTextAsync with the provided searchText from the query', async () => {
+      // Arrange
+      const query = new GetTownsByTextQuery('Rosario');
+      jest.spyOn(townServiceMock, 'searchTownsByTextAsync').mockResolvedValueOnce(townMockData);
+
+      // Act
+      await handler.execute(query);
+
+      // Assert
+      expect(townServiceMock.searchTownsByTextAsync).toHaveBeenCalledWith('Rosario');
+    });
+
+    it('should map towns as townDtos and return them', async () => {
       // Arrange
       const query = new GetTownsByTextQuery('Rosario');
       jest.spyOn(townServiceMock, 'searchTownsByTextAsync').mockResolvedValueOnce(townMockData);
@@ -37,24 +49,21 @@ describe('GetTownByTextQueryHandler', () => {
       const result = await handler.execute(query);
 
       // Assert
-      expect(townServiceMock.searchTownsByTextAsync).toHaveBeenCalledWith('Rosario');
       expect(result).toEqual(townMockData);
     });
 
-    it('should return an empty array when no towns are found', async () => {
+    it('should call searchTownsByTextAsync with empty searchText when the query contains an empty string', async () => {
       // Arrange
-      const query = new GetTownsByTextQuery('xyz'); 
+      const query = new GetTownsByTextQuery('');
       jest.spyOn(townServiceMock, 'searchTownsByTextAsync').mockResolvedValueOnce([]);
 
       // Act
-      const result = await handler.execute(query);
+      await handler.execute(query);
 
       // Assert
-      expect(townServiceMock.searchTownsByTextAsync).toHaveBeenCalledWith('xyz');
-      expect(result).toEqual([]);
+      expect(townServiceMock.searchTownsByTextAsync).toHaveBeenCalledWith('');
     });
-
-    it('should call searchTownsByTextAsync with empty searchText when no search parameter is provided', async () => {
+    it('should return an empty array when the service returns no towns', async () => {
       // Arrange
       const query = new GetTownsByTextQuery('');
       jest.spyOn(townServiceMock, 'searchTownsByTextAsync').mockResolvedValueOnce([]);
@@ -63,7 +72,6 @@ describe('GetTownByTextQueryHandler', () => {
       const result = await handler.execute(query);
 
       // Assert
-      expect(townServiceMock.searchTownsByTextAsync).toHaveBeenCalledWith('');
       expect(result).toEqual([]);
     });
   });

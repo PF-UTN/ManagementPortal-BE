@@ -1,6 +1,6 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { QueryBus } from '@nestjs/cqrs';
-import { ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiQuery } from '@nestjs/swagger';
 
 import { Public } from '@mp/common/decorators';
 
@@ -12,7 +12,6 @@ export class TownController {
 
   @Public()
   @Get()
-  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Search towns by name or zip code',
     description: 'Retrieve towns that match the search text provided.',
@@ -20,6 +19,5 @@ export class TownController {
   @ApiQuery({ name: 'search', required: false, type: String })
   searchTownsAsync(@Query('search') searchText?: string) {
     return this.queryBus.execute(new GetTownsByTextQuery(searchText || ''));
-  
 }
 }

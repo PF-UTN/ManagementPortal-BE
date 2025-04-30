@@ -16,6 +16,5 @@ export class GetTownByTextQueryHandler implements IQueryHandler<GetTownsByTextQu
         zipCode: town.zipCode,
         provinceId: town.provinceId,
       }));
-  
   }
 }
