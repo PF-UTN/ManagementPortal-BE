@@ -150,6 +150,12 @@ describe('AuthenticationService', () => {
 
     it('should call signAsync with correct payload', async () => {
       // Arrange
+      const roleName = 'admin';
+      user.role = {
+        ...user.role,
+        name: roleName,
+      };
+
       const mockRolePermission1 = mockDeep<
         Prisma.RolePermissionGetPayload<{ include: { permission: true } }>
       >({
@@ -182,6 +188,7 @@ describe('AuthenticationService', () => {
         email: 'test@test.com',
         sub: 1,
         permissions: expectedPermissions,
+        role: roleName,
       });
     });
   });
