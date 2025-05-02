@@ -9,9 +9,10 @@ export class ResetPasswordCommandHandler
 {
   constructor(private readonly service: AuthenticationService) {}
 
-    async execute(command: ResetPasswordCommand) {
-        const { token, resetPasswordDto } = command;
+  async execute(command: ResetPasswordCommand) {
+    const { authenticationHeader, resetPasswordDto } = command;
+    const token = authenticationHeader.split(' ')[1];
 
-        await this.service.resetPasswordAsync(token, resetPasswordDto.password);
-    }
+    await this.service.resetPasswordAsync(token, resetPasswordDto.password);
+  }
 }

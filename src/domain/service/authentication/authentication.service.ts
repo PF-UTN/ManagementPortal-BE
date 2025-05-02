@@ -107,13 +107,7 @@ export class AuthenticationService {
   }
 
   async resetPasswordAsync(token: string, password: string) {
-    let payload: TokenPayload;
-
-    try {
-      payload = await this.jwtService.verifyAsync(token);
-    } catch {
-      throw new UnauthorizedException('Token inválido o expirado');
-    }
+    const payload = await this.jwtService.verifyAsync(token);
 
     const user = await this.userService.findByIdAsync(payload.sub);
 
