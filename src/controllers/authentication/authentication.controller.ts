@@ -71,11 +71,11 @@ export class AuthenticationController {
   })
   @ApiBody({ type: ResetPasswordDto })
   async resetPasswordAsync(
-    @Headers('Authentication') authenticationHeader: string,
+    @Headers('Authorization') authorizationHeader: string,
     @Body() resetPasswordDto: ResetPasswordDto,
   ) {
     return this.commandBus.execute(
-      new ResetPasswordCommand(authenticationHeader, resetPasswordDto),
+      new ResetPasswordCommand(authorizationHeader, resetPasswordDto),
     );
   }
 }
