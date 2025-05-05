@@ -1,8 +1,8 @@
-import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
+import { Body, Controller, Headers, HttpCode, Post } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
+import { ApiOperation, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 
-import { Public } from '@mp/common/decorators';
+import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
   UserCreationDto,
   UserSignInDto,
@@ -61,19 +61,21 @@ export class AuthenticationController {
     );
   }
 
-  @Public()
+  @Post('reset-password')
   @HttpCode(200)
-  @Post('reset-password/:token')
+  @RequiredPermissions()
+  @ApiBearerAuth()
   @ApiOperation({
     summary: 'Reset password',
     description: 'Resets the password for the user with the provided token.',
   })
-  @ApiParam({
-    name: 'token',
-    description: 'Password reset token'
-  })
   @ApiBody({ type: ResetPasswordDto })
-  async resetPasswordAsync(@Param('token') token: string, @Body() resetPasswordDto: ResetPasswordDto) {
-    return this.commandBus.execute(new ResetPasswordCommand(token, resetPasswordDto));
+  async resetPasswordAsync(
+    @Headers('Authentication') authenticationHeader: string,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    return this.commandBus.execute(
+      new ResetPasswordCommand(authenticationHeader, resetPasswordDto),
+    );
   }
 }

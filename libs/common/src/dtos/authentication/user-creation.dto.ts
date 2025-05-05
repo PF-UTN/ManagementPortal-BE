@@ -6,9 +6,10 @@ import {
   IsNumberString,
   IsString,
   Length,
-  Matches,
   MaxLength,
 } from 'class-validator';
+
+import { IsStrongPasswordCustom } from '@mp/common/decorators';
 
 import { UserDocumentTypes } from '../../constants';
 
@@ -33,11 +34,8 @@ export class UserCreationDto {
   @ApiProperty({ example: 'Password123!' })
   @IsString()
   @IsNotEmpty()
-  @Length(8, 255)
-  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).*$/, {
-    message:
-      'La contraseña debe incluir mayúsculas, minúsculas, números y símbolos.',
-  })
+  @MaxLength(255)
+  @IsStrongPasswordCustom()
   password: string;
 
   @ApiProperty({ example: '+1234567890' })

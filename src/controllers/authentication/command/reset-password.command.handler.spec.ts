@@ -38,10 +38,12 @@ describe('ResetPasswordCommandHandler', () => {
       const token = 'mocked-token';
       const resetPasswordDto = {
         password: 'new-password',
-        confirmPassword: 'new-password',
       };
 
-      const query = new ResetPasswordCommand(token, resetPasswordDto);
+      const query = new ResetPasswordCommand(
+        `Bearer ${token}`,
+        resetPasswordDto,
+      );
 
       // Act
       await handler.execute(query);
