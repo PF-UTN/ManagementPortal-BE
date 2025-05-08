@@ -15,56 +15,103 @@ export class RegistrationRequestRepository {
     page: number,
     pageSize: number,
   ) {
-    return this.prisma.registrationRequest.findMany({
-      where: {
-        AND: [
-          filters.status?.length
-            ? {
-                status: {
-                  is: {
-                    code: { in: filters.status },
+    const [data, total] = await Promise.all([
+      this.prisma.registrationRequest.findMany({
+        where: {
+          AND: [
+            filters.status?.length
+              ? {
+                  status: {
+                    is: {
+                      code: { in: filters.status },
+                    },
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  user: {
+                    firstName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
                   },
                 },
-              }
-            : {},
-          {
-            OR: [
-              {
-                user: {
-                  firstName: {
-                    contains: searchText,
-                    mode: 'insensitive',
+                {
+                  user: {
+                    lastName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
                   },
                 },
-              },
-              {
-                user: {
-                  lastName: {
-                    contains: searchText,
-                    mode: 'insensitive',
+                {
+                  user: {
+                    email: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
                   },
                 },
-              },
-              {
-                user: {
-                  email: {
-                    contains: searchText,
-                    mode: 'insensitive',
+              ],
+            },
+          ],
+        },
+        include: {
+          status: true,
+          user: true,
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { requestDate: 'desc' },
+      }),
+      this.prisma.registrationRequest.count({
+        where: {
+          AND: [
+            filters.status?.length
+              ? {
+                  status: {
+                    is: {
+                      code: { in: filters.status },
+                    },
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  user: {
+                    firstName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
                   },
                 },
-              },
-            ],
-          },
-        ],
-      },
-      include: {
-        status: true,
-        user: true,
-      },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      orderBy: { requestDate: 'desc' },
-    });
+                {
+                  user: {
+                    lastName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                {
+                  user: {
+                    email: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      }),
+    ]);
+
+    return { data, total };
   }
 
   async createRegistrationRequestAsync(

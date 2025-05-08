@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma, User } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
 
 import { SearchRegistrationRequestResponse } from '@mp/common/dtos';
 import { RegistrationRequestDomainServiceMock } from '@mp/common/testing';
@@ -9,22 +11,24 @@ import { RegistrationRequestDomainService } from '../../../domain/service/regist
 
 describe('SearchRegistrationRequestQueryHandler', () => {
   let handler: SearchRegistrationRequestQueryHandler;
-  let registrationRequestServiceMock: RegistrationRequestDomainServiceMock;
+  let registrationRequestService: RegistrationRequestDomainService;
 
   beforeEach(async () => {
-    registrationRequestServiceMock = new RegistrationRequestDomainServiceMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SearchRegistrationRequestQueryHandler,
         {
           provide: RegistrationRequestDomainService,
-          useValue: registrationRequestServiceMock,
+          useValue: mockDeep(RegistrationRequestDomainServiceMock),
         },
       ],
     }).compile();
 
     handler = module.get<SearchRegistrationRequestQueryHandler>(
       SearchRegistrationRequestQueryHandler,
+    );
+    registrationRequestService = module.get<RegistrationRequestDomainService>(
+      RegistrationRequestDomainService,
     );
   });
 
@@ -42,15 +46,15 @@ describe('SearchRegistrationRequestQueryHandler', () => {
     });
 
     jest
-      .spyOn(registrationRequestServiceMock, 'searchWithFiltersAsync')
-      .mockResolvedValue([]);
+      .spyOn(registrationRequestService, 'searchWithFiltersAsync')
+      .mockResolvedValue({ data: [], total: 0 });
 
     // Act
     await handler.execute(query);
 
     // Assert
     expect(
-      registrationRequestServiceMock.searchWithFiltersAsync,
+      registrationRequestService.searchWithFiltersAsync,
     ).toHaveBeenCalledWith(query);
   });
 
@@ -59,19 +63,25 @@ describe('SearchRegistrationRequestQueryHandler', () => {
     const query = new SearchRegistrationRequestQuery({
       searchText: 'test',
       page: 1,
-      pageSize: 10,
+      pageSize: 1,
       filters: { status: ['Pending'] },
     });
-
     const result = [
-      {
+      mockDeep<
+        Prisma.RegistrationRequestGetPayload<{
+          include: {
+            status: true;
+            user: true;
+          };
+        }>
+      >({
         id: 1,
         statusId: 5,
         userId: 10,
         note: 'Test note',
         requestDate: new Date(),
         status: { id: 5, code: 'Pending' },
-        user: {
+        user: mockDeep<User>({
           id: 10,
           firstName: 'John',
           lastName: 'Doe',
@@ -79,15 +89,18 @@ describe('SearchRegistrationRequestQueryHandler', () => {
           documentType: 'DNI',
           email: 'john.doe@example.com',
           phone: '123-456-7890',
-          registrationRequestId: 1,
           password: 'password',
           roleId: 1,
-        },
-      },
+          accountLockedUntil: null,
+          failedLoginAttempts: 0,
+        }),
+      }),
     ];
 
+    const expectedTotal = 20;
+
     const expectedResponse = new SearchRegistrationRequestResponse({
-      total: result.length,
+      total: expectedTotal,
       results: result.map((registrationRequest) => ({
         id: registrationRequest.id,
         requestDate: registrationRequest.requestDate,
@@ -103,8 +116,8 @@ describe('SearchRegistrationRequestQueryHandler', () => {
     });
 
     jest
-      .spyOn(registrationRequestServiceMock, 'searchWithFiltersAsync')
-      .mockResolvedValue(result);
+      .spyOn(registrationRequestService, 'searchWithFiltersAsync')
+      .mockResolvedValue({ data: result, total: expectedTotal });
 
     // Act
     const response = await handler.execute(query);

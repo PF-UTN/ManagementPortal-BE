@@ -19,10 +19,10 @@ export class SearchRegistrationRequestQueryHandler
   async execute(
     query: SearchRegistrationRequestQuery,
   ): Promise<SearchRegistrationRequestResponse> {
-    const registrationRequests =
+    const { data, total } =
       await this.registrationRequestDomainService.searchWithFiltersAsync(query);
 
-    const mappedResponse = registrationRequests.map(
+    const mappedResponse = data.map(
       (registrationRequest): RegistrationRequestDto => {
         return {
           id: registrationRequest.id,
@@ -40,7 +40,7 @@ export class SearchRegistrationRequestQueryHandler
     );
 
     return new SearchRegistrationRequestResponse({
-      total: registrationRequests.length,
+      total,
       results: mappedResponse,
     });
   }
