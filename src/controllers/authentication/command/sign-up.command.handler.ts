@@ -1,27 +1,16 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
-import { RegistrationRequestStatusId } from '@mp/common/constants';
-
 import { SignUpCommand } from './sign-up.command';
-import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
 
 @CommandHandler(SignUpCommand)
 export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
-  constructor(
-    private readonly userService: UserService,
-    private readonly registrationRequestService: RegistrationRequestDomainService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   async execute(command: SignUpCommand) {
-    const user = await this.userService.createUserAsync(
+    const user = await this.userService.createUserWithRegistrationRequestAsync(
       command.userCreationDto,
     );
-
-    await this.registrationRequestService.createRegistrationRequestAsync({
-      user: { connect: { id: user.id } },
-      status: { connect: { id: RegistrationRequestStatusId.Pending } },
-    });
 
     return user;
   }

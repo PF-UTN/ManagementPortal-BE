@@ -116,8 +116,10 @@ export class RegistrationRequestRepository {
 
   async createRegistrationRequestAsync(
     data: Prisma.RegistrationRequestCreateInput,
+    tx?: Prisma.TransactionClient,
   ): Promise<RegistrationRequest> {
-    return this.prisma.registrationRequest.create({
+    const client = tx ?? this.prisma;
+    return client.registrationRequest.create({
       data,
     });
   }

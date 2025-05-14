@@ -1,16 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
-import { RoleIds } from '@mp/common/constants';
+import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
 import { UserCreationDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
-import { UserRepository } from '@mp/repository';
+import {
+  PrismaUnitOfWork,
+  RegistrationRequestRepository,
+  UserRepository,
+} from '@mp/repository';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly encryptionService: EncryptionService,
+    private readonly registrationRequestRepository: RegistrationRequestRepository,
+    private readonly unitOfWork: PrismaUnitOfWork,
   ) {}
 
   async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
@@ -26,6 +32,33 @@ export class UserService {
 
     const newUser = await this.userRepository.createUserAsync(user);
     return newUser;
+  }
+
+  async createUserWithRegistrationRequestAsync(
+    userCreationDto: UserCreationDto,
+  ) {
+    return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      const hashedPassword = await this.hashPasswordAsync(
+        userCreationDto.password,
+      );
+      const user = {
+        ...userCreationDto,
+        password: hashedPassword,
+        role: { connect: { id: RoleIds.Employee } },
+      } as Prisma.UserCreateInput;
+
+      const newUser = await this.userRepository.createUserAsync(user, tx);
+
+      await this.registrationRequestRepository.createRegistrationRequestAsync(
+        {
+          user: { connect: { id: newUser.id } },
+          status: { connect: { id: RegistrationRequestStatusId.Pending } },
+        },
+        tx,
+      );
+
+      return newUser;
+    });
   }
 
   async findByEmailAsync(email: string) {
@@ -45,7 +78,8 @@ export class UserService {
   }
 
   async incrementFailedLoginAttemptsAsync(id: number) {
-    const user = await this.userRepository.incrementFailedLoginAttemptsAsync(id);
+    const user =
+      await this.userRepository.incrementFailedLoginAttemptsAsync(id);
     return user.failedLoginAttempts;
   }
 
