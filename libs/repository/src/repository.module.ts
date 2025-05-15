@@ -6,6 +6,7 @@ import {
   RegistrationRequestRepository,
   RegistrationRequestStatusRepository,
   TownRepository,
+  PrismaUnitOfWork,
 } from './services';
 @Module({
   providers: [
@@ -14,12 +15,14 @@ import {
     RegistrationRequestRepository,
     RegistrationRequestStatusRepository,
     TownRepository,
+    PrismaUnitOfWork,
   ],
   exports: [
     UserRepository,
     RegistrationRequestRepository,
     RegistrationRequestStatusRepository,
     TownRepository,
+    PrismaUnitOfWork,
   ],
 })
 export class RepositoryModule {}
