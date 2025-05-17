@@ -1,0 +1,14 @@
+model Product {
+    id           Int             @id @default(autoincrement())
+    name         String          @db.VarChar(255)
+    description  String          @db.Text
+    price        Decimal         @db.Decimal(10, 2)
+    enabled      Boolean         @default(true)
+    weight       Decimal         @db.Decimal(10, 2)
+    category     ProductCategory @relation(fields: [categoryId], references: [id])
+    categoryId   Int
+    supplier     Supplier        @relation(fields: [supplierId], references: [id])
+    supplierId   Int
+    stock        Stock?
+    priceHistory PriceHistory[]
+}
