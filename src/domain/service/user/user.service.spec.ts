@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
@@ -295,6 +296,18 @@ describe('UserService', () => {
         },
         txMock,
       );
+    });
+
+    it('should throw BadRequestException if email already exists', async () => {
+      // Arrange
+      jest
+        .spyOn(userRepository, 'findByEmailAsync')
+        .mockResolvedValueOnce(user);
+
+      // Act & Assert
+      await expect(
+        service.createUserWithRegistrationRequestAsync(userCreationDtoMock),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
