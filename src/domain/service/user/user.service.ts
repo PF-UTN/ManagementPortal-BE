@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
@@ -37,6 +37,14 @@ export class UserService {
   async createUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
+    const foundUser = await this.userRepository.findByEmailAsync(
+      userCreationDto.email,
+    );
+    if (foundUser) {
+      throw new BadRequestException(
+        'Este email ya se encuentra registrado. Por favor, usá otro email o iniciá sesión.',
+      );
+    }
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
       const hashedPassword = await this.hashPasswordAsync(
         userCreationDto.password,
