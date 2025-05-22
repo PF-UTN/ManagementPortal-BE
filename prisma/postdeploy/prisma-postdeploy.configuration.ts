@@ -5,6 +5,7 @@ import {
   registrationRequestStatusPostDeployAsync,
   rolePermissionPostDeployAsync,
   rolePostDeployAsync,
+  taxCategoryPostDeployAsync,
 } from './table-population';
 
 const prisma = new PrismaClient();
@@ -14,6 +15,7 @@ async function main() {
     registrationRequestStatusPostDeployAsync(),
     rolePostDeployAsync(),
     permissionPostDeployAsync(),
+    taxCategoryPostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);
