@@ -9,8 +9,8 @@ export class SearchProductFiltersDto {
     })
     @IsArray()
     @IsString({ each: true })
-    @ValidateIf((o) => o.categoryDescriptions?.length > 0)
-    categoryDescriptions?: string[];
+    @ValidateIf((o) => o.categoryName?.length > 0)
+    categoryName?: string[];
 
     @ApiProperty({
         example: ['Proveedor A', 'Proveedor B'],
@@ -19,8 +19,8 @@ export class SearchProductFiltersDto {
     })
     @IsArray()
     @IsString({ each: true })
-    @ValidateIf((o) => o.providerDescription?.length > 0)
-    providerDescription?: string[];
+    @ValidateIf((o) => o.supplierBusinessName?.length > 0)
+    supplierBusinessName?: string[];
 
     @ApiProperty({
         example: true,

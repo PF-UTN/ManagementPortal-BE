@@ -1,15 +1,14 @@
+import { Decimal } from "@prisma/client/runtime/library";
+
 export class ProductDto {
   id: number;
   name: string;
   description: string;
-  price: number;         
+  price: Decimal;         
   enabled: boolean;
-  weight: number;        
-  categoryId: number;
-  supplierId: number;
-  // category?: ProductCategoryDto;
-  // supplier?: SupplierDto;
-  // stock?: StockDto;
-  // priceHistory?: PriceHistoryDto[];
+  weight: Decimal;        
+  categoryName: string;
+  supplierBusinessName: string;
+  stock?: number;
 }
 

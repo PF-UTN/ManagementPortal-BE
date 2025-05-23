@@ -31,14 +31,9 @@ export class SearchProductQueryHandler
                     price: product.price,
                     enabled: product.enabled,
                     weight: product.weight,
-                    category: {
-                        id: product.category.id,
-                        description: product.category.description,
-                    },
-                    provider: {
-                        id: product.supplier.id,
-                        businessName: product.supplier.businessName,
-                    },
+                    categoryName: product.category.name,
+                    supplierBusinessName: product.supplier.businessName,
+                    stock: product.stock?.quantityAvailable, 
                 };
             },
         );

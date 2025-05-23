@@ -19,20 +19,20 @@ export class ProductRepository {
                 where: {
                     AND: [
                         filters.enabled !== undefined ? { enabled: filters.enabled } : {},
-                        filters.categoryDescriptions?.length
+                        filters.categoryName?.length
                             ? {
                                 category: {
                                     is: {
-                                        description: { in: filters.categoryDescriptions },
+                                        name: { in: filters.categoryName },
                                     },
                                 },
                             }
                             : {},
-                        filters.providerDescription?.length
+                        filters.supplierBusinessName?.length
                             ? {
                                 supplier: {
                                     is: {
-                                        businessName: { in: filters.providerDescription },
+                                        businessName: { in: filters.supplierBusinessName },
                                     },
                                 },
                             }
@@ -55,6 +55,24 @@ export class ProductRepository {
                         },
                     ],
                 },
+                include: {
+                    category: {
+                        select: {
+                            name: true,
+                            description: true,
+                        },
+                    },
+                    supplier: {
+                        select: {
+                            businessName: true,
+                        },
+                    },
+                    stock: {
+                        select: {
+                            quantityAvailable: true,
+                        },
+                    },
+                },
                 skip: (page - 1) * pageSize,
                 take: pageSize,
                 orderBy: { name: 'asc' },
@@ -63,20 +81,20 @@ export class ProductRepository {
                 where: {
                     AND: [
                         filters.enabled !== undefined ? { enabled: filters.enabled } : {},
-                        filters.categoryDescriptions?.length
+                        filters.categoryName?.length
                             ? {
                                 category: {
                                     is: {
-                                        description: { in: filters.categoryDescriptions },
+                                        description: { in: filters.categoryName },
                                     },
                                 },
                             }
                             : {},
-                        filters.providerDescription?.length
+                        filters.supplierBusinessName?.length
                             ? {
                                 supplier: {
                                     is: {
-                                        businessName: { in: filters.providerDescription },
+                                        businessName: { in: filters.supplierBusinessName },
                                     },
                                 },
                             }
