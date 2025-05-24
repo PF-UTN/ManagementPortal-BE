@@ -10,7 +10,7 @@ import {
 
 import { SearchProductFiltersDto } from './search-product-filters.dto';
 
-export class SearchProductRequestDto {
+export class SearchProductRequest {
   @ApiProperty({
     example: 'search text',
     description: 'The text to search for',

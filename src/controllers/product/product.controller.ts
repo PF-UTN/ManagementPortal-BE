@@ -11,7 +11,7 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { SearchProductRequestDto } from '@mp/common/dtos';
+import { SearchProductRequest } from '@mp/common/dtos';
 
 import { SearchProductQuery } from './command/search-product-query';
 
@@ -20,7 +20,7 @@ export class ProductController {
   constructor(
     private readonly queryBus: QueryBus,
   ) {}
-
+  
   @Post('search')
   @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
   @ApiBearerAuth()
@@ -30,7 +30,7 @@ export class ProductController {
       'Search for products based on the provided filters and search text.',
   })
   searchAsync(
-    @Body() searchProductRequestDto: SearchProductRequestDto,
+    @Body() searchProductRequestDto: SearchProductRequest,
   ) {
     return this.queryBus.execute(
       new SearchProductQuery(searchProductRequestDto),
