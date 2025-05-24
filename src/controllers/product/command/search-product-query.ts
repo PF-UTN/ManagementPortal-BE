@@ -3,7 +3,7 @@ import { Query } from '@nestjs/cqrs';
 import { 
     SearchProductFiltersDto, 
     SearchProductResponse,
-    SearchProductRequestDto,
+    SearchProductRequest,
 } from '@mp/common/dtos';
 
 export class SearchProductQuery extends Query<SearchProductResponse> {
@@ -12,7 +12,7 @@ export class SearchProductQuery extends Query<SearchProductResponse> {
   pageSize: number = 10;
   filters: SearchProductFiltersDto;
 
-  constructor(request: SearchProductRequestDto) {
+  constructor(request: SearchProductRequest) {
     super();
     this.searchText = request.searchText;
     this.page = request.page;
