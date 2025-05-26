@@ -2,7 +2,7 @@ import { Country, Province, Town } from '@prisma/client';
 
 import { mergeTableData } from './generate-merge-data.script';
 
-export const populateTablesPostDeployAsync = async () => {
+export const countryProvinceTownPostDeployAsync = async () => {
   const countryData: Country[] = [
     { id: 1, name: 'Argentina' },
     { id: 2, name: 'Brasil' },
