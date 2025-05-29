@@ -1,0 +1,9 @@
+model Address {
+     id                  Int                  @id @default(autoincrement())
+     townId              Int
+     town                Town                 @relation(fields: [townId], references: [id])
+     street              String               @db.VarChar(100)
+     streetNumber        Int
+     user                User                 @relation(fields: [userId], references: [id])
+     userId              Int                  @unique
+}

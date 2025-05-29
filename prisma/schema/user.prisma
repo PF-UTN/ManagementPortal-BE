@@ -12,5 +12,6 @@ model User {
   failedLoginAttempts Int                  @default(0)
   registrationRequest RegistrationRequest?
   role                Role                 @relation(fields: [roleId], references: [id])
-  client              Client?
+  client              Client? 
+  address             Address?
 }
