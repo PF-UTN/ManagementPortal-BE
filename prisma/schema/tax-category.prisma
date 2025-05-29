@@ -1,6 +1,0 @@
-model TaxCategory {
-    id          Int      @id @default(autoincrement())
-    name        String   @db.VarChar(50)
-    description String?  @db.VarChar(255)
-    clients     Client[]
-}

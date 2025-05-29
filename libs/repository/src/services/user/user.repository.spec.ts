@@ -147,51 +147,14 @@ describe('UserRepository', () => {
     it('should reset failed login attempts and locked until date', async () => {
       // Arrange
       const userId = 1;
-      const updatedUser = {
-        ...userMock,
-        failedLoginAttempts: 0,
-        accountLockedUntil: null,
-      };
+      const updatedUser = { ...userMock, failedLoginAttempts: 0, accountLockedUntil: null };
       prismaServiceMock.user.update.mockResolvedValue(updatedUser);
 
       // Act
-      const result =
-        await repository.resetFailedLoginAttemptsAndLockedUntilAsync(userId);
+      const result = await repository.resetFailedLoginAttemptsAndLockedUntilAsync(userId);
 
       // Assert
       expect(result).toEqual(updatedUser);
-    });
-  });
-
-  describe('checkIfExistsByEmailAsync', () => {
-    it('should return true if user exists with given email', async () => {
-      // Arrange
-      prismaServiceMock.user.findUnique.mockResolvedValue(userMock);
-
-      // Act
-      const result = await repository.checkIfExistsByEmailAsync(userMock.email);
-
-      // Assert
-      expect(result).toBe(true);
-      expect(prismaServiceMock.user.findUnique).toHaveBeenCalledWith({
-        where: { email: userMock.email },
-      });
-    });
-
-    it('should return false if user does not exist with given email', async () => {
-      // Arrange
-      prismaServiceMock.user.findUnique.mockResolvedValue(null);
-
-      // Act
-      const result = await repository.checkIfExistsByEmailAsync(
-        'nonexistent@email.com',
-      );
-
-      // Assert
-      expect(result).toBe(false);
-      expect(prismaServiceMock.user.findUnique).toHaveBeenCalledWith({
-        where: { email: 'nonexistent@email.com' },
-      });
     });
   });
 });

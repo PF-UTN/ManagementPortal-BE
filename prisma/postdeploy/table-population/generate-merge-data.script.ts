@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 export const mergeTableData = async (
   tableName: string,
-  values: Array<Record<string, string | number | Date | null>>,
+  values: Array<Record<string, string | number | Date>>,
   uniqueColumns: string[] = ['id'],
 ): Promise<void> => {
   if (values.length === 0) throw new Error('Values array cannot be empty');

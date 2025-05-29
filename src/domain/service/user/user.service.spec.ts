@@ -4,11 +4,9 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationResponseDto } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import { userCreationDtoMock, userMock } from '@mp/common/testing';
 import {
-  ClientRepository,
   PrismaUnitOfWork,
   RegistrationRequestRepository,
   UserRepository,
@@ -21,7 +19,6 @@ describe('UserService', () => {
   let userRepository: UserRepository;
   let encryptionService: EncryptionService;
   let registrationRequestRepository: RegistrationRequestRepository;
-  let clientRepository: ClientRepository;
   let unitOfWork: PrismaUnitOfWork;
   let user: ReturnType<
     typeof mockDeep<
@@ -41,9 +38,6 @@ describe('UserService', () => {
       }>
     >
   >;
-  let userCreationReturnDtoMock: ReturnType<
-    typeof mockDeep<UserCreationResponseDto>
-  >;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,10 +49,6 @@ describe('UserService', () => {
           provide: RegistrationRequestRepository,
           useValue: mockDeep(RegistrationRequestRepository),
         },
-        {
-          provide: ClientRepository,
-          useValue: mockDeep(ClientRepository),
-        },
         { provide: PrismaUnitOfWork, useValue: mockDeep(PrismaUnitOfWork) },
       ],
     }).compile();
@@ -68,7 +58,6 @@ describe('UserService', () => {
     registrationRequestRepository = module.get<RegistrationRequestRepository>(
       RegistrationRequestRepository,
     );
-    clientRepository = module.get<ClientRepository>(ClientRepository);
     unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
 
     service = module.get<UserService>(UserService);
@@ -101,18 +90,6 @@ describe('UserService', () => {
       requestDate: mockDeep<Date>(new Date()),
       note: null,
     };
-
-    userCreationReturnDtoMock = mockDeep<UserCreationResponseDto>();
-
-    userCreationReturnDtoMock.id = user.id;
-    userCreationReturnDtoMock.email = user.email;
-    userCreationReturnDtoMock.firstName = user.firstName;
-    userCreationReturnDtoMock.lastName = user.lastName;
-    userCreationReturnDtoMock.companyName = 'Test Company';
-    userCreationReturnDtoMock.documentType = user.documentType;
-    userCreationReturnDtoMock.documentNumber = user.documentNumber;
-    userCreationReturnDtoMock.phone = user.phone;
-    userCreationReturnDtoMock.taxCategoryName = 'Responsable Inscripto';
   });
 
   it('should be defined', () => {
@@ -250,21 +227,9 @@ describe('UserService', () => {
     });
   });
 
-  describe('createClientUserWithRegistrationRequestAsync', () => {
+  describe('createUserWithRegistrationRequestAsync', () => {
     it('should execute the method within a transaction using unitOfWork.execute', async () => {
-      // Arrange
       jest.spyOn(userRepository, 'createUserAsync').mockResolvedValue(user);
-      jest.spyOn(clientRepository, 'createClientAsync').mockResolvedValueOnce({
-        id: 1,
-        companyName: userCreationDtoMock.companyName,
-        taxCategoryId: 1,
-        taxCategory: {
-          id: 1,
-          name: 'Responsable Inscripto',
-          description: 'Test description',
-        },
-        userId: 1,
-      });
 
       const executeSpy = jest
         .spyOn(unitOfWork, 'execute')
@@ -273,78 +238,43 @@ describe('UserService', () => {
           return cb(tx);
         });
 
-      // Act
-      await service.createClientUserWithRegistrationRequestAsync(
-        userCreationDtoMock,
-      );
+      await service.createUserWithRegistrationRequestAsync(userCreationDtoMock);
 
-      // Assert
       expect(executeSpy).toHaveBeenCalled();
     });
 
     it('should call userRepository.createUserAsync with correct data', async () => {
-      // Arrange
-      const { companyName, taxCategoryId, ...userData } = userCreationDtoMock;
       const hashedPassword = 'hashedPassword';
       jest
         .spyOn(encryptionService, 'hashAsync')
         .mockResolvedValueOnce(hashedPassword);
       const txMock = {} as Prisma.TransactionClient;
-
-      jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
-
-      jest.spyOn(clientRepository, 'createClientAsync').mockResolvedValueOnce({
-        id: 1,
-        companyName: companyName,
-        taxCategoryId: taxCategoryId,
-        taxCategory: {
-          id: 1,
-          name: 'Responsable Inscripto',
-          description: 'Test description',
-        },
-        userId: 1,
-      });
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
       });
 
       const expectedUser = {
-        ...userData,
+        ...userCreationDtoMock,
         password: hashedPassword,
         role: { connect: { id: RoleIds.Employee } },
       };
 
-      const createUserSpy = jest.spyOn(userRepository, 'createUserAsync');
+      const createUserSpy = jest
+        .spyOn(userRepository, 'createUserAsync')
+        .mockResolvedValueOnce(user);
 
-      // Act
-      await service.createClientUserWithRegistrationRequestAsync(
-        userCreationDtoMock,
-      );
+      await service.createUserWithRegistrationRequestAsync(userCreationDtoMock);
 
-      // Assert
       expect(createUserSpy).toHaveBeenCalledWith(expectedUser, txMock);
     });
 
     it('should call registrationRequestRepository.createRegistrationRequestAsync with correct data', async () => {
-      // Arrange
       const hashedPassword = 'hashedPassword';
       jest
         .spyOn(encryptionService, 'hashAsync')
         .mockResolvedValueOnce(hashedPassword);
       const txMock = {} as Prisma.TransactionClient;
-
-      jest.spyOn(clientRepository, 'createClientAsync').mockResolvedValueOnce({
-        id: 1,
-        companyName: userCreationDtoMock.companyName,
-        taxCategoryId: 1,
-        taxCategory: {
-          id: 1,
-          name: 'Responsable Inscripto',
-          description: 'Test description',
-        },
-        userId: 1,
-      });
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
@@ -357,12 +287,8 @@ describe('UserService', () => {
         'createRegistrationRequestAsync',
       );
 
-      // Act
-      await service.createClientUserWithRegistrationRequestAsync(
-        userCreationDtoMock,
-      );
+      await service.createUserWithRegistrationRequestAsync(userCreationDtoMock);
 
-      // Assert
       expect(createRequestSpy).toHaveBeenCalledWith(
         {
           user: { connect: { id: user.id } },
@@ -372,60 +298,15 @@ describe('UserService', () => {
       );
     });
 
-    it('should call clientRepository.createClientAsync with correct data', async () => {
-      // Arrange
-      const hashedPassword = 'hashedPassword';
-      jest
-        .spyOn(encryptionService, 'hashAsync')
-        .mockResolvedValueOnce(hashedPassword);
-      const txMock = {} as Prisma.TransactionClient;
-
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
-
-      const expectedClient = {
-        user: { connect: { id: user.id } },
-        companyName: userCreationDtoMock.companyName,
-        taxCategory: { connect: { id: userCreationDtoMock.taxCategoryId } },
-      };
-
-      const createClientSpy = jest
-        .spyOn(clientRepository, 'createClientAsync')
-        .mockResolvedValueOnce({
-          id: 1,
-          companyName: userCreationDtoMock.companyName,
-          taxCategoryId: 1,
-          taxCategory: {
-            id: 1,
-            name: 'Responsable Inscripto',
-            description: 'Test description',
-          },
-          userId: 1,
-        });
-
-      // Act
-      await service.createClientUserWithRegistrationRequestAsync(
-        userCreationDtoMock,
-      );
-
-      // Assert
-      expect(createClientSpy).toHaveBeenCalledWith(expectedClient, txMock);
-    });
-
     it('should throw BadRequestException if email already exists', async () => {
       // Arrange
       jest
-        .spyOn(userRepository, 'checkIfExistsByEmailAsync')
-        .mockResolvedValueOnce(true);
+        .spyOn(userRepository, 'findByEmailAsync')
+        .mockResolvedValueOnce(user);
 
       // Act & Assert
       await expect(
-        service.createClientUserWithRegistrationRequestAsync(
-          userCreationDtoMock,
-        ),
+        service.createUserWithRegistrationRequestAsync(userCreationDtoMock),
       ).rejects.toThrow(BadRequestException);
     });
   });
