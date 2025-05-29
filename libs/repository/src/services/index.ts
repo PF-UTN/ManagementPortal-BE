@@ -4,4 +4,3 @@ export * from './registration-request-status/registration-request-status.reposit
 export * from './user/user.repository';
 export * from './town/town.repository';
 export * from './unit-of-work/prisma-unit-of-work';
-export * from './client/client.repository';

@@ -3,7 +3,6 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { RegistrationRequestStatusId } from '@mp/common/constants';
-import { UserCreationResponseDto } from '@mp/common/dtos';
 import { userCreationDtoMock } from '@mp/common/testing';
 
 import { SignUpCommand } from './sign-up.command';
@@ -30,9 +29,6 @@ describe('SignUpCommandHandler', () => {
         };
       }>
     >
-  >;
-  let userCreationReturnDtoMock: ReturnType<
-    typeof mockDeep<UserCreationResponseDto>
   >;
 
   beforeEach(async () => {
@@ -78,30 +74,18 @@ describe('SignUpCommandHandler', () => {
       requestDate: mockDeep<Date>(new Date()),
       note: null,
     };
-
-    userCreationReturnDtoMock = mockDeep<UserCreationResponseDto>();
-
-    userCreationReturnDtoMock.id = user.id;
-    userCreationReturnDtoMock.email = user.email;
-    userCreationReturnDtoMock.firstName = user.firstName;
-    userCreationReturnDtoMock.lastName = user.lastName;
-    userCreationReturnDtoMock.companyName = 'Test Company';
-    userCreationReturnDtoMock.documentType = user.documentType;
-    userCreationReturnDtoMock.documentNumber = user.documentNumber;
-    userCreationReturnDtoMock.phone = user.phone;
-    userCreationReturnDtoMock.taxCategoryName = 'Responsable Inscripto';
   });
 
   it('should be defined', () => {
     expect(handler).toBeDefined();
   });
 
-  it('should call createClientUserWithRegistrationRequestAsync with correct parameters', async () => {
+  it('should call createUserWithRegistrationRequestAsync with correct parameters', async () => {
     // Arrange
     const command = new SignUpCommand(userCreationDtoMock);
     const createUserWithRegistrationRequestAsyncSpy = jest
-      .spyOn(userService, 'createClientUserWithRegistrationRequestAsync')
-      .mockResolvedValueOnce(userCreationReturnDtoMock);
+      .spyOn(userService, 'createUserWithRegistrationRequestAsync')
+      .mockResolvedValueOnce(user);
     // Act
     await handler.execute(command);
 
@@ -115,13 +99,13 @@ describe('SignUpCommandHandler', () => {
     // Arrange
     const command = new SignUpCommand(userCreationDtoMock);
     jest
-      .spyOn(userService, 'createClientUserWithRegistrationRequestAsync')
-      .mockResolvedValueOnce(userCreationReturnDtoMock);
+      .spyOn(userService, 'createUserWithRegistrationRequestAsync')
+      .mockResolvedValueOnce(user);
 
     // Act
     const result = await handler.execute(command);
 
     // Assert
-    expect(result).toEqual(userCreationReturnDtoMock);
+    expect(result).toEqual(user);
   });
 });

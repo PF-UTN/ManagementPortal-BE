@@ -6,7 +6,6 @@ import {
   registrationRequestStatusPostDeployAsync,
   rolePermissionPostDeployAsync,
   rolePostDeployAsync,
-  taxCategoryPostDeployAsync,
 } from './table-population';
 
 const prisma = new PrismaClient();
@@ -17,7 +16,6 @@ async function main() {
     rolePostDeployAsync(),
     permissionPostDeployAsync(),
     countryProvinceTownPostDeployAsync(),
-    taxCategoryPostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);

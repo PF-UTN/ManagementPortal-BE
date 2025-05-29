@@ -3,7 +3,6 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsNumberString,
   IsString,
   Length,
@@ -12,7 +11,7 @@ import {
 
 import { IsStrongPasswordCustom } from '@mp/common/decorators';
 
-import { TaxCategoryId, UserDocumentTypes } from '../../constants';
+import { UserDocumentTypes } from '../../constants';
 
 export class UserCreationDto {
   @ApiProperty({ example: 'john.doe@example.com' })
@@ -57,16 +56,4 @@ export class UserCreationDto {
   @MaxLength(4)
   @IsEnum(UserDocumentTypes)
   documentType: string;
-
-  @ApiProperty({ example: 'Test Company' })
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(50)
-  companyName: string;
-
-  @ApiProperty({ example: 1 })
-  @IsNumber()
-  @IsNotEmpty()
-  @IsEnum(TaxCategoryId)
-  taxCategoryId: number;
 }

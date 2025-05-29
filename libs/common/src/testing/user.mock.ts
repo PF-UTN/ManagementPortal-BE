@@ -10,8 +10,6 @@ export const userCreationDtoMock: UserCreationDto = {
   phone: '1234567890',
   documentNumber: '12345678',
   documentType: 'DNI',
-  companyName: 'Test Company',
-  taxCategoryId: 1,
 };
 
 export const userMock = {
