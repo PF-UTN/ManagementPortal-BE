@@ -1,7 +1,8 @@
 model Client {
-    id          Int    @id @default(autoincrement())
-    companyName String @db.VarChar(50)
-    taxCategory String @db.VarChar(20)
-    user        User   @relation(fields: [userId], references: [id])
-    userId      Int    @unique
+    id            Int         @id @default(autoincrement())
+    companyName   String      @db.VarChar(50)
+    user          User        @relation(fields: [userId], references: [id])
+    userId        Int         @unique
+    taxCategory   TaxCategory @relation(fields: [taxCategoryId], references: [id])
+    taxCategoryId Int
 }
