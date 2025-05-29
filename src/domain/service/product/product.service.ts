@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { SearchProductQuery } from 'src/controllers/product/command/search-product-query';
 
 import { ProductRepository } from '@mp/repository';
+
+import { SearchProductQuery } from '../../../controllers/product/command/search-product-query';
 
 @Injectable()
 export class ProductService {

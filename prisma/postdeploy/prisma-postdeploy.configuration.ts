@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 
 import {
   countryProvinceTownPostDeployAsync,
-  productPostDeployAsync,
   permissionPostDeployAsync,
   registrationRequestStatusPostDeployAsync,
   rolePermissionPostDeployAsync,
@@ -17,7 +16,6 @@ async function main() {
     rolePostDeployAsync(),
     permissionPostDeployAsync(),
     countryProvinceTownPostDeployAsync(),
-    productPostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);

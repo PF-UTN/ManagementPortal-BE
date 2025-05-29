@@ -28,12 +28,12 @@ export class SearchProductQueryHandler
                     id: product.id,
                     name: product.name,
                     description: product.description,
-                    price: product.price,
+                    price: product.price.toNumber(),
                     enabled: product.enabled,
-                    weight: product.weight,
+                    weight: product.weight.toNumber(),
                     categoryName: product.category.name,
                     supplierBusinessName: product.supplier.businessName,
-                    stock: product.stock?.quantityAvailable, 
+                    stock: product.stock?.quantityAvailable ?? 0, 
                 };
             },
         );

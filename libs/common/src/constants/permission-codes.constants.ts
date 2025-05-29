@@ -5,4 +5,10 @@ export const PermissionCodes = {
     UPDATE: 'registration-request:update',
     DELETE: 'registration-request:delete',
   },
+  Product: {
+    READ: 'product:read',
+    CREATE: 'product:create',
+    UPDATE: 'product:update',
+    DELETE: 'product:delete',
+  },
 };

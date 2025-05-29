@@ -22,7 +22,7 @@ export class ProductController {
   ) {}
   
   @Post('search')
-  @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
+  @RequiredPermissions(PermissionCodes.Product.READ)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Search products for listing',
