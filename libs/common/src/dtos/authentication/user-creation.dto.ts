@@ -56,4 +56,18 @@ export class UserCreationDto {
   @MaxLength(4)
   @IsEnum(UserDocumentTypes)
   documentType: string;
+
+  @ApiProperty({ example: 'Calle Falsa' })
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  street: string;
+
+  @ApiProperty({ example: 123 })
+  @IsNotEmpty()
+  streetNumber: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNotEmpty()
+  townId: number;  
 }

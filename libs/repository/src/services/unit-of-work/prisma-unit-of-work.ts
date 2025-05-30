@@ -6,6 +6,10 @@ import { IUnitOfWork } from './unit-of-work.interface';
 
 @Injectable()
 export class PrismaUnitOfWork implements IUnitOfWork {
+  public get prisma() {
+    return this.prismaService;
+  }
+
   constructor(private readonly prismaService: PrismaService) {}
 
   async execute<T>(
