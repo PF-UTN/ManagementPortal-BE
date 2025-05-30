@@ -1,8 +1,8 @@
 import { Command } from '@nestjs/cqrs';
 
-import { UserCreationDto, UserCreationResponseDto } from '@mp/common/dtos';
+import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
 
-export class SignUpCommand extends Command<UserCreationResponseDto> {
+export class SignUpCommand extends Command<UserCreationResponse> {
   constructor(public readonly userCreationDto: UserCreationDto) {
     super();
   }

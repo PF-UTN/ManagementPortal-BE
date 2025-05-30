@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationResponseDto } from '@mp/common/dtos';
+import { UserCreationResponse } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import { userCreationDtoMock, userMock } from '@mp/common/testing';
 import {
@@ -42,7 +42,7 @@ describe('UserService', () => {
     >
   >;
   let userCreationReturnDtoMock: ReturnType<
-    typeof mockDeep<UserCreationResponseDto>
+    typeof mockDeep<UserCreationResponse>
   >;
 
   beforeEach(async () => {
@@ -102,7 +102,7 @@ describe('UserService', () => {
       note: null,
     };
 
-    userCreationReturnDtoMock = mockDeep<UserCreationResponseDto>();
+    userCreationReturnDtoMock = mockDeep<UserCreationResponse>();
 
     userCreationReturnDtoMock.id = user.id;
     userCreationReturnDtoMock.email = user.email;

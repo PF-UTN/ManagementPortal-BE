@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { RegistrationRequestStatusId } from '@mp/common/constants';
-import { UserCreationResponseDto } from '@mp/common/dtos';
+import { UserCreationResponse } from '@mp/common/dtos';
 import { userCreationDtoMock } from '@mp/common/testing';
 
 import { SignUpCommand } from './sign-up.command';
@@ -31,8 +31,8 @@ describe('SignUpCommandHandler', () => {
       }>
     >
   >;
-  let userCreationReturnDtoMock: ReturnType<
-    typeof mockDeep<UserCreationResponseDto>
+  let userCreationResponseDtoMock: ReturnType<
+    typeof mockDeep<UserCreationResponse>
   >;
 
   beforeEach(async () => {
@@ -79,17 +79,17 @@ describe('SignUpCommandHandler', () => {
       note: null,
     };
 
-    userCreationReturnDtoMock = mockDeep<UserCreationResponseDto>();
+    userCreationResponseDtoMock = mockDeep<UserCreationResponse>();
 
-    userCreationReturnDtoMock.id = user.id;
-    userCreationReturnDtoMock.email = user.email;
-    userCreationReturnDtoMock.firstName = user.firstName;
-    userCreationReturnDtoMock.lastName = user.lastName;
-    userCreationReturnDtoMock.companyName = 'Test Company';
-    userCreationReturnDtoMock.documentType = user.documentType;
-    userCreationReturnDtoMock.documentNumber = user.documentNumber;
-    userCreationReturnDtoMock.phone = user.phone;
-    userCreationReturnDtoMock.taxCategoryName = 'Responsable Inscripto';
+    userCreationResponseDtoMock.id = user.id;
+    userCreationResponseDtoMock.email = user.email;
+    userCreationResponseDtoMock.firstName = user.firstName;
+    userCreationResponseDtoMock.lastName = user.lastName;
+    userCreationResponseDtoMock.companyName = 'Test Company';
+    userCreationResponseDtoMock.documentType = user.documentType;
+    userCreationResponseDtoMock.documentNumber = user.documentNumber;
+    userCreationResponseDtoMock.phone = user.phone;
+    userCreationResponseDtoMock.taxCategoryName = 'Responsable Inscripto';
   });
 
   it('should be defined', () => {
@@ -101,7 +101,7 @@ describe('SignUpCommandHandler', () => {
     const command = new SignUpCommand(userCreationDtoMock);
     const createUserWithRegistrationRequestAsyncSpy = jest
       .spyOn(userService, 'createClientUserWithRegistrationRequestAsync')
-      .mockResolvedValueOnce(userCreationReturnDtoMock);
+      .mockResolvedValueOnce(userCreationResponseDtoMock);
     // Act
     await handler.execute(command);
 
@@ -116,12 +116,12 @@ describe('SignUpCommandHandler', () => {
     const command = new SignUpCommand(userCreationDtoMock);
     jest
       .spyOn(userService, 'createClientUserWithRegistrationRequestAsync')
-      .mockResolvedValueOnce(userCreationReturnDtoMock);
+      .mockResolvedValueOnce(userCreationResponseDtoMock);
 
     // Act
     const result = await handler.execute(command);
 
     // Assert
-    expect(result).toEqual(userCreationReturnDtoMock);
+    expect(result).toEqual(userCreationResponseDtoMock);
   });
 });

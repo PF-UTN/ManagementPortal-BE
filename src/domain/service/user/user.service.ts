@@ -2,7 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationDto, UserCreationResponseDto } from '@mp/common/dtos';
+import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import {
   ClientRepository,
@@ -68,7 +68,7 @@ export class UserService {
         tx,
       );
 
-      const userCreationResponseDto: UserCreationResponseDto = {
+      const userCreationResponseDto: UserCreationResponse = {
         id: newUser.id,
         email: newUser.email,
         firstName: newUser.firstName,
