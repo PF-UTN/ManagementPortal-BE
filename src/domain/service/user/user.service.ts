@@ -2,9 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationDto } from '@mp/common/dtos';
+import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import {
+  ClientRepository,
   PrismaUnitOfWork,
   RegistrationRequestRepository,
   UserRepository,
@@ -16,6 +17,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly encryptionService: EncryptionService,
     private readonly registrationRequestRepository: RegistrationRequestRepository,
+    private readonly clientRepository: ClientRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
   ) {}
 
@@ -34,28 +36,49 @@ export class UserService {
     return newUser;
   }
 
-  async createUserWithRegistrationRequestAsync(
+  async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
-    const foundUser = await this.userRepository.findByEmailAsync(
-      userCreationDto.email,
-    );
-    if (foundUser) {
+    if (
+      await this.userRepository.checkIfExistsByEmailAsync(userCreationDto.email)
+    ) {
       throw new BadRequestException(
         'Este email ya se encuentra registrado. Por favor, usá otro email o iniciá sesión.',
       );
     }
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const hashedPassword = await this.hashPasswordAsync(
-        userCreationDto.password,
-      );
+      const { companyName, taxCategoryId, ...userData } = userCreationDto;
+      const hashedPassword = await this.hashPasswordAsync(userData.password);
       const user = {
-        ...userCreationDto,
+        ...userData,
         password: hashedPassword,
         role: { connect: { id: RoleIds.Employee } },
       } as Prisma.UserCreateInput;
 
       const newUser = await this.userRepository.createUserAsync(user, tx);
+
+      const client = {
+        user: { connect: { id: newUser.id } },
+        companyName,
+        taxCategory: { connect: { id: taxCategoryId } },
+      };
+
+      const newClient = await this.clientRepository.createClientAsync(
+        client,
+        tx,
+      );
+
+      const userCreationResponseDto: UserCreationResponse = {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        companyName: newClient.companyName,
+        documentType: newUser.documentType,
+        documentNumber: newUser.documentNumber,
+        phone: newUser.phone,
+        taxCategoryName: newClient.taxCategory.name,
+      };
 
       await this.registrationRequestRepository.createRegistrationRequestAsync(
         {
@@ -65,7 +88,7 @@ export class UserService {
         tx,
       );
 
-      return newUser;
+      return userCreationResponseDto;
     });
   }
 
