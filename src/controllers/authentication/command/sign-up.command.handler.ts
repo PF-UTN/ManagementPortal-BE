@@ -8,9 +8,10 @@ export class SignUpCommandHandler implements ICommandHandler<SignUpCommand> {
   constructor(private readonly userService: UserService) {}
 
   async execute(command: SignUpCommand) {
-    const user = await this.userService.createUserWithRegistrationRequestAsync(
-      command.userCreationDto,
-    );
+    const user =
+      await this.userService.createClientUserWithRegistrationRequestAsync(
+        command.userCreationDto,
+      );
 
     return user;
   }

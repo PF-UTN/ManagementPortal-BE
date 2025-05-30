@@ -2,9 +2,10 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationDto } from '@mp/common/dtos';
+import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import {
+  ClientRepository,
   PrismaUnitOfWork,
   RegistrationRequestRepository,
   UserRepository,
@@ -16,6 +17,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly encryptionService: EncryptionService,
     private readonly registrationRequestRepository: RegistrationRequestRepository,
+    private readonly clientRepository: ClientRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
   ) { }
 
@@ -39,7 +41,7 @@ export class UserService {
     return newUser;
   }
 
-  async createUserWithRegistrationRequestAsync(
+  async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
     if (isNaN(Number(userCreationDto.streetNumber))) {
@@ -57,6 +59,7 @@ export class UserService {
       );
     }
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      const { companyName, taxCategoryId, ...userData } = userCreationDto;
       const town = await this.unitOfWork.prisma.town.findUnique({
         where: { id: userCreationDto.townId },
       });
@@ -65,14 +68,12 @@ export class UserService {
           'El id de la localidad proporcionado no es válido.',
         );
       }
-      const hashedPassword = await this.hashPasswordAsync(
-        userCreationDto.password,
-      );
+      const hashedPassword = await this.hashPasswordAsync(userData.password);
 
       const user = await this.userRepository.createUserAsync({
         firstName: userCreationDto.firstName,
         lastName: userCreationDto.lastName,
-        email: userCreationDto.email,
+        email: userData.email,
         password: hashedPassword,
         phone: userCreationDto.phone,
         documentType: userCreationDto.documentType,
@@ -93,6 +94,29 @@ export class UserService {
         address: { connect: { id: address.id } },
       });
 
+      const client = {
+        user: { connect: { id: newUser.id } },
+        companyName,
+        taxCategory: { connect: { id: taxCategoryId } },
+      };
+
+      const newClient = await this.clientRepository.createClientAsync(
+        client,
+        tx,
+      );
+
+      const userCreationResponseDto: UserCreationResponse = {
+        id: newUser.id,
+        email: newUser.email,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        companyName: newClient.companyName,
+        documentType: newUser.documentType,
+        documentNumber: newUser.documentNumber,
+        phone: newUser.phone,
+        taxCategoryName: newClient.taxCategory.name,
+      };
+
       await this.registrationRequestRepository.createRegistrationRequestAsync(
         {
           user: { connect: { id: updatedUser.id } },
@@ -101,7 +125,7 @@ export class UserService {
         tx,
       );
 
-      return updatedUser;
+      return newUser;
     });
   }
 

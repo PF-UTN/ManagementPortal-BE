@@ -22,7 +22,7 @@ export class AuthenticationService {
     const user = await this.userService.findByEmailAsync(email);
 
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Credenciales inválidas.');
     }
 
     if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
