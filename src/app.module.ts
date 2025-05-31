@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
+import { ProductModule } from './controllers/product/product.module';
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
 import { TownModule } from './controllers/town/town.controller.module';
 
@@ -16,6 +17,7 @@ import { TownModule } from './controllers/town/town.controller.module';
     AuthenticationModule,
     RegistrationRequestModule,
     TownModule,
+    ProductModule,
   ],
   controllers: [],
   providers: [],
