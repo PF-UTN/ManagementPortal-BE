@@ -12,6 +12,7 @@ import {
 
 import { IsStrongPasswordCustom } from '@mp/common/decorators';
 
+import { AddressCreationDto } from './address-creation.dto';
 import { TaxCategoryId, UserDocumentTypes } from '../../constants';
 
 export class UserCreationDto {
@@ -70,17 +71,7 @@ export class UserCreationDto {
   @IsEnum(TaxCategoryId)
   taxCategoryId: number;
 
-  @ApiProperty({ example: 'Calle Falsa' })
-  @IsString()
+  @ApiProperty({ type: AddressCreationDto })
   @IsNotEmpty()
-  @MaxLength(100)
-  street: string;
-
-  @ApiProperty({ example: 123 })
-  @IsNotEmpty()
-  streetNumber: number;
-
-  @ApiProperty({ example: 1 })
-  @IsNotEmpty()
-  townId: number;  
+  address: AddressCreationDto;
 }

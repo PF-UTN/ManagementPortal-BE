@@ -12,9 +12,11 @@ export const userCreationDtoMock: UserCreationDto = {
   documentType: 'DNI',
   companyName: 'Test Company',
   taxCategoryId: 1,
-  street: 'Calle Falsa',
-  streetNumber: 123,
-  townId: 1,
+  address: { 
+    street: 'Calle Falsa',
+    streetNumber: 123,
+    townId: 1,
+  },
 };
 
 export const userMock = {

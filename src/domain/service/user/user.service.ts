@@ -44,10 +44,10 @@ export class UserService {
   async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
-    if (isNaN(Number(userCreationDto.streetNumber))) {
+    if (isNaN(Number(userCreationDto.address.streetNumber))) {
       throw new BadRequestException('El número de calle debe ser numérico.');
     }
-    if (isNaN(Number(userCreationDto.townId))) {
+    if (isNaN(Number(userCreationDto.address.townId))) {
       throw new BadRequestException('El id de la localidad debe ser numérico.');
     }
     const foundUser = await this.userRepository.findByEmailAsync(
@@ -61,7 +61,7 @@ export class UserService {
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
       const { companyName, taxCategoryId, ...userData } = userCreationDto;
       const town = await this.unitOfWork.prisma.town.findUnique({
-        where: { id: userCreationDto.townId },
+        where: { id: userCreationDto.address.townId },
       });
       if (!town) {
         throw new BadRequestException(
@@ -70,7 +70,7 @@ export class UserService {
       }
       const hashedPassword = await this.hashPasswordAsync(userData.password);
 
-      const user = await this.userRepository.createUserAsync({
+      const newUser = await this.userRepository.createUserAsync({
         firstName: userCreationDto.firstName,
         lastName: userCreationDto.lastName,
         email: userData.email,
@@ -83,14 +83,14 @@ export class UserService {
 
       const address = await this.unitOfWork.prisma.address.create({
         data: {
-          street: userCreationDto.street,
-          streetNumber: userCreationDto.streetNumber,
-          townId: userCreationDto.townId,
-          userId: user.id,
+          street: userCreationDto.address.street,
+          streetNumber: userCreationDto.address.streetNumber,
+          townId: userCreationDto.address.townId,
+          userId: newUser.id,
         },
       });
 
-      const updatedUser = await this.userRepository.updateUserByIdAsync(user.id, {
+      const updatedUser = await this.userRepository.updateUserByIdAsync(newUser.id, {
         address: { connect: { id: address.id } },
       });
 
@@ -125,7 +125,7 @@ export class UserService {
         tx,
       );
 
-      return newUser;
+      return userCreationResponseDto;
     });
   }
 
