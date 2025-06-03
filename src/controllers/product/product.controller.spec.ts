@@ -1,15 +1,18 @@
-import { QueryBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductRequest } from '@mp/common/dtos';
+import { productCreationDtoMock } from '@mp/common/testing';
 
+import { CreateProductCommand } from './command/create-product.command';
 import { SearchProductQuery } from './command/search-product-query';
 import { ProductController } from './product.controller';
 
 describe('ProductController', () => {
   let controller: ProductController;
   let queryBus: QueryBus;
+  let commandBus: CommandBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,13 +22,16 @@ describe('ProductController', () => {
           provide: QueryBus,
           useValue: mockDeep<QueryBus>(),
         },
+        {
+          provide: CommandBus,
+          useValue: mockDeep<CommandBus>(),
+        },
       ],
     }).compile();
 
-    controller = module.get<ProductController>(
-      ProductController,
-    );
+    controller = module.get<ProductController>(ProductController);
     queryBus = module.get<QueryBus>(QueryBus);
+    commandBus = module.get<CommandBus>(CommandBus);
   });
 
   it('should be defined', () => {
@@ -37,10 +43,10 @@ describe('ProductController', () => {
         searchText: 'test',
         page: 1,
         pageSize: 10,
-        filters: { 
-                categoryName: ['Electronics'],
-                supplierBusinessName: ['Supplier A'],
-                enabled: true
+        filters: {
+          categoryName: ['Electronics'],
+          supplierBusinessName: ['Supplier A'],
+          enabled: true,
         },
       };
 
@@ -49,6 +55,20 @@ describe('ProductController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchProductQuery(request),
       );
+    });
+  });
+
+  describe('createProductAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateProductCommand(productCreationDtoMock);
+
+      // Act
+      await controller.createProductAsync(productCreationDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });
