@@ -8,3 +8,4 @@ export * from './unit-of-work/prisma-unit-of-work';
 export * from './client/client.repository';
 export * from './product-category/product-category.repository';
 export * from './supplier/supplier.repository';
+export * from './stock/stock.repository';
