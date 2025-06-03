@@ -6,6 +6,7 @@ import {
   RegistrationRequestRepository,
   RegistrationRequestStatusRepository,
   TownRepository,
+  ProductRepository,
   PrismaUnitOfWork,
   ClientRepository,
 } from './services';
@@ -16,6 +17,7 @@ import {
     RegistrationRequestRepository,
     RegistrationRequestStatusRepository,
     TownRepository,
+    ProductRepository,
     PrismaUnitOfWork,
     ClientRepository,
   ],
@@ -24,6 +26,7 @@ import {
     RegistrationRequestRepository,
     RegistrationRequestStatusRepository,
     TownRepository,
+    ProductRepository,
     PrismaUnitOfWork,
     ClientRepository,
   ],

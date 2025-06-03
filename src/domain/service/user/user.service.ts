@@ -19,7 +19,7 @@ export class UserService {
     private readonly registrationRequestRepository: RegistrationRequestRepository,
     private readonly clientRepository: ClientRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
-  ) {}
+  ) { }
 
   async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
     const hashedPassword = await this.hashPasswordAsync(
@@ -27,8 +27,13 @@ export class UserService {
     );
 
     const user = {
-      ...userCreationDto,
+      firstName: userCreationDto.firstName,
+      lastName: userCreationDto.lastName,
+      email: userCreationDto.email,
       password: hashedPassword,
+      phone: userCreationDto.phone,
+      documentType: userCreationDto.documentType,
+      documentNumber: userCreationDto.documentNumber,
       role: { connect: { id: RoleIds.Employee } },
     } as Prisma.UserCreateInput;
 
@@ -39,23 +44,49 @@ export class UserService {
   async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
-    if (
-      await this.userRepository.checkIfExistsByEmailAsync(userCreationDto.email)
-    ) {
+    const foundUser = await this.userRepository.findByEmailAsync(
+      userCreationDto.email,
+    );
+    if (foundUser) {
       throw new BadRequestException(
         'Este email ya se encuentra registrado. Por favor, usá otro email o iniciá sesión.',
       );
     }
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
       const { companyName, taxCategoryId, ...userData } = userCreationDto;
+      const town = await this.unitOfWork.prisma.town.findUnique({
+        where: { id: userCreationDto.address.townId },
+      });
+      if (!town) {
+        throw new BadRequestException(
+          'El id de la localidad proporcionado no es válido.',
+        );
+      }
       const hashedPassword = await this.hashPasswordAsync(userData.password);
-      const user = {
-        ...userData,
-        password: hashedPassword,
-        role: { connect: { id: RoleIds.Employee } },
-      } as Prisma.UserCreateInput;
 
-      const newUser = await this.userRepository.createUserAsync(user, tx);
+      const newUser = await this.userRepository.createUserAsync({
+        firstName: userCreationDto.firstName,
+        lastName: userCreationDto.lastName,
+        email: userData.email,
+        password: hashedPassword,
+        phone: userCreationDto.phone,
+        documentType: userCreationDto.documentType,
+        documentNumber: userCreationDto.documentNumber,
+        role: { connect: { id: RoleIds.Employee } },
+      });
+
+      const address = await this.unitOfWork.prisma.address.create({
+        data: {
+          street: userCreationDto.address.street,
+          streetNumber: userCreationDto.address.streetNumber,
+          townId: userCreationDto.address.townId,
+          userId: newUser.id,
+        },
+      });
+
+      const updatedUser = await this.userRepository.updateUserByIdAsync(newUser.id, {
+        address: { connect: { id: address.id } },
+      });
 
       const client = {
         user: { connect: { id: newUser.id } },
@@ -82,7 +113,7 @@ export class UserService {
 
       await this.registrationRequestRepository.createRegistrationRequestAsync(
         {
-          user: { connect: { id: newUser.id } },
+          user: { connect: { id: updatedUser.id } },
           status: { connect: { id: RegistrationRequestStatusId.Pending } },
         },
         tx,
