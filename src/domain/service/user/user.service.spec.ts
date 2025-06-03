@@ -409,7 +409,13 @@ describe('UserService', () => {
       );
 
       // Assert
-      expect(createRequestSpy).toHaveBeenCalledWith({ user: { connect: { id: user.id } }, status: { connect: { id: RegistrationRequestStatusId.Pending } }, }, txMock,);
+      expect(createRequestSpy).toHaveBeenCalledWith(
+        { 
+          user: { connect: { id: user.id } },
+          status: { connect: { id: RegistrationRequestStatusId.Pending}},
+        }, 
+        txMock,
+      );
     });
 
     it('should call clientRepository.createClientAsync with correct data', async () => {

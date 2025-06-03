@@ -44,12 +44,6 @@ export class UserService {
   async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
-    if (isNaN(Number(userCreationDto.address.streetNumber))) {
-      throw new BadRequestException('El número de calle debe ser numérico.');
-    }
-    if (isNaN(Number(userCreationDto.address.townId))) {
-      throw new BadRequestException('El id de la localidad debe ser numérico.');
-    }
     const foundUser = await this.userRepository.findByEmailAsync(
       userCreationDto.email,
     );
