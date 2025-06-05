@@ -28,6 +28,7 @@ describe('ClientRepository', () => {
       companyName: 'Test Company',
       user: { connect: { id: 1 } },
       taxCategory: { connect: { id: 1 } },
+      address: { connect: { id: 1 } },
     };
   });
 
