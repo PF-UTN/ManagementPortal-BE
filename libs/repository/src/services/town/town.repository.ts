@@ -22,4 +22,11 @@ export class TownRepository {
           },
         });
       }
+
+    async checkIfExistsByIdAsync(id: number): Promise<boolean> {
+      const town = await this.prisma.town.findUnique({
+        where: { id },
+      });
+      return !!town;
+    }
 }
