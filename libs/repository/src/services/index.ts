@@ -6,3 +6,4 @@ export * from './town/town.repository';
 export * from './product/product.repository';
 export * from './unit-of-work/prisma-unit-of-work';
 export * from './client/client.repository';
+export * from './address/address.repository';
