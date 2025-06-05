@@ -26,8 +26,8 @@ describe('ProductCategoryService', () => {
   it('should be defined', () => {
     expect(service).toBeDefined();
   });
-    describe('getCategoriesAsync', () => {
-        it('should call productCategoryRepository.getCategoriesAsync and return its result', async () => {
+    describe('getProductCategoryAsync', () => {
+        it('should call productCategoryRepository.getProductCategoryAsync and return its result', async () => {
         // Arrange
        repository.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData)
     

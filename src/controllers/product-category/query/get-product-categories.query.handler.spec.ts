@@ -3,25 +3,25 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 
 import { productCategoryMockData } from '@mp/common/testing';
 
-import { GetProductCategoryQueryHandler } from './get-product-categories.query.handler';
+import { GetProductCategoriesQueryHandler } from './get-product-categories.query.handler';
 import { ProductCategoryService } from '../../../domain/service/product-category/product-category.service';
 
 describe('GetProductCategoriesQueryHandler', () => {
-    let handler: GetProductCategoryQueryHandler;
+    let handler: GetProductCategoriesQueryHandler;
     let service: DeepMockProxy<ProductCategoryService>;
     
     beforeEach(async () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                GetProductCategoryQueryHandler,
+                GetProductCategoriesQueryHandler,
                 {
                     provide: ProductCategoryService,
                     useValue: mockDeep<ProductCategoryService>(),
                 },
             ],
         }).compile();
-        handler = module.get<GetProductCategoryQueryHandler>(GetProductCategoryQueryHandler);
+        handler = module.get<GetProductCategoriesQueryHandler>(GetProductCategoriesQueryHandler);
         service = module.get(ProductCategoryService);
     });
     it('should be defined', () => {

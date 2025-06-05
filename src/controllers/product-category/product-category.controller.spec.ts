@@ -13,7 +13,6 @@ describe('ProductCategoryController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductCategoryController],
       providers: [
-
         {
           provide: QueryBus,
           useValue: mockDeep<QueryBus>(),

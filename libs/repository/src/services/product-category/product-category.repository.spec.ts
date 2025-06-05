@@ -24,8 +24,8 @@ describe('ProductCategoryRepository', () => {
   it('should be defined', () => {
     expect(repository).toBeDefined();
   });
-    describe('getCategoriesAsync', () => {
-        it('should return categories', async () => {
+    describe('getProductCategoriesAsync', () => {
+        it('should return product categories', async () => {
         // Arrange
         prismaService.productCategory.findMany.mockResolvedValueOnce(productCategoryMockData);
     

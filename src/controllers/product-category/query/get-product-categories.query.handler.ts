@@ -4,7 +4,7 @@ import { GetProductCategoriesQuery } from './get-product-categories.query';
 import { ProductCategoryService } from '../../../domain/service/product-category/product-category.service';
 
 @QueryHandler(GetProductCategoriesQuery)
-export class GetProductCategoryQueryHandler implements IQueryHandler<GetProductCategoriesQuery> {
+export class GetProductCategoriesQueryHandler implements IQueryHandler<GetProductCategoriesQuery> {
   constructor(private readonly productCategoryService: ProductCategoryService) {}
 
   async execute() {
