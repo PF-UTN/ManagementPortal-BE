@@ -9,4 +9,8 @@ export class TownService {
   async searchTownsByTextAsync(searchText: string) {
     return await this.townRepository.searchTownsByTextAsync(searchText);
   }
+
+  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
+    return this.townRepository.checkIfExistsByIdAsync(id);
+  }
 }
