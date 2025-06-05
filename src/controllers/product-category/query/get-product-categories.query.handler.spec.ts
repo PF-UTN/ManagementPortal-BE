@@ -28,19 +28,19 @@ describe('GetProductCategoriesQueryHandler', () => {
         expect(handler).toBeDefined();
     });
     describe('execute', () => {
-        it('should call getCategoriesAsync', async () => {
+        it('should call getProductCategoryAsync', async () => {
             // Arrange
-            service.getCategoriesAsync.mockResolvedValueOnce(productCategoryMockData);
+            service.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData);
             
             // Act
             await handler.execute();
 
             // Assert
-            expect(service.getCategoriesAsync).toHaveBeenCalled();
+            expect(service.getProductCategoryAsync).toHaveBeenCalled();
         });
         it('should return product categories as DTOs', async () => {
             // Arrange
-            service.getCategoriesAsync.mockResolvedValueOnce(productCategoryMockData);
+            service.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData);
             
             // Act
             const result = await handler.execute();
@@ -56,7 +56,7 @@ describe('GetProductCategoriesQueryHandler', () => {
         });
         it('should return an empty array when no categories are found', async () => {
             // Arrange
-            service.getCategoriesAsync.mockResolvedValueOnce([]);
+            service.getProductCategoryAsync.mockResolvedValueOnce([]);
             
             // Act
             const result = await handler.execute();

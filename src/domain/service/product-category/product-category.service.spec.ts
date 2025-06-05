@@ -29,13 +29,13 @@ describe('ProductCategoryService', () => {
     describe('getCategoriesAsync', () => {
         it('should call productCategoryRepository.getCategoriesAsync and return its result', async () => {
         // Arrange
-       repository.getCategoriesAsync.mockResolvedValueOnce(productCategoryMockData)
+       repository.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData)
     
         // Act
-        const result = await service.getCategoriesAsync();
+        const result = await service.getProductCategoryAsync();
     
         // Assert
-        expect(repository.getCategoriesAsync).toHaveBeenCalled();
+        expect(repository.getProductCategoryAsync).toHaveBeenCalled();
         expect(result).toEqual(productCategoryMockData);
         });
     });

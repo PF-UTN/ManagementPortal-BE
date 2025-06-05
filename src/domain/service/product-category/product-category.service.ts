@@ -6,7 +6,7 @@ import { ProductCategoryRepository } from '@mp/repository';
 export class ProductCategoryService {
   constructor(private readonly productCategoryRepository: ProductCategoryRepository) {}
 
-  async getCategoriesAsync() {
-    return await this.productCategoryRepository.getCategoriesAsync();
+  async getProductCategoryAsync() {
+    return await this.productCategoryRepository.getProductCategoryAsync();
   }
 }

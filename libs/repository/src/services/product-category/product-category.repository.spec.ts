@@ -6,7 +6,7 @@ import { productCategoryMockData } from '@mp/common/testing';
 import { ProductCategoryRepository } from './product-category.repository';
 import { PrismaService } from '../prisma.service';
 
-describe('CategoryRepository', () => {
+describe('ProductCategoryRepository', () => {
   let repository: ProductCategoryRepository;
   let prismaService: DeepMockProxy<PrismaService>;
 
@@ -30,7 +30,7 @@ describe('CategoryRepository', () => {
         prismaService.productCategory.findMany.mockResolvedValueOnce(productCategoryMockData);
     
         // Act
-        const result = await repository.getCategoriesAsync();
+        const result = await repository.getProductCategoryAsync();
     
         // Assert
         expect(result).toEqual(productCategoryMockData);
@@ -41,7 +41,7 @@ describe('CategoryRepository', () => {
         prismaService.productCategory.findMany.mockResolvedValueOnce([]);
     
         // Act
-        await repository.getCategoriesAsync();
+        await repository.getProductCategoryAsync();
     
         // Assert
         expect(prismaService.productCategory.findMany).toHaveBeenCalledWith({

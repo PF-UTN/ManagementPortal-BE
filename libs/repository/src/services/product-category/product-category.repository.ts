@@ -6,7 +6,7 @@ import { PrismaService } from "../prisma.service";
 export class ProductCategoryRepository {
     constructor(private readonly prisma: PrismaService) {}
     
-    async getCategoriesAsync() {
+    async getProductCategoryAsync() {
         return this.prisma.productCategory.findMany({
             orderBy: {
                 name: "asc",

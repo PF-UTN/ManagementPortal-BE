@@ -13,7 +13,7 @@ export class ProductCategoryController {
     
     @Get()
     @HttpCode(200)
-    @RequiredPermissions(PermissionCodes.Product.READ)
+    @RequiredPermissions(PermissionCodes.ProductCategory.READ)
     @ApiBearerAuth()
     @ApiOperation({
         summary: 'Retrieve product categories',
