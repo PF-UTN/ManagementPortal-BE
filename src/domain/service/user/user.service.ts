@@ -5,11 +5,14 @@ import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
 import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import {
+  AddressRepository,
   ClientRepository,
   PrismaUnitOfWork,
   RegistrationRequestRepository,
   UserRepository,
 } from '@mp/repository';
+
+import { TownService } from '../town/town.service';
 
 @Injectable()
 export class UserService {
@@ -18,84 +21,66 @@ export class UserService {
     private readonly encryptionService: EncryptionService,
     private readonly registrationRequestRepository: RegistrationRequestRepository,
     private readonly clientRepository: ClientRepository,
+    private readonly addressRepository: AddressRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
+    private readonly townService: TownService
   ) { }
-
-  async createUserAsync(userCreationDto: UserCreationDto): Promise<User> {
-    const hashedPassword = await this.hashPasswordAsync(
-      userCreationDto.password,
-    );
-
-    const user = {
-      firstName: userCreationDto.firstName,
-      lastName: userCreationDto.lastName,
-      email: userCreationDto.email,
-      password: hashedPassword,
-      phone: userCreationDto.phone,
-      documentType: userCreationDto.documentType,
-      documentNumber: userCreationDto.documentNumber,
-      role: { connect: { id: RoleIds.Employee } },
-    } as Prisma.UserCreateInput;
-
-    const newUser = await this.userRepository.createUserAsync(user);
-    return newUser;
-  }
 
   async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
   ) {
-    const foundUser = await this.userRepository.findByEmailAsync(
-      userCreationDto.email,
-    );
-    if (foundUser) {
+    if (
+      await this.userRepository.checkIfExistsByEmailAsync(userCreationDto.email)
+    ) {
       throw new BadRequestException(
         'Este email ya se encuentra registrado. Por favor, usá otro email o iniciá sesión.',
       );
     }
+
+    const { companyName, taxCategoryId, address, ...userData } = userCreationDto;
+    const { townId, ...addressData } = address;
+
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const { companyName, taxCategoryId, ...userData } = userCreationDto;
-      const town = await this.unitOfWork.prisma.town.findUnique({
-        where: { id: userCreationDto.address.townId },
-      });
-      if (!town) {
+      if (
+        !await this.townService.checkIfExistsByIdAsync(townId)
+      ) {
         throw new BadRequestException(
-          'El id de la localidad proporcionado no es válido.',
-        );
+          'El id de la localidad proporcionado no se encuentra registrado.',
+        )
       }
+
       const hashedPassword = await this.hashPasswordAsync(userData.password);
 
-      const newUser = await this.userRepository.createUserAsync({
-        firstName: userCreationDto.firstName,
-        lastName: userCreationDto.lastName,
-        email: userData.email,
+      const user = {
+        ...userData,
         password: hashedPassword,
-        phone: userCreationDto.phone,
-        documentType: userCreationDto.documentType,
-        documentNumber: userCreationDto.documentNumber,
-        role: { connect: { id: RoleIds.Employee } },
-      });
+        role: { connect: { id: RoleIds.Client } },
+      }
 
-      const address = await this.unitOfWork.prisma.address.create({
-        data: {
-          street: userCreationDto.address.street,
-          streetNumber: userCreationDto.address.streetNumber,
-          townId: userCreationDto.address.townId,
-          userId: newUser.id,
-        },
-      });
+      const newUser = await this.userRepository.createUserAsync(user, tx);
 
-      const updatedUser = await this.userRepository.updateUserByIdAsync(newUser.id, {
-        address: { connect: { id: address.id } },
-      });
+      const newAddress = await this.addressRepository.createAddressAsync(
+        { ...addressData, town: { connect: { id: townId } } },
+        tx,
+      );
 
       const client = {
         user: { connect: { id: newUser.id } },
         companyName,
         taxCategory: { connect: { id: taxCategoryId } },
+        address: { connect: { id: newAddress.id } },
       };
 
       const newClient = await this.clientRepository.createClientAsync(
         client,
+        tx,
+      );
+
+      await this.registrationRequestRepository.createRegistrationRequestAsync(
+        {
+          user: { connect: { id: newUser.id } },
+          status: { connect: { id: RegistrationRequestStatusId.Pending } },
+        },
         tx,
       );
 
@@ -110,14 +95,6 @@ export class UserService {
         phone: newUser.phone,
         taxCategoryName: newClient.taxCategory.name,
       };
-
-      await this.registrationRequestRepository.createRegistrationRequestAsync(
-        {
-          user: { connect: { id: updatedUser.id } },
-          status: { connect: { id: RegistrationRequestStatusId.Pending } },
-        },
-        tx,
-      );
 
       return userCreationResponseDto;
     });
