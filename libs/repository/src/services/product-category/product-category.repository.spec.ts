@@ -30,7 +30,7 @@ describe('ProductCategoryRepository', () => {
         prismaService.productCategory.findMany.mockResolvedValueOnce(productCategoryMockData);
     
         // Act
-        const result = await repository.getProductCategoryAsync();
+        const result = await repository.getProductCategoriesAsync();
     
         // Assert
         expect(result).toEqual(productCategoryMockData);
@@ -41,7 +41,7 @@ describe('ProductCategoryRepository', () => {
         prismaService.productCategory.findMany.mockResolvedValueOnce([]);
     
         // Act
-        await repository.getProductCategoryAsync();
+        await repository.getProductCategoriesAsync();
     
         // Assert
         expect(prismaService.productCategory.findMany).toHaveBeenCalledWith({

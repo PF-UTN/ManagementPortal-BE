@@ -5,7 +5,7 @@ import { ApiBearerAuth, ApiOperation} from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 
-import { GetProductCategoriesQuery } from './query/get-product-categories.query';
+import { ProductCategoriesQuery } from './query/product-categories.query';
 
 @Controller('product-categories')
 export class ProductCategoryController {
@@ -20,6 +20,6 @@ export class ProductCategoryController {
         description: 'Fetches all product categories available.',
     })
     async getProductCategoriesAsync() {
-        return this.queryBus.execute(new GetProductCategoriesQuery());
+        return this.queryBus.execute(new ProductCategoriesQuery());
     }
     }

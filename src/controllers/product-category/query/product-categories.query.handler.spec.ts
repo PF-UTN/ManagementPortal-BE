@@ -3,25 +3,25 @@ import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 
 import { productCategoryMockData } from '@mp/common/testing';
 
-import { GetProductCategoriesQueryHandler } from './get-product-categories.query.handler';
+import { ProductCategoriesQueryHandler } from './product-categories.query.handler';
 import { ProductCategoryService } from '../../../domain/service/product-category/product-category.service';
 
 describe('GetProductCategoriesQueryHandler', () => {
-    let handler: GetProductCategoriesQueryHandler;
+    let handler: ProductCategoriesQueryHandler;
     let service: DeepMockProxy<ProductCategoryService>;
     
     beforeEach(async () => {
 
         const module: TestingModule = await Test.createTestingModule({
             providers: [
-                GetProductCategoriesQueryHandler,
+                ProductCategoriesQueryHandler,
                 {
                     provide: ProductCategoryService,
                     useValue: mockDeep<ProductCategoryService>(),
                 },
             ],
         }).compile();
-        handler = module.get<GetProductCategoriesQueryHandler>(GetProductCategoriesQueryHandler);
+        handler = module.get<ProductCategoriesQueryHandler>(ProductCategoriesQueryHandler);
         service = module.get(ProductCategoryService);
     });
     it('should be defined', () => {
@@ -30,17 +30,17 @@ describe('GetProductCategoriesQueryHandler', () => {
     describe('execute', () => {
         it('should call getProductCategoryAsync', async () => {
             // Arrange
-            service.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData);
+            service.getProductCategoriesAsync.mockResolvedValueOnce(productCategoryMockData);
             
             // Act
             await handler.execute();
 
             // Assert
-            expect(service.getProductCategoryAsync).toHaveBeenCalled();
+            expect(service.getProductCategoriesAsync).toHaveBeenCalled();
         });
         it('should return product categories as DTOs', async () => {
             // Arrange
-            service.getProductCategoryAsync.mockResolvedValueOnce(productCategoryMockData);
+            service.getProductCategoriesAsync.mockResolvedValueOnce(productCategoryMockData);
             
             // Act
             const result = await handler.execute();
@@ -56,7 +56,7 @@ describe('GetProductCategoriesQueryHandler', () => {
         });
         it('should return an empty array when no categories are found', async () => {
             // Arrange
-            service.getProductCategoryAsync.mockResolvedValueOnce([]);
+            service.getProductCategoriesAsync.mockResolvedValueOnce([]);
             
             // Act
             const result = await handler.execute();

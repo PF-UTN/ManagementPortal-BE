@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { ProductCategoryController } from './product-category.controller';
-import { GetProductCategoriesQuery } from './query/get-product-categories.query';
+import { ProductCategoriesQuery } from './query/product-categories.query';
 
 describe('ProductCategoryController', () => {
   let controller: ProductCategoryController;
@@ -30,7 +30,7 @@ describe('ProductCategoryController', () => {
   describe('getProductCategoriesAsync', () => {
     it('should call execute on the queryBus', async () => {
         // Act
-        const query = new GetProductCategoriesQuery();
+        const query = new ProductCategoriesQuery();
         await controller.getProductCategoriesAsync();
         // Assert  
         expect(queryBus.execute).toHaveBeenCalledWith(query);
