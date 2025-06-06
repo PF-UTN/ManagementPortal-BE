@@ -2,7 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 
 import { RegistrationRequestStatusId, RoleIds } from '@mp/common/constants';
-import { UserCreationDto, UserCreationResponse } from '@mp/common/dtos';
+import {
+  ClientCreationDto,
+  UserCreationDto,
+  UserCreationResponse,
+} from '@mp/common/dtos';
 import { EncryptionService } from '@mp/common/services';
 import {
   AddressRepository,
@@ -23,8 +27,8 @@ export class UserService {
     private readonly clientRepository: ClientRepository,
     private readonly addressRepository: AddressRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
-    private readonly townService: TownService
-  ) { }
+    private readonly townService: TownService,
+  ) {}
 
   async createClientUserWithRegistrationRequestAsync(
     userCreationDto: UserCreationDto,
@@ -37,16 +41,14 @@ export class UserService {
       );
     }
 
-    const { companyName, taxCategoryId, address, ...userData } = userCreationDto;
-    const { townId, ...addressData } = address;
+    const { companyName, taxCategoryId, address, ...userData } =
+      userCreationDto;
 
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      if (
-        !await this.townService.existsAsync(townId)
-      ) {
+      if (!(await this.townService.existsAsync(address.townId))) {
         throw new BadRequestException(
           'El id de la localidad proporcionado no se encuentra registrado.',
-        )
+        );
       }
 
       const hashedPassword = await this.hashPasswordAsync(userData.password);
@@ -55,20 +57,20 @@ export class UserService {
         ...userData,
         password: hashedPassword,
         role: { connect: { id: RoleIds.Client } },
-      }
+      };
 
       const newUser = await this.userRepository.createUserAsync(user, tx);
 
       const newAddress = await this.addressRepository.createAddressAsync(
-        { ...addressData, town: { connect: { id: townId } } },
+        address,
         tx,
       );
 
-      const client = {
-        user: { connect: { id: newUser.id } },
-        companyName,
-        taxCategory: { connect: { id: taxCategoryId } },
-        address: { connect: { id: newAddress.id } },
+      const client: ClientCreationDto = {
+        userId: newUser.id,
+        companyName: companyName,
+        taxCategoryId: taxCategoryId,
+        addressId: newAddress.id,
       };
 
       const newClient = await this.clientRepository.createClientAsync(

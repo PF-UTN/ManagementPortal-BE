@@ -397,10 +397,10 @@ describe('UserService', () => {
         });
 
       const expectedClient = {
-        user: { connect: { id: user.id } },
+        userId: user.id,
         companyName: userCreationDtoMock.companyName,
-        taxCategory: { connect: { id: userCreationDtoMock.taxCategoryId } },
-        address: { connect: { id: 1 } },
+        taxCategoryId: userCreationDtoMock.taxCategoryId,
+        addressId: 1
       };
 
       const createClientSpy = jest
@@ -479,12 +479,7 @@ describe('UserService', () => {
     jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
     jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
 
-    const { townId, ...addressDataMock } = addressMock;
-
-    const expectedAddress = {
-      ...addressDataMock,
-      town: { connect: { id: townId } },
-    };
+    const expectedAddress = { ...addressMock };
 
     const createAddressSpy = jest
       .spyOn(addressRepository, 'createAddressAsync')

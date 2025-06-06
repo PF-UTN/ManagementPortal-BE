@@ -6,11 +6,12 @@ import { newClientMock } from '@mp/common/testing';
 
 import { ClientRepository } from './client.repository';
 import { PrismaService } from '../prisma.service';
+import { ClientCreationDto } from '@mp/common/dtos';
 
 describe('ClientRepository', () => {
   let repository: ClientRepository;
   let prismaService: PrismaService;
-  let createClientMock: Prisma.ClientCreateInput;
+  let createClientMock: ClientCreationDto;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -26,9 +27,9 @@ describe('ClientRepository', () => {
 
     createClientMock = {
       companyName: 'Test Company',
-      user: { connect: { id: 1 } },
-      taxCategory: { connect: { id: 1 } },
-      address: { connect: { id: 1 } },
+      userId: 1,
+      taxCategoryId: 1,
+      addressId: 1,
     };
   });
 
