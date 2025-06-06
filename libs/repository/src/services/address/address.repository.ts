@@ -3,7 +3,6 @@ import { Prisma, Address } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 import { AddressCreationDto } from '@mp/common/dtos';
-import { connect } from 'http2';
 
 @Injectable()
 export class AddressRepository {
