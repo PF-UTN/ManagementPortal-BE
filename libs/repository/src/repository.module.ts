@@ -9,6 +9,7 @@ import {
   ProductRepository,
   PrismaUnitOfWork,
   ClientRepository,
+  ProductCategoryRepository,
   AddressRepository,
 } from './services';
 @Module({
@@ -19,6 +20,7 @@ import {
     RegistrationRequestStatusRepository,
     TownRepository,
     ProductRepository,
+    ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
     AddressRepository,
@@ -30,6 +32,7 @@ import {
     RegistrationRequestStatusRepository,
     TownRepository,
     ProductRepository,
+    ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
     AddressRepository,
