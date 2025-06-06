@@ -44,21 +44,21 @@ describe('TownService', () => {
     });
   });
 
-  describe('checkIfExistsByIdAsync', () => {
-    it('should call townRepository.checkIfExistsByIdAsync with the correct id', async () => {
+  describe('existsAsync', () => {
+    it('should call townRepository.existsAsync with the correct id', async () => {
       // Arrange
       const id = 1;
 
       jest
-        .spyOn(townRepository, 'checkIfExistsByIdAsync')
+        .spyOn(townRepository, 'existsAsync')
         .mockResolvedValueOnce(true);
 
       // Act
-      await service.checkIfExistsByIdAsync(id);
+      await service.existsAsync(id);
 
       // Assert
       expect(
-        townRepository.checkIfExistsByIdAsync,
+        townRepository.existsAsync,
       ).toHaveBeenCalledWith(id);
     });
   });

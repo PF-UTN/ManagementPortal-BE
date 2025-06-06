@@ -10,7 +10,7 @@ export class TownService {
     return await this.townRepository.searchTownsByTextAsync(searchText);
   }
 
-  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
-    return this.townRepository.checkIfExistsByIdAsync(id);
+  async existsAsync(id: number): Promise<boolean> {
+    return this.townRepository.existsAsync(id);
   }
 }

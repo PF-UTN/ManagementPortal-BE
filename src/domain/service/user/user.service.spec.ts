@@ -232,7 +232,7 @@ describe('UserService', () => {
   describe('createClientUserWithRegistrationRequestAsync', () => {
     it('should execute the method within a transaction using unitOfWork.execute', async () => {
       // Arrange
-      jest.spyOn(townService, 'checkIfExistsByIdAsync').mockResolvedValue(true);
+      jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
       jest.spyOn(userRepository, 'createUserAsync').mockResolvedValue(user);
       jest.spyOn(addressRepository, 'createAddressAsync').mockResolvedValue({
         id: 1,
@@ -278,7 +278,7 @@ describe('UserService', () => {
         .mockResolvedValueOnce(hashedPassword);
       const txMock = {} as Prisma.TransactionClient;
 
-      jest.spyOn(townService, 'checkIfExistsByIdAsync').mockResolvedValue(true);
+      jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
       jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
       jest
         .spyOn(addressRepository, 'createAddressAsync')
@@ -328,7 +328,7 @@ describe('UserService', () => {
         .mockResolvedValueOnce(hashedPassword);
       const txMock = {} as Prisma.TransactionClient;
 
-      jest.spyOn(townService, 'checkIfExistsByIdAsync').mockResolvedValue(true);
+      jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
       jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
       jest
         .spyOn(addressRepository, 'createAddressAsync')
@@ -387,7 +387,7 @@ describe('UserService', () => {
         return cb(txMock);
       });
 
-      jest.spyOn(townService, 'checkIfExistsByIdAsync').mockResolvedValue(true);
+      jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
       jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
       jest
         .spyOn(addressRepository, 'createAddressAsync')
@@ -447,7 +447,7 @@ describe('UserService', () => {
         .spyOn(userRepository, 'checkIfExistsByEmailAsync')
         .mockResolvedValue(false);
       jest
-        .spyOn(townService, 'checkIfExistsByIdAsync')
+        .spyOn(townService, 'existsAsync')
         .mockResolvedValue(false);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
@@ -476,7 +476,7 @@ describe('UserService', () => {
       return cb(txMock);
     });
 
-    jest.spyOn(townService, 'checkIfExistsByIdAsync').mockResolvedValue(true);
+    jest.spyOn(townService, 'existsAsync').mockResolvedValue(true);
     jest.spyOn(userRepository, 'createUserAsync').mockResolvedValueOnce(user);
 
     const { townId, ...addressDataMock } = addressMock;

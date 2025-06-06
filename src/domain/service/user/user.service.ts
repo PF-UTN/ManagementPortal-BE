@@ -42,7 +42,7 @@ export class UserService {
 
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
       if (
-        !await this.townService.checkIfExistsByIdAsync(townId)
+        !await this.townService.existsAsync(townId)
       ) {
         throw new BadRequestException(
           'El id de la localidad proporcionado no se encuentra registrado.',

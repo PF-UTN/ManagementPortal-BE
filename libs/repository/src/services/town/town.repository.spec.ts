@@ -92,7 +92,7 @@ describe('TownRepository', () => {
   
   });
 
-  describe('checkIfExistsByIdAsync', () => {
+  describe('existsAsync', () => {
     it('should return true if town exists', async () => {
       // Arrange
       const townId = 1;
@@ -101,7 +101,7 @@ describe('TownRepository', () => {
         .mockResolvedValueOnce(town);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(townId);
+      const exists = await repository.existsAsync(townId);
 
       // Assert
       expect(exists).toBe(true);
@@ -115,7 +115,7 @@ describe('TownRepository', () => {
         .mockResolvedValueOnce(null);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(townId);
+      const exists = await repository.existsAsync(townId);
 
       // Assert
       expect(exists).toBe(false);
