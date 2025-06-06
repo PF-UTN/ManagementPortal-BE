@@ -2,11 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { ClientCreationDto } from '@mp/common/dtos';
 import { newClientMock } from '@mp/common/testing';
 
 import { ClientRepository } from './client.repository';
 import { PrismaService } from '../prisma.service';
-import { ClientCreationDto } from '@mp/common/dtos';
 
 describe('ClientRepository', () => {
   let repository: ClientRepository;
