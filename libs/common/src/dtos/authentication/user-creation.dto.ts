@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsEnum,
@@ -8,6 +9,7 @@ import {
   IsString,
   Length,
   MaxLength,
+  ValidateNested,
 } from 'class-validator';
 
 import { IsStrongPasswordCustom } from '@mp/common/decorators';
@@ -73,5 +75,7 @@ export class UserCreationDto {
 
   @ApiProperty({ type: AddressCreationDto })
   @IsNotEmpty()
+  @ValidateNested()
+  @Type(() => AddressCreationDto)
   address: AddressCreationDto;
 }

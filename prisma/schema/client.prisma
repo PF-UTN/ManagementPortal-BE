@@ -5,4 +5,6 @@ model Client {
     userId        Int         @unique
     taxCategory   TaxCategory @relation(fields: [taxCategoryId], references: [id])
     taxCategoryId Int
+    address       Address     @relation(fields: [addressId], references: [id])
+    addressId     Int         @unique
 }

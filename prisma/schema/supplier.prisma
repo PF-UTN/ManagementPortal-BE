@@ -6,4 +6,6 @@ model Supplier {
     email          String    @unique @db.VarChar(250)
     phone          String    @db.VarChar(20)
     products       Product[]
+    address        Address   @relation(fields: [addressId], references: [id])
+    addressId      Int       @unique
 }
