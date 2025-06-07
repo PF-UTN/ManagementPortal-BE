@@ -53,22 +53,18 @@ export class ProductService {
     }
 
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const { stock, categoryId, supplierId, ...productData } =
+      const { stock, ...productData } =
         productCreationDto;
 
       const newProduct = await this.productRepository.createProductAsync(
-        {
-          ...productData,
-          category: { connect: { id: categoryId } },
-          supplier: { connect: { id: supplierId } },
-        },
+        productData,
         tx,
       );
 
       await this.stockRepository.createStockAsync(
         {
           ...stock,
-          product: { connect: { id: newProduct.id } },
+          productId: newProduct.id,
         },
         tx,
       );

@@ -3,3 +3,4 @@ export * from './search-product.response.dto';
 export * from './search-product.request.dto';
 export * from './product.dto';
 export * from './product-creation.dto';
+export * from './product-creation-data.dto';

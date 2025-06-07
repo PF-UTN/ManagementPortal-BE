@@ -242,16 +242,10 @@ describe('ProductRepository', () => {
       it('should create a new product', async () => {
         // Arrange
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { categoryId, supplierId, stock, ...productData } =
+        const { stock, ...productData } =
           productCreationDtoMock;
         const productCreateInput = {
-          ...productData,
-          category: {
-            connect: { id: categoryId },
-          },
-          supplier: {
-            connect: { id: supplierId },
-          },
+          ...productData
         };
 
         jest

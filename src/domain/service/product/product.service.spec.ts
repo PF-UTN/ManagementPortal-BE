@@ -149,7 +149,7 @@ describe('searchWithFiltersAsync', () => {
     it('should call productRepository.createProductAsync with correct data', async () => {
       // Arrange
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { stock, categoryId, supplierId, ...productData } =
+      const { stock, ...productData } =
         productCreationDtoMock;
       const txMock = {} as Prisma.TransactionClient;
 
@@ -175,8 +175,6 @@ describe('searchWithFiltersAsync', () => {
       expect(createProductAsyncSpy).toHaveBeenCalledWith(
         {
           ...productData,
-          category: { connect: { id: categoryId } },
-          supplier: { connect: { id: supplierId } },
         },
         txMock,
       );
@@ -215,8 +213,8 @@ describe('searchWithFiltersAsync', () => {
       // Assert
       expect(createStockAsyncSpy).toHaveBeenCalledWith(
         {
-          product: { connect: { id: product.id } },
           ...stock,
+          productId: product.id,
         },
         txMock,
       );

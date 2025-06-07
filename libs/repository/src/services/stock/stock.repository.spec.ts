@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Stock } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { StockDto } from '@mp/common/dtos';
+import { StockCreationDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 import { StockRepository } from './stock.repository';
@@ -40,14 +40,11 @@ describe('StockRepository', () => {
   describe('createStockAsync', () => {
     it('should create a new stock record', async () => {
       // Arrange
-      const stockData: StockDto = {
+      const stockCreateInput: StockCreationDataDto = {
         quantityAvailable: stock.quantityAvailable,
         quantityOrdered: stock.quantityOrdered,
         quantityReserved: stock.quantityReserved,
-      };
-      const stockCreateInput = {
-        ...stockData,
-        product: { connect: { id: stock.productId } },
+        productId: stock.productId,
       };
 
       jest.spyOn(prismaService.stock, 'create').mockResolvedValueOnce(stock);
