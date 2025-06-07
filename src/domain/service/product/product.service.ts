@@ -17,5 +17,10 @@ export class ProductService {
             query.pageSize,
         );
     }
-}
 
+    async findProductByIdAsync(productId: number) {
+        return this.productRepository.findProductWithDetailsByIdAsync(
+            productId,
+        );
+    }
+}

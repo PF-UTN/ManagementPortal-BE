@@ -1,14 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { mockDeep } from 'jest-mock-extended';
+import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
+import { productMockData } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
 import { ProductRepository } from './product.repository';
 
 describe('ProductRepository', () => {
     let repository: ProductRepository;
-    let prismaService: PrismaService;
+    let prismaService: DeepMockProxy<PrismaService>;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -24,7 +25,7 @@ describe('ProductRepository', () => {
         repository = module.get<ProductRepository>(
             ProductRepository,
         );
-        prismaService = module.get<PrismaService>(PrismaService);
+        prismaService = module.get(PrismaService);
     });
 
     it('should be defined', () => {
@@ -189,6 +190,40 @@ describe('ProductRepository', () => {
                     },
                 }),
             );
+        });
+    });
+    describe('findProductWithDetailsByIdAsync', () => {
+        it('should return product with details', async () => {
+            // Arrange
+            prismaService.product.findUnique.mockResolvedValueOnce(productMockData);
+
+            // Act
+            const result = await repository.findProductWithDetailsByIdAsync(1);
+
+            // Assert
+            expect(prismaService.product.findUnique).toHaveBeenCalledWith({
+                where: { id: 1 },
+                include: {
+                    category: {
+                        select: { name: true },
+                    },
+                    supplier: {
+                        select: {
+                            businessName: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                    stock: {
+                        select: {
+                            quantityAvailable: true,
+                            quantityReserved: true,
+                            quantityOrdered: true,
+                        },
+                    },
+                },
+            });
+            expect(result).toEqual(productMockData);
         });
     });
 });

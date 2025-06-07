@@ -123,4 +123,31 @@ export class ProductRepository {
         return { data, total };
     }
 
+    async findProductWithDetailsByIdAsync(productId: number) {
+        return this.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                category: {
+                    select: {
+                        name: true,
+                    },
+                },
+                supplier: {
+                    select: {
+                        businessName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                stock: {
+                    select: {
+                        quantityAvailable: true,
+                        quantityReserved: true,
+                        quantityOrdered: true,
+                    },
+                },
+            },
+        });
+    }
+
 }

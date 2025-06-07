@@ -9,4 +9,3 @@ export class ProductDto {
   supplierBusinessName: string;
   stock: number;
 }
-
