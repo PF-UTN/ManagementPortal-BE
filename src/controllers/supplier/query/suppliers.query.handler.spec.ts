@@ -4,17 +4,17 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { suppliersMock } from '@mp/common/testing';
 
-import { GetAllSuppliersQueryHandler } from './get-all-suppliers.query.handler';
+import { SuppliersQueryHandler } from './suppliers.query.handler';
 import { SupplierService } from '../../../domain/service/supplier/supplier.service';
 
 describe('GetRegistrationRequestByIdQueryHandler', () => {
-  let handler: GetAllSuppliersQueryHandler;
+  let handler: SuppliersQueryHandler;
   let supplierService: SupplierService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        GetAllSuppliersQueryHandler,
+        SuppliersQueryHandler,
         {
           provide: SupplierService,
           useValue: mockDeep(SupplierService),
@@ -24,8 +24,8 @@ describe('GetRegistrationRequestByIdQueryHandler', () => {
 
     supplierService = module.get<SupplierService>(SupplierService);
 
-    handler = module.get<GetAllSuppliersQueryHandler>(
-      GetAllSuppliersQueryHandler,
+    handler = module.get<SuppliersQueryHandler>(
+      SuppliersQueryHandler,
     );
   });
 

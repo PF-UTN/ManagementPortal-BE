@@ -5,7 +5,7 @@ import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 
-import { GetAllSuppliersQuery } from './query/get-all-suppliers.query';
+import { SuppliersQuery } from './query/suppliers.query';
 
 @Controller('supplier')
 export class SupplierController {
@@ -21,7 +21,7 @@ export class SupplierController {
   })
   getAllSuppliersAsync() {
     return this.queryBus.execute(
-      new GetAllSuppliersQuery(),
+      new SuppliersQuery(),
     );
   }
 }

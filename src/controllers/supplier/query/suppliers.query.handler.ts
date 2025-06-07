@@ -1,11 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { QueryHandler } from '@nestjs/cqrs';
 
-import { GetAllSuppliersQuery } from './get-all-suppliers.query';
+import { SuppliersQuery } from './suppliers.query';
 import { SupplierService } from '../../../domain/service/supplier/supplier.service';
 
-@QueryHandler(GetAllSuppliersQuery)
-export class GetAllSuppliersQueryHandler {
+@QueryHandler(SuppliersQuery)
+export class SuppliersQueryHandler {
   constructor(
     private readonly supplierService: SupplierService,
   ) {}
@@ -14,7 +14,7 @@ export class GetAllSuppliersQueryHandler {
     const foundSuppliers =
       await this.supplierService.getAllSuppliersAsync();
 
-    if (!foundSuppliers || foundSuppliers.length === 0) {
+    if (foundSuppliers.length === 0) {
       throw new NotFoundException(
         'No suppliers found.',
       );
