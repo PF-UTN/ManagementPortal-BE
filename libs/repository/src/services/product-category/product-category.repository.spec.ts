@@ -31,7 +31,7 @@ describe('ProductCategoryRepository', () => {
     productCategory.description = 'This is a test category';
   });
 
-  describe('checkIfExistsByIdAsync', () => {
+  describe('existsAsync', () => {
     it('should return true if product category exists', async () => {
       // Arrange
       const productCategoryId = 1;
@@ -40,7 +40,7 @@ describe('ProductCategoryRepository', () => {
         .mockResolvedValueOnce(productCategory);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(productCategoryId);
+      const exists = await repository.existsAsync(productCategoryId);
 
       // Assert
       expect(exists).toBe(true);
@@ -54,7 +54,7 @@ describe('ProductCategoryRepository', () => {
         .mockResolvedValueOnce(null);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(productCategoryId);
+      const exists = await repository.existsAsync(productCategoryId);
 
       // Assert
       expect(exists).toBe(false);

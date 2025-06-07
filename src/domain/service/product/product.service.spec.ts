@@ -126,8 +126,8 @@ describe('searchWithFiltersAsync', () => {
   describe('createProductAsync', () => {
     it('should execute the method within a transaction using unitOfWork.execute', async () => {
       // Arrange
-      jest.spyOn(productCategoryService, 'checkIfExistsByIdAsync').mockResolvedValueOnce(true);
-      jest.spyOn(supplierService, 'checkIfExistsByIdAsync').mockResolvedValueOnce(true);
+      jest.spyOn(productCategoryService, 'existsAsync').mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
       jest.spyOn(repository, 'createProductAsync').mockResolvedValueOnce(product);
 
       const executeSpy = jest
@@ -154,10 +154,10 @@ describe('searchWithFiltersAsync', () => {
       const txMock = {} as Prisma.TransactionClient;
 
       jest
-        .spyOn(productCategoryService, 'checkIfExistsByIdAsync')
+        .spyOn(productCategoryService, 'existsAsync')
         .mockResolvedValueOnce(true);
       jest
-        .spyOn(supplierService, 'checkIfExistsByIdAsync')
+        .spyOn(supplierService, 'existsAsync')
         .mockResolvedValueOnce(true);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
@@ -190,10 +190,10 @@ describe('searchWithFiltersAsync', () => {
       const txMock = {} as Prisma.TransactionClient;
 
       jest
-        .spyOn(productCategoryService, 'checkIfExistsByIdAsync')
+        .spyOn(productCategoryService, 'existsAsync')
         .mockResolvedValueOnce(true);
       jest
-        .spyOn(supplierService, 'checkIfExistsByIdAsync')
+        .spyOn(supplierService, 'existsAsync')
         .mockResolvedValueOnce(true);
 
       jest
@@ -225,7 +225,7 @@ describe('searchWithFiltersAsync', () => {
     it('should throw BadRequestException if product category does not exist', async () => {
       // Arrange
       jest
-        .spyOn(productCategoryService, 'checkIfExistsByIdAsync')
+        .spyOn(productCategoryService, 'existsAsync')
         .mockResolvedValueOnce(false);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
@@ -241,8 +241,8 @@ describe('searchWithFiltersAsync', () => {
 
     it('should throw BadRequestException if supplier does not exist', async () => {
       // Arrange
-      jest.spyOn(productCategoryService, 'checkIfExistsByIdAsync').mockResolvedValueOnce(true);
-      jest.spyOn(supplierService, 'checkIfExistsByIdAsync').mockResolvedValueOnce(false);
+      jest.spyOn(productCategoryService, 'existsAsync').mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(false);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         const tx = {} as Prisma.TransactionClient;

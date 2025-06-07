@@ -8,7 +8,7 @@ export class ProductCategoryService {
     private readonly productCategoryRepository: ProductCategoryRepository,
   ) {}
 
-  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
-    return this.productCategoryRepository.checkIfExistsByIdAsync(id);
+  async existsAsync(id: number): Promise<boolean> {
+    return this.productCategoryRepository.existsAsync(id);
   }
 }

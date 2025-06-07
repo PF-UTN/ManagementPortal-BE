@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma.service';
 export class ProductCategoryRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
+  async existsAsync(id: number): Promise<boolean> {
     const productCategory = await this.prisma.productCategory.findUnique({
       where: { id },
     });

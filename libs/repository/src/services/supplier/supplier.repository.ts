@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma.service';
 export class SupplierRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
+  async existsAsync(id: number): Promise<boolean> {
     const supplier = await this.prisma.supplier.findUnique({
       where: { id },
     });

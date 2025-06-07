@@ -33,7 +33,7 @@ export class ProductService {
 
   async createProductAsync(productCreationDto: ProductCreationDto) {
     if (
-      !(await this.productCategoryService.checkIfExistsByIdAsync(
+      !(await this.productCategoryService.existsAsync(
         productCreationDto.categoryId,
       ))
     ) {
@@ -42,7 +42,7 @@ export class ProductService {
       );
     }
     if (
-      !(await this.supplierService.checkIfExistsByIdAsync(
+      !(await this.supplierService.existsAsync(
         productCreationDto.supplierId,
       ))
     ) {

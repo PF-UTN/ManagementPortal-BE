@@ -27,21 +27,21 @@ describe('ProductCategoryService', () => {
     service = module.get<ProductCategoryService>(ProductCategoryService);
   });
 
-  describe('checkIfExistsByIdAsync', () => {
-    it('should call productCategoryRepository.checkIfExistsByIdAsync with the correct id', async () => {
+  describe('existsAsync', () => {
+    it('should call productCategoryRepository.existsAsync with the correct id', async () => {
       // Arrange
       const id = 1;
 
       jest
-        .spyOn(productCategoryRepository, 'checkIfExistsByIdAsync')
+        .spyOn(productCategoryRepository, 'existsAsync')
         .mockResolvedValueOnce(true);
 
       // Act
-      await service.checkIfExistsByIdAsync(id);
+      await service.existsAsync(id);
 
       // Assert
       expect(
-        productCategoryRepository.checkIfExistsByIdAsync,
+        productCategoryRepository.existsAsync,
       ).toHaveBeenCalledWith(id);
     });
   });

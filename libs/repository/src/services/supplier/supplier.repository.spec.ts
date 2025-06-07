@@ -32,7 +32,7 @@ describe('SupplierRepository', () => {
     supplier.phone = '1234567890';
   });
 
-  describe('checkIfExistsByIdAsync', () => {
+  describe('existsAsync', () => {
     it('should return true if supplier exists', async () => {
       // Arrange
       const supplierId = 1;
@@ -41,7 +41,7 @@ describe('SupplierRepository', () => {
         .mockResolvedValueOnce(supplier);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(supplierId);
+      const exists = await repository.existsAsync(supplierId);
 
       // Assert
       expect(exists).toBe(true);
@@ -55,7 +55,7 @@ describe('SupplierRepository', () => {
         .mockResolvedValueOnce(null);
 
       // Act
-      const exists = await repository.checkIfExistsByIdAsync(supplierId);
+      const exists = await repository.existsAsync(supplierId);
 
       // Assert
       expect(exists).toBe(false);

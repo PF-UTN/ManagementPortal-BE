@@ -8,7 +8,7 @@ export class SupplierService {
     private readonly supplierRepository: SupplierRepository,
   ) {}
 
-  async checkIfExistsByIdAsync(id: number): Promise<boolean> {
-    return this.supplierRepository.checkIfExistsByIdAsync(id);
+  async existsAsync(id: number): Promise<boolean> {
+    return this.supplierRepository.existsAsync(id);
   }
 }

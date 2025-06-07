@@ -25,20 +25,20 @@ describe('SupplierService', () => {
     service = module.get<SupplierService>(SupplierService);
   });
 
-  describe('checkIfExistsByIdAsync', () => {
-    it('should call supplierRepository.checkIfExistsByIdAsync with the correct id', async () => {
+  describe('existsAsync', () => {
+    it('should call supplierRepository.existsAsync with the correct id', async () => {
       // Arrange
       const id = 1;
 
       jest
-        .spyOn(supplierRepository, 'checkIfExistsByIdAsync')
+        .spyOn(supplierRepository, 'existsAsync')
         .mockResolvedValueOnce(true);
 
       // Act
-      await service.checkIfExistsByIdAsync(id);
+      await service.existsAsync(id);
 
       // Assert
-      expect(supplierRepository.checkIfExistsByIdAsync).toHaveBeenCalledWith(
+      expect(supplierRepository.existsAsync).toHaveBeenCalledWith(
         id,
       );
     });
