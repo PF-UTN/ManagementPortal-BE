@@ -8,6 +8,7 @@ export class SupplierRepository {
 
   async existsAsync(id: number): Promise<boolean> {
     const supplier = await this.prisma.supplier.findUnique({
+      select: { id: true },
       where: { id },
     });
     return !!supplier;

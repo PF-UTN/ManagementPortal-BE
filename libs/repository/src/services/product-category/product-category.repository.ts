@@ -8,6 +8,7 @@ export class ProductCategoryRepository {
 
   async existsAsync(id: number): Promise<boolean> {
     const productCategory = await this.prisma.productCategory.findUnique({
+      select: { id: true },
       where: { id },
     });
     return !!productCategory;
