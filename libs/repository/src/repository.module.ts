@@ -10,6 +10,7 @@ import {
   PrismaUnitOfWork,
   ClientRepository,
   ProductCategoryRepository,
+  SupplierRepository,
 } from './services';
 @Module({
   providers: [
@@ -22,6 +23,7 @@ import {
     ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
+    SupplierRepository,
   ],
   exports: [
     UserRepository,
@@ -32,6 +34,7 @@ import {
     ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
+    SupplierRepository,
   ],
 })
 export class RepositoryModule {}
