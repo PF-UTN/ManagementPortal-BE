@@ -32,20 +32,21 @@ export class ProductService {
   }
 
   async createProductAsync(productCreationDto: ProductCreationDto) {
-    if (
-      !(await this.productCategoryService.existsAsync(
-        productCreationDto.categoryId,
-      ))
-    ) {
+    const existsProductCategory = await this.productCategoryService.existsAsync(
+      productCreationDto.categoryId,
+    );
+
+    if (!existsProductCategory) {
       throw new BadRequestException(
         `Product category with id ${productCreationDto.categoryId} does not exist.`,
       );
     }
-    if (
-      !(await this.supplierService.existsAsync(
-        productCreationDto.supplierId,
-      ))
-    ) {
+
+    const existsSupplier = await this.supplierService.existsAsync(
+      productCreationDto.supplierId,
+    );
+
+    if (!existsSupplier) {
       throw new BadRequestException(
         `Supplier with id ${productCreationDto.supplierId} does not exist.`,
       );
