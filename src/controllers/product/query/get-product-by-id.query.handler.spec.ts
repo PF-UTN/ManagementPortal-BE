@@ -43,7 +43,7 @@ describe('GetRegistrationRequestByIdQueryHandler', () => {
         expect(result).toEqual(productDetailsDtoMock);
     });
 
-    it('should throw NotFoundException when product is not found', async () => {
+    it('should throw NotFoundException when product is not found ', async () => {
       // Arrange
       service.findProductByIdAsync.mockResolvedValue(
         null,
