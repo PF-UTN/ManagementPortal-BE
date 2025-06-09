@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
-import { SearchProductFiltersDto } from '@mp/common/dtos';
+import { ProductCreationDataDto, SearchProductFiltersDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 
@@ -121,6 +122,35 @@ export class ProductRepository {
         ]);
 
         return { data, total };
+    }
+
+    async createProductAsync(data: ProductCreationDataDto, tx?: Prisma.TransactionClient) {
+        const { categoryId, supplierId, ...productData } = data
+        const client = tx ?? this.prisma;
+        return client.product.create({
+            data: {
+                ...productData,
+                category: {
+                    connect: { id: categoryId }
+                },
+                supplier: {
+                    connect: { id: supplierId }
+                }
+            },
+            include: {
+                category: {
+                    select: {
+                        name: true,
+                        description: true,
+                    },
+                },
+                supplier: {
+                    select: {
+                        businessName: true,
+                    },
+                },
+            },
+        });
     }
 
 }

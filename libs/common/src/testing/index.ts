@@ -19,3 +19,4 @@ export * from './town.repository.mock';
 export * from './client.mock';
 export * from './product-category.data.mock';
 export * from './supplier.mock';
+export * from './product.mock';
