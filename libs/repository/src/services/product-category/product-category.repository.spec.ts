@@ -2,10 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ProductCategory } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { productCategoryMockData } from '@mp/common/testing';
+
 import { PrismaService } from '../prisma.service';
 import { ProductCategoryRepository } from './product-category.repository';
-
-import { productCategoryMockData } from '@mp/common/testing';
 
 describe('ProductCategoryRepository', () => {
   let repository: ProductCategoryRepository;
