@@ -5,6 +5,8 @@ import { mockDeep } from 'jest-mock-extended';
 import { PrismaService } from '../prisma.service';
 import { ProductCategoryRepository } from './product-category.repository';
 
+import { productCategoryMockData } from '@mp/common/testing';
+
 describe('ProductCategoryRepository', () => {
   let repository: ProductCategoryRepository;
   let prismaService: PrismaService;
@@ -58,6 +60,36 @@ describe('ProductCategoryRepository', () => {
 
       // Assert
       expect(exists).toBe(false);
+    });
+  });
+
+  describe('getProductCategoriesAsync', () => {
+    it('should return product categories', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.productCategory, 'findMany')
+        .mockResolvedValueOnce(productCategoryMockData);
+
+      // Act
+      const result = await repository.getProductCategoriesAsync();
+
+      // Assert
+      expect(result).toEqual(productCategoryMockData);
+    });
+
+    it('should call findMany on prismaService.productCategory', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.productCategory, 'findMany')
+        .mockResolvedValueOnce([]);
+
+      // Act
+      await repository.getProductCategoriesAsync();
+
+      // Assert
+      expect(prismaService.productCategory.findMany).toHaveBeenCalledWith({
+        orderBy: { name: 'asc' },
+      });
     });
   });
 });

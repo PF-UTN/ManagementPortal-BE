@@ -13,4 +13,8 @@ export class SupplierRepository {
     });
     return !!supplier;
   }
+
+  async getAllSuppliersAsync() {
+    return this.prisma.supplier.findMany({ orderBy: { businessName: 'asc' } });
+  }
 }

@@ -11,4 +11,8 @@ export class ProductCategoryService {
   async existsAsync(id: number): Promise<boolean> {
     return this.productCategoryRepository.existsAsync(id);
   }
+
+  async getProductCategoriesAsync() {
+    return await this.productCategoryRepository.getProductCategoriesAsync();
+  }
 }

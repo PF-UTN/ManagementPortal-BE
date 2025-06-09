@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Supplier } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { suppliersMock } from '@mp/common/testing';
+
 import { PrismaService } from '../prisma.service';
 import { SupplierRepository } from './supplier.repository';
 
@@ -59,6 +61,25 @@ describe('SupplierRepository', () => {
 
       // Assert
       expect(exists).toBe(false);
+    });
+  });
+
+  describe('getAllSuppliersAsync', () => {
+    it('should call prisma.supplier.findMany with correct order and return the result', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.supplier, 'findMany')
+        .mockResolvedValueOnce(suppliersMock);
+
+      // Act
+      const result = await repository.getAllSuppliersAsync();
+
+      // Assert
+      expect(prismaService.supplier.findMany).toHaveBeenCalledWith({
+        orderBy: { businessName: 'asc' },
+      });
+
+      expect(result).toEqual(suppliersMock);
     });
   });
 });

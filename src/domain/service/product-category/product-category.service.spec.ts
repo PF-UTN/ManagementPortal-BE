@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
+import { productCategoryMockData } from '@mp/common/testing';
 import { ProductCategoryRepository } from '@mp/repository';
 
 import { ProductCategoryService } from './product-category.service';
@@ -40,9 +41,25 @@ describe('ProductCategoryService', () => {
       await service.existsAsync(id);
 
       // Assert
+      expect(productCategoryRepository.existsAsync).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('getProductCategoryAsync', () => {
+    it('should call productCategoryRepository.getProductCategoryAsync and return its result', async () => {
+      // Arrange
+      jest
+        .spyOn(productCategoryRepository, 'getProductCategoriesAsync')
+        .mockResolvedValueOnce(productCategoryMockData);
+
+      // Act
+      const result = await service.getProductCategoriesAsync();
+
+      // Assert
       expect(
-        productCategoryRepository.existsAsync,
-      ).toHaveBeenCalledWith(id);
+        productCategoryRepository.getProductCategoriesAsync,
+      ).toHaveBeenCalled();
+      expect(result).toEqual(productCategoryMockData);
     });
   });
 });

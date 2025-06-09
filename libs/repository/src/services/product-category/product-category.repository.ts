@@ -13,4 +13,12 @@ export class ProductCategoryRepository {
     });
     return !!productCategory;
   }
+
+  async getProductCategoriesAsync() {
+    return this.prisma.productCategory.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
 }
