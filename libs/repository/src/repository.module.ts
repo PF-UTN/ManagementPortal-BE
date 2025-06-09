@@ -10,6 +10,8 @@ import {
   PrismaUnitOfWork,
   ClientRepository,
   ProductCategoryRepository,
+  SupplierRepository,
+  StockRepository,
   AddressRepository,
 } from './services';
 @Module({
@@ -23,6 +25,9 @@ import {
     ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
+    ProductCategoryRepository,
+    SupplierRepository,
+    StockRepository,
     AddressRepository,
     TownRepository,
   ],
@@ -35,6 +40,9 @@ import {
     ProductCategoryRepository,
     PrismaUnitOfWork,
     ClientRepository,
+    ProductCategoryRepository,
+    SupplierRepository,
+    StockRepository,
     AddressRepository,
     TownRepository,
   ],

@@ -4,4 +4,5 @@ export * from './registration-request';
 export * from './town';
 export * from './products';
 export * from './product-category';
+export * from './stock';
 export * from './client';

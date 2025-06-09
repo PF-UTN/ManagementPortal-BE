@@ -6,6 +6,7 @@ import { AuthenticationModule } from './controllers/authentication/authenticatio
 import { ProductModule } from './controllers/product/product.module';
 import { ProductCategoryModule } from './controllers/product-category/product-category.module';
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
+import { SupplierModule } from './controllers/supplier/supplier.controller.module';
 import { TownModule } from './controllers/town/town.controller.module';
 
 @Module({
@@ -19,7 +20,8 @@ import { TownModule } from './controllers/town/town.controller.module';
     RegistrationRequestModule,
     TownModule,
     ProductModule,
-    ProductCategoryModule
+    ProductCategoryModule,
+    SupplierModule,
   ],
   controllers: [],
   providers: [],
