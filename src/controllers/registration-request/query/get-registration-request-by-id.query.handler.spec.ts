@@ -89,7 +89,7 @@ describe('GetRegistrationRequestByIdQueryHandler', () => {
 
       // Assert
       await expect(executePromise).rejects.toEqual(
-        new NotFoundException('Solicitud de registro con ID 1 no encontrada.'),
+        new NotFoundException('Registration request with ID 1 not found.'),
       );
     });
   });

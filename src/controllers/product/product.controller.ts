@@ -56,8 +56,6 @@ export class ProductController {
       new CreateProductCommand(productCreationDto),
     );
   }
-}
-
 
   @Get(':id')
   @HttpCode(200)

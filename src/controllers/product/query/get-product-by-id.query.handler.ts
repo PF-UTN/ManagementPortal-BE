@@ -19,7 +19,7 @@ export class GetProductByIdQueryHandler {
 
         if (!foundProduct) {
             throw new NotFoundException(
-                `Producto con ID ${query.id} no encontrado.`,
+                `Product with ID ${query.id} not found.`,
             );
         }
 

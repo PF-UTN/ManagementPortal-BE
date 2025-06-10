@@ -54,7 +54,7 @@ describe('GetRegistrationRequestByIdQueryHandler', () => {
 
       // Assert
       await expect(executePromise).rejects.toEqual(
-        new NotFoundException('Producto con ID 1 no encontrado.'),
+        new NotFoundException('Product with ID 1 not found.'),
       );
     });
   });

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
-import { DeepMockProxy, mockDeep } from 'jest-mock-extended';
+import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
 import { productCreationDtoMock } from '@mp/common/testing';
@@ -13,18 +13,18 @@ describe('ProductRepository', () => {
     let repository: ProductRepository;
     let prismaService: PrismaService;
     let product: ReturnType<
-      typeof mockDeep<
-        Prisma.ProductGetPayload<{
-            include: {
-              category: {
-                select: { name: true; description: true };
-              };
-              supplier: {
-                select: { businessName: true };
-              };
-            };
-          }>
-      >
+        typeof mockDeep<
+            Prisma.ProductGetPayload<{
+                include: {
+                    category: {
+                        select: { name: true; description: true };
+                    };
+                    supplier: {
+                        select: { businessName: true };
+                    };
+                };
+            }>
+        >
     >;
 
     beforeEach(async () => {
@@ -44,16 +44,16 @@ describe('ProductRepository', () => {
         prismaService = module.get<PrismaService>(PrismaService);
 
         product = mockDeep<
-          Prisma.ProductGetPayload<{
-            include: {
-              category: {
-                select: { name: true; description: true };
-              };
-              supplier: {
-                select: { businessName: true };
-              };
-            };
-          }>
+            Prisma.ProductGetPayload<{
+                include: {
+                    category: {
+                        select: { name: true; description: true };
+                    };
+                    supplier: {
+                        select: { businessName: true };
+                    };
+                };
+            }>
         >();
 
         product.id = 1;
@@ -240,54 +240,56 @@ describe('ProductRepository', () => {
     });
 
     describe('createProductAsync', () => {
-      it('should create a new product', async () => {
-        // Arrange
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { stock, ...productData } =
-          productCreationDtoMock;
-        const productCreateInput = {
-          ...productData
-        };
+        it('should create a new product', async () => {
+            // Arrange
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { stock, ...productData } =
+                productCreationDtoMock;
+            const productCreateInput = {
+                ...productData
+            };
 
-        jest
-          .spyOn(prismaService.product, 'create')
-          .mockResolvedValueOnce(product);
+            jest
+                .spyOn(prismaService.product, 'create')
+                .mockResolvedValueOnce(product);
 
-        // Act
-        const createdProduct =
-          await repository.createProductAsync(productCreateInput);
+            // Act
+            const createdProduct =
+                await repository.createProductAsync(productCreateInput);
 
-        // Assert
-        expect(createdProduct).toEqual(product);
-      });
+            // Assert
+            expect(createdProduct).toEqual(product);
+        });
     });
 
     describe('createProductAsync', () => {
-      it('should create a new product', async () => {
-        // Arrange
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { stock, ...productData } =
-          productCreationDtoMock;
-        const productCreateInput = {
-          ...productData
-        };
+        it('should create a new product', async () => {
+            // Arrange
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { stock, ...productData } =
+                productCreationDtoMock;
+            const productCreateInput = {
+                ...productData
+            };
 
-        jest
-          .spyOn(prismaService.product, 'create')
-          .mockResolvedValueOnce(product);
+            jest
+                .spyOn(prismaService.product, 'create')
+                .mockResolvedValueOnce(product);
 
-        // Act
-        const createdProduct =
-          await repository.createProductAsync(productCreateInput);
+            // Act
+            const createdProduct =
+                await repository.createProductAsync(productCreateInput);
 
-        // Assert
-        expect(createdProduct).toEqual(product);
-      });
+            // Assert
+            expect(createdProduct).toEqual(product);
+        });
     });
     describe('findProductWithDetailsByIdAsync', () => {
         it('should return product with details', async () => {
             // Arrange
-            prismaService.product.findUnique.mockResolvedValueOnce(productMockData);
+            jest
+                .spyOn(prismaService.product, 'findUnique')
+                .mockResolvedValueOnce(productMockData);
 
             // Act
             const result = await repository.findProductWithDetailsByIdAsync(1);
@@ -321,7 +323,9 @@ describe('ProductRepository', () => {
     describe('findProductWithDetailsByIdAsync', () => {
         it('should return product with details', async () => {
             // Arrange
-            prismaService.product.findUnique.mockResolvedValueOnce(productMockData);
+            jest
+                .spyOn(prismaService.product, 'findUnique')
+                .mockResolvedValueOnce(productMockData);
 
             // Act
             const result = await repository.findProductWithDetailsByIdAsync(1);

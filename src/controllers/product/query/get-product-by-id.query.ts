@@ -1,6 +1,7 @@
 import { Query } from "@nestjs/cqrs";
 
-export class GetProductByIdQuery extends Query<void> {
+import { ProductDetailsDto } from "@mp/common/dtos";
+export class GetProductByIdQuery extends Query<ProductDetailsDto> {
     constructor(public readonly id: number) {
         super();
     }
