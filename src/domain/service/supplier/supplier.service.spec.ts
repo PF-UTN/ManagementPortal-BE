@@ -26,6 +26,21 @@ describe('SupplierService', () => {
     service = module.get<SupplierService>(SupplierService);
   });
 
+  describe('existsAsync', () => {
+    it('should call supplierRepository.existsAsync with the correct id', async () => {
+      // Arrange
+      const id = 1;
+
+      jest.spyOn(supplierRepository, 'existsAsync').mockResolvedValueOnce(true);
+
+      // Act
+      await service.existsAsync(id);
+
+      // Assert
+      expect(supplierRepository.existsAsync).toHaveBeenCalledWith(id);
+    });
+  });
+
   describe('getAllSuppliersAsync', () => {
     it('should call supplierRepository.getAllSuppliersAsync', async () => {
       // Arrange
