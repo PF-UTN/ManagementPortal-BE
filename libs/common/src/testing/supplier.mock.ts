@@ -6,6 +6,7 @@ export const suppliersMock = [
     documentNumber: '30-12345678-9',
     email: 'info@acme.com',
     phone: '+54 11 1234-5678',
+    addressId: 1
   },
   {
     id: 2,
@@ -14,5 +15,6 @@ export const suppliersMock = [
     documentNumber: '30-98765432-1',
     email: 'contact@zetacorp.com',
     phone: '+54 11 8765-4321',
+    addressId: 1
   },
 ];

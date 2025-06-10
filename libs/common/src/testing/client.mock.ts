@@ -3,4 +3,5 @@ export const newClientMock = {
   companyName: 'Test Company',
   userId: 1,
   taxCategoryId: 1,
+  addressId: 1,
 };

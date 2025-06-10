@@ -13,7 +13,7 @@ export const userCreationDtoMock: UserCreationDto = {
   companyName: 'Test Company',
   taxCategoryId: 1,
   address: { 
-    street: 'Calle Falsa',
+    street: 'unknown street',
     streetNumber: 123,
     townId: 1,
   },

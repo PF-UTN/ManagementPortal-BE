@@ -9,3 +9,4 @@ export * from './client/client.repository';
 export * from './product-category/product-category.repository';
 export * from './supplier/supplier.repository';
 export * from './stock/stock.repository';
+export * from './address/address.repository';

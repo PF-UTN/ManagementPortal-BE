@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Town } from '@prisma/client';
 import { mockDeep, DeepMockProxy } from 'jest-mock-extended';
 
 import { townMockData } from '@mp/common/testing';
@@ -9,6 +10,7 @@ import { PrismaService } from '../prisma.service';
 describe('TownRepository', () => {
   let repository: TownRepository;
   let prismaService: DeepMockProxy<PrismaService>;
+  let town: ReturnType<typeof mockDeep<Town>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -20,6 +22,13 @@ describe('TownRepository', () => {
 
     prismaService = module.get(PrismaService);
     repository = module.get(TownRepository);
+
+    town = mockDeep<Town>();
+
+    town.id = 1;
+    town.name = 'Rosario';
+    town.zipCode = '2000';
+    town.provinceId = 1;
   });
 
   it('should be defined', () => {
@@ -81,5 +90,35 @@ describe('TownRepository', () => {
       expect(result).toEqual(townMockData);
     });
   
+  });
+
+  describe('existsAsync', () => {
+    it('should return true if town exists', async () => {
+      // Arrange
+      const townId = 1;
+      jest
+        .spyOn(prismaService.town, 'findUnique')
+        .mockResolvedValueOnce(town);
+
+      // Act
+      const exists = await repository.existsAsync(townId);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if town does not exist', async () => {
+      // Arrange
+      const townId = 1;
+      jest
+        .spyOn(prismaService.town, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const exists = await repository.existsAsync(townId);
+
+      // Assert
+      expect(exists).toBe(false);
+    });
   });
 });
