@@ -72,4 +72,10 @@ export class ProductService {
       return newProduct;
     });
   }
+
+  async findProductByIdAsync(productId: number) {
+        return this.productRepository.findProductWithDetailsByIdAsync(
+            productId,
+        );
+    }
 }

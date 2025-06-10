@@ -4,6 +4,7 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
 import { productCreationDtoMock } from '@mp/common/testing';
+import { productMockData } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
 import { ProductRepository } from './product.repository';
@@ -12,18 +13,18 @@ describe('ProductRepository', () => {
     let repository: ProductRepository;
     let prismaService: PrismaService;
     let product: ReturnType<
-      typeof mockDeep<
-        Prisma.ProductGetPayload<{
-            include: {
-              category: {
-                select: { name: true; description: true };
-              };
-              supplier: {
-                select: { businessName: true };
-              };
-            };
-          }>
-      >
+        typeof mockDeep<
+            Prisma.ProductGetPayload<{
+                include: {
+                    category: {
+                        select: { name: true; description: true };
+                    };
+                    supplier: {
+                        select: { businessName: true };
+                    };
+                };
+            }>
+        >
     >;
 
     beforeEach(async () => {
@@ -43,16 +44,16 @@ describe('ProductRepository', () => {
         prismaService = module.get<PrismaService>(PrismaService);
 
         product = mockDeep<
-          Prisma.ProductGetPayload<{
-            include: {
-              category: {
-                select: { name: true; description: true };
-              };
-              supplier: {
-                select: { businessName: true };
-              };
-            };
-          }>
+            Prisma.ProductGetPayload<{
+                include: {
+                    category: {
+                        select: { name: true; description: true };
+                    };
+                    supplier: {
+                        select: { businessName: true };
+                    };
+                };
+            }>
         >();
 
         product.id = 1;
@@ -239,25 +240,120 @@ describe('ProductRepository', () => {
     });
 
     describe('createProductAsync', () => {
-      it('should create a new product', async () => {
-        // Arrange
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { stock, ...productData } =
-          productCreationDtoMock;
-        const productCreateInput = {
-          ...productData
-        };
+        it('should create a new product', async () => {
+            // Arrange
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { stock, ...productData } =
+                productCreationDtoMock;
+            const productCreateInput = {
+                ...productData
+            };
 
-        jest
-          .spyOn(prismaService.product, 'create')
-          .mockResolvedValueOnce(product);
+            jest
+                .spyOn(prismaService.product, 'create')
+                .mockResolvedValueOnce(product);
 
-        // Act
-        const createdProduct =
-          await repository.createProductAsync(productCreateInput);
+            // Act
+            const createdProduct =
+                await repository.createProductAsync(productCreateInput);
 
-        // Assert
-        expect(createdProduct).toEqual(product);
-      });
+            // Assert
+            expect(createdProduct).toEqual(product);
+        });
+    });
+
+    describe('createProductAsync', () => {
+        it('should create a new product', async () => {
+            // Arrange
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { stock, ...productData } =
+                productCreationDtoMock;
+            const productCreateInput = {
+                ...productData
+            };
+
+            jest
+                .spyOn(prismaService.product, 'create')
+                .mockResolvedValueOnce(product);
+
+            // Act
+            const createdProduct =
+                await repository.createProductAsync(productCreateInput);
+
+            // Assert
+            expect(createdProduct).toEqual(product);
+        });
+    });
+    describe('findProductWithDetailsByIdAsync', () => {
+        it('should return product with details', async () => {
+            // Arrange
+            jest
+                .spyOn(prismaService.product, 'findUnique')
+                .mockResolvedValueOnce(productMockData);
+
+            // Act
+            const result = await repository.findProductWithDetailsByIdAsync(1);
+
+            // Assert
+            expect(prismaService.product.findUnique).toHaveBeenCalledWith({
+                where: { id: 1 },
+                include: {
+                    category: {
+                        select: { name: true },
+                    },
+                    supplier: {
+                        select: {
+                            businessName: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                    stock: {
+                        select: {
+                            quantityAvailable: true,
+                            quantityReserved: true,
+                            quantityOrdered: true,
+                        },
+                    },
+                },
+            });
+            expect(result).toEqual(productMockData);
+        });
+    });
+    describe('findProductWithDetailsByIdAsync', () => {
+        it('should return product with details', async () => {
+            // Arrange
+            jest
+                .spyOn(prismaService.product, 'findUnique')
+                .mockResolvedValueOnce(productMockData);
+
+            // Act
+            const result = await repository.findProductWithDetailsByIdAsync(1);
+
+            // Assert
+            expect(prismaService.product.findUnique).toHaveBeenCalledWith({
+                where: { id: 1 },
+                include: {
+                    category: {
+                        select: { name: true },
+                    },
+                    supplier: {
+                        select: {
+                            businessName: true,
+                            email: true,
+                            phone: true,
+                        },
+                    },
+                    stock: {
+                        select: {
+                            quantityAvailable: true,
+                            quantityReserved: true,
+                            quantityOrdered: true,
+                        },
+                    },
+                },
+            });
+            expect(result).toEqual(productMockData);
+        });
     });
 });

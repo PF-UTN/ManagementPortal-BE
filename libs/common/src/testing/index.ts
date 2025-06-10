@@ -20,3 +20,5 @@ export * from './client.mock';
 export * from './product-category.data.mock';
 export * from './supplier.mock';
 export * from './product.mock';
+
+export * from './product.data.mock';
