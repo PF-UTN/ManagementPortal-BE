@@ -44,15 +44,15 @@ export class UserService {
     const { companyName, taxCategoryId, address, ...userData } =
       userCreationDto;
 
+    if (!(await this.townService.existsAsync(address.townId))) {
+      throw new BadRequestException(
+        'El id de la localidad proporcionado no se encuentra registrado.',
+      );
+    }
+
+    const hashedPassword = await this.hashPasswordAsync(userData.password);
+
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      if (!(await this.townService.existsAsync(address.townId))) {
-        throw new BadRequestException(
-          'El id de la localidad proporcionado no se encuentra registrado.',
-        );
-      }
-
-      const hashedPassword = await this.hashPasswordAsync(userData.password);
-
       const user = {
         ...userData,
         password: hashedPassword,
