@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Supplier } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { suppliersMock } from '@mp/common/testing';
+import {
+  supplierCreationDataMock,
+  supplierMock,
+  suppliersMock,
+} from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
 import { SupplierRepository } from './supplier.repository';
@@ -32,6 +36,7 @@ describe('SupplierRepository', () => {
     supplier.documentNumber = '12345678901';
     supplier.email = 'test-supplier@mp.com';
     supplier.phone = '1234567890';
+    supplier.addressId = 1;
   });
 
   describe('existsAsync', () => {
@@ -80,6 +85,89 @@ describe('SupplierRepository', () => {
       });
 
       expect(result).toEqual(suppliersMock);
+    });
+  });
+
+  describe('createSupplierAsync', () => {
+    it('should create a supplier with the provided data', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.supplier, 'create')
+        .mockResolvedValueOnce(supplierMock);
+
+      // Act
+      const result = await repository.createSupplierAsync(
+        supplierCreationDataMock,
+      );
+
+      // Assert
+      expect(result).toEqual(supplierMock);
+    });
+
+    it('should call prisma.supplier.create with correct data', async () => {
+      // Arrange
+      const { addressId, ...supplierData } = supplierCreationDataMock;
+
+      jest
+        .spyOn(prismaService.supplier, 'create')
+        .mockResolvedValueOnce(supplierMock);
+
+      // Act
+      await repository.createSupplierAsync(supplierCreationDataMock);
+
+      // Assert
+      expect(prismaService.supplier.create).toHaveBeenCalledWith({
+        data: {
+          ...supplierData,
+          address: {
+            connect: { id: addressId },
+          },
+        },
+      });
+    });
+  });
+
+  describe('updateSupplierAsync', () => {
+    it('should update the supplier with the provided data', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.supplier, 'update')
+        .mockResolvedValueOnce(supplierMock);
+
+      // Act
+      const result = await repository.updateSupplierAsync(
+        supplierMock.id,
+        supplierCreationDataMock,
+      );
+
+      // Assert
+      expect(result).toEqual(supplierMock);
+    });
+
+    it('should call prisma.supplier.update with correct data', async () => {
+      // Arrange
+      const { addressId, ...supplierData } = supplierCreationDataMock;
+
+      jest
+        .spyOn(prismaService.supplier, 'update')
+        .mockResolvedValueOnce(supplierMock);
+
+      // Act
+      await repository.updateSupplierAsync(
+        supplierMock.id,
+        supplierCreationDataMock,
+      );
+
+      // Assert
+      expect(prismaService.supplier.update).toHaveBeenCalledWith({
+        where: { id: supplierMock.id },
+        data: {
+          ...supplierData,
+          address: {
+            connect: { id: addressId },
+          },
+        },
+      });
     });
   });
 });

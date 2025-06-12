@@ -60,4 +60,29 @@ describe('AddressRepository', () => {
       expect(result).toEqual(address);
     });
   });
+
+  describe('updateAddressAsync', () => {
+    it('should update the address with the provided data', async () => {
+      // Arrange
+      const addressData: AddressCreationDto = {
+        townId: address.townId,
+        street: address.street,
+        streetNumber: address.streetNumber,
+      };
+      const addressCreateInput = {
+        ...addressData,
+        town: { connect: { id: addressData.townId } },
+      };
+
+      jest
+        .spyOn(prismaService.address, 'update')
+        .mockResolvedValueOnce(address);
+
+      // Act
+      const result = await repository.updateAddressAsync(address.id, addressCreateInput);
+
+      // Assert
+      expect(result).toEqual(address);
+    });
+  });
 });

@@ -8,4 +8,6 @@ model Supplier {
     products       Product[]
     address        Address   @relation(fields: [addressId], references: [id])
     addressId      Int       @unique
+
+    @@unique([documentType, documentNumber])
 }
