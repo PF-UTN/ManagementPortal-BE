@@ -95,6 +95,7 @@ export class UserService {
         documentType: newUser.documentType,
         documentNumber: newUser.documentNumber,
         phone: newUser.phone,
+        birthdate: newUser.birthdate,
         taxCategoryName: newClient.taxCategory.name,
       };
 

@@ -7,6 +7,7 @@ model User {
   phone               String               @db.VarChar(20)
   documentType        String               @db.VarChar(4)
   documentNumber      String               @db.VarChar(11)
+  birthdate           DateTime            @db.Date
   roleId              Int
   accountLockedUntil  DateTime?
   failedLoginAttempts Int                  @default(0)

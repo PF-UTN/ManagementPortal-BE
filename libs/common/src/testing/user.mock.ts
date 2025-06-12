@@ -11,6 +11,7 @@ export const userCreationDtoMock: UserCreationDto = {
   documentNumber: '12345678',
   documentType: 'DNI',
   companyName: 'Test Company',
+  birthdate: new Date('1990-01-01'),
   taxCategoryId: 1,
   address: { 
     street: 'unknown street',

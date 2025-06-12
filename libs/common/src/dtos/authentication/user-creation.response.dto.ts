@@ -6,6 +6,7 @@ export class UserCreationResponse {
   companyName: string;
   documentType: string;
   documentNumber: string;
+  birthdate: Date;
   phone: string;
   taxCategoryName: string;
 }
