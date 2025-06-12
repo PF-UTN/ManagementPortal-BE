@@ -6,3 +6,4 @@ export * from './products';
 export * from './product-category';
 export * from './stock';
 export * from './client';
+export * from './supplier';
