@@ -152,6 +152,30 @@ export class ProductRepository {
             },
         });
     }
+    
+    async updateProductAsync(id: number, data: ProductCreationDataDto) {
+        const { categoryId, supplierId, ...productData } = data;
+        return this.prisma.product.update({
+            where: { id },
+            data: {
+                ...productData,
+                category: {
+                    connect: { id: categoryId }
+                },
+                supplier: {
+                    connect: { id: supplierId }
+                }
+            },
+        });
+    }
+
+    async existsAsync(id: number): Promise<boolean> {
+    const product = await this.prisma.product.findUnique({
+      select: { id: true },
+      where: { id },
+    });
+    return !!product;
+    }
 
     async findProductWithDetailsByIdAsync(productId: number) {
         return this.prisma.product.findUnique({

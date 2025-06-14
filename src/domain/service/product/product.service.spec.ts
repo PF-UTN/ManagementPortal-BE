@@ -1,11 +1,18 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
-import { productCreationDtoMock } from '@mp/common/testing';
-import { PrismaUnitOfWork, ProductRepository, StockRepository } from '@mp/repository';
+import {
+  productCreationDtoMock,
+  productUpdateDtoMock,
+} from '@mp/common/testing';
+import {
+  PrismaUnitOfWork,
+  ProductRepository,
+  StockRepository,
+} from '@mp/repository';
 
 import { SearchProductQuery } from './../../../controllers/product/command/search-product-query';
 import { ProductService } from './product.service';
@@ -35,19 +42,23 @@ describe('ProductService', () => {
   >;
 
   beforeEach(async () => {
-
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductService,
         { provide: ProductRepository, useValue: mockDeep<ProductRepository>() },
-        { provide: ProductCategoryService, useValue: mockDeep<ProductCategoryService>() },
+        {
+          provide: ProductCategoryService,
+          useValue: mockDeep<ProductCategoryService>(),
+        },
         { provide: SupplierService, useValue: mockDeep<SupplierService>() },
         { provide: StockRepository, useValue: mockDeep<StockRepository>() },
         { provide: PrismaUnitOfWork, useValue: mockDeep<PrismaUnitOfWork>() },
       ],
     }).compile();
 
-    productCategoryService = module.get<ProductCategoryService>(ProductCategoryService);
+    productCategoryService = module.get<ProductCategoryService>(
+      ProductCategoryService,
+    );
     supplierService = module.get<SupplierService>(SupplierService);
     stockRepository = module.get<StockRepository>(StockRepository);
 
@@ -55,7 +66,7 @@ describe('ProductService', () => {
 
     service = module.get<ProductService>(ProductService);
     repository = module.get<ProductRepository>(ProductRepository);
-    
+
     product = mockDeep<
       Prisma.ProductGetPayload<{
         include: {
@@ -86,11 +97,11 @@ describe('ProductService', () => {
     };
   });
 
-    it('should be defined', () => {
+  it('should be defined', () => {
     expect(service).toBeDefined();
   });
 
-describe('searchWithFiltersAsync', () => {
+  describe('searchWithFiltersAsync', () => {
     it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
       // Arrange
       const searchText = 'test';
@@ -112,9 +123,7 @@ describe('searchWithFiltersAsync', () => {
       await service.searchWithFiltersAsync(query);
 
       // Assert
-      expect(
-        repository.searchWithFiltersAsync,
-      ).toHaveBeenCalledWith(
+      expect(repository.searchWithFiltersAsync).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
         query.page,
@@ -126,9 +135,13 @@ describe('searchWithFiltersAsync', () => {
   describe('createProductAsync', () => {
     it('should execute the method within a transaction using unitOfWork.execute', async () => {
       // Arrange
-      jest.spyOn(productCategoryService, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
       jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
-      jest.spyOn(repository, 'createProductAsync').mockResolvedValueOnce(product);
+      jest
+        .spyOn(repository, 'createProductAsync')
+        .mockResolvedValueOnce(product);
 
       const executeSpy = jest
         .spyOn(unitOfWork, 'execute')
@@ -138,27 +151,22 @@ describe('searchWithFiltersAsync', () => {
         });
 
       // Act
-      await service.createProductAsync(
-        productCreationDtoMock,
-      );
+      await service.createProductAsync(productCreationDtoMock);
 
       // Assert
       expect(executeSpy).toHaveBeenCalled();
-    })
+    });
 
     it('should call productRepository.createProductAsync with correct data', async () => {
       // Arrange
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { stock, ...productData } =
-        productCreationDtoMock;
+      const { stock, ...productData } = productCreationDtoMock;
       const txMock = {} as Prisma.TransactionClient;
 
       jest
         .spyOn(productCategoryService, 'existsAsync')
         .mockResolvedValueOnce(true);
-      jest
-        .spyOn(supplierService, 'existsAsync')
-        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
@@ -183,16 +191,13 @@ describe('searchWithFiltersAsync', () => {
     it('should call stockRepository.createStockAsync with correct data', async () => {
       // Arrange
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { stock, ...otherData } =
-        productCreationDtoMock;
+      const { stock, ...otherData } = productCreationDtoMock;
       const txMock = {} as Prisma.TransactionClient;
 
       jest
         .spyOn(productCategoryService, 'existsAsync')
         .mockResolvedValueOnce(true);
-      jest
-        .spyOn(supplierService, 'existsAsync')
-        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
 
       jest
         .spyOn(repository, 'createProductAsync')
@@ -239,7 +244,9 @@ describe('searchWithFiltersAsync', () => {
 
     it('should throw BadRequestException if supplier does not exist', async () => {
       // Arrange
-      jest.spyOn(productCategoryService, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
       jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(false);
 
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
@@ -252,7 +259,66 @@ describe('searchWithFiltersAsync', () => {
         service.createProductAsync(productCreationDtoMock),
       ).rejects.toThrow(BadRequestException);
     });
-  })
+  });
+
+  describe('updateProductAsync', () => {
+    it('should call productRepository.updateProductAsync with correct data', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+
+      const updateProductAsyncSpy = jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce(product);
+
+      // Act
+      await service.updateProductAsync(product.id, productUpdateDtoMock);
+
+      // Assert
+      expect(updateProductAsyncSpy).toHaveBeenCalledWith(product.id, productUpdateDtoMock);
+    });
+
+    it('should throw NotFoundException if product does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateProductAsync(product.id, productUpdateDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if product category does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateProductAsync(product.id, productUpdateDtoMock),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if supplier does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateProductAsync(product.id, productUpdateDtoMock),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe('findProductByIdAsync', () => {
     it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
       // Arrange
@@ -262,8 +328,9 @@ describe('searchWithFiltersAsync', () => {
       await service.findProductByIdAsync(productId);
 
       // Assert
-      expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(productId);
+      expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(
+        productId,
+      );
     });
-  }
-);
+  });
 });
