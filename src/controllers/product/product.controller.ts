@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -16,10 +17,11 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { ProductCreationDto, SearchProductRequest } from '@mp/common/dtos';
+import { ProductCreationDto, ProductUpdateDto, SearchProductRequest } from '@mp/common/dtos';
 
 import { CreateProductCommand } from './command/create-product.command';
 import { SearchProductQuery } from './command/search-product-query';
+import { UpdateProductCommand } from './command/update-product.command';
 import { GetProductByIdQuery } from './query/get-product-by-id.query';
 
 @Controller('product')
@@ -54,6 +56,27 @@ export class ProductController {
   createProductAsync(@Body() productCreationDto: ProductCreationDto) {
     return this.commandBus.execute(
       new CreateProductCommand(productCreationDto),
+    );
+  }
+
+  @Put(':id')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Product.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an existing product',
+    description: 'Update the product with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the product to update',
+  })
+  updateProductAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() productUpdateDto: ProductUpdateDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateProductCommand(id, productUpdateDto),
     );
   }
 
