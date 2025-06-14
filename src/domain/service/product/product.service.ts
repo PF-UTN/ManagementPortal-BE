@@ -1,7 +1,11 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { ProductCreationDto } from '@mp/common/dtos';
+import { ProductCreationDto, ProductUpdateDto } from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
   ProductRepository,
@@ -53,8 +57,7 @@ export class ProductService {
     }
 
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const { stock, ...productData } =
-        productCreationDto;
+      const { stock, ...productData } = productCreationDto;
 
       const newProduct = await this.productRepository.createProductAsync(
         productData,
@@ -73,9 +76,42 @@ export class ProductService {
     });
   }
 
-  async findProductByIdAsync(productId: number) {
-        return this.productRepository.findProductWithDetailsByIdAsync(
-            productId,
-        );
+  async updateProductAsync(id: number, productUpdateDto: ProductUpdateDto) {
+    const existsProduct = await this.productRepository.existsAsync(id);
+
+    if (!existsProduct) {
+      throw new NotFoundException(`Product with id ${id} does not exist.`);
     }
+
+    const existsProductCategory = await this.productCategoryService.existsAsync(
+      productUpdateDto.categoryId,
+    );
+
+    if (!existsProductCategory) {
+      throw new BadRequestException(
+        `Product category with id ${productUpdateDto.categoryId} does not exist.`,
+      );
+    }
+
+    const existsSupplier = await this.supplierService.existsAsync(
+      productUpdateDto.supplierId,
+    );
+
+    if (!existsSupplier) {
+      throw new BadRequestException(
+        `Supplier with id ${productUpdateDto.supplierId} does not exist.`,
+      );
+    }
+
+    const updatedProduct = await this.productRepository.updateProductAsync(
+      id,
+      productUpdateDto,
+    );
+
+    return updatedProduct;
+  }
+
+  async findProductByIdAsync(productId: number) {
+    return this.productRepository.findProductWithDetailsByIdAsync(productId);
+  }
 }
