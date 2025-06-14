@@ -262,28 +262,59 @@ describe('ProductRepository', () => {
         });
     });
 
-    describe('createProductAsync', () => {
-        it('should create a new product', async () => {
+    describe('updateProductAsync', () => {
+        it('should update an existing product', async () => {
             // Arrange
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const { stock, ...productData } =
                 productCreationDtoMock;
-            const productCreateInput = {
+            const productUpdateInput = {
                 ...productData
             };
 
             jest
-                .spyOn(prismaService.product, 'create')
+                .spyOn(prismaService.product, 'update')
                 .mockResolvedValueOnce(product);
 
             // Act
-            const createdProduct =
-                await repository.createProductAsync(productCreateInput);
+            const updatedProduct =
+                await repository.updateProductAsync(product.id, productUpdateInput);
 
             // Assert
-            expect(createdProduct).toEqual(product);
+            expect(updatedProduct).toEqual(product);
         });
     });
+
+    describe('existsAsync', () => {
+      it('should return true if product exists', async () => {
+        // Arrange
+        const productId = 1;
+        jest
+          .spyOn(prismaService.product, 'findUnique')
+          .mockResolvedValueOnce(product);
+
+        // Act
+        const exists = await repository.existsAsync(productId);
+
+        // Assert
+        expect(exists).toBe(true);
+      });
+
+      it('should return false if product category does not exist', async () => {
+        // Arrange
+        const productId = 1;
+        jest
+          .spyOn(prismaService.product, 'findUnique')
+          .mockResolvedValueOnce(null);
+
+        // Act
+        const exists = await repository.existsAsync(productId);
+
+        // Assert
+        expect(exists).toBe(false);
+      });
+    });
+
     describe('findProductWithDetailsByIdAsync', () => {
         it('should return product with details', async () => {
             // Arrange
