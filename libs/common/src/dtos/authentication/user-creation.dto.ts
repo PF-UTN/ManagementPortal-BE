@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
+  IsDate,
   IsEmail,
   IsEnum,
   IsNotEmpty,
@@ -60,6 +61,12 @@ export class UserCreationDto {
   @MaxLength(4)
   @IsEnum(UserDocumentTypes)
   documentType: string;
+
+  @ApiProperty({ example: '1990-01-15', type: String, format: 'date' })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  birthdate: Date;
 
   @ApiProperty({ example: 'Test Company' })
   @IsString()
