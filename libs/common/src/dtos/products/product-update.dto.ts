@@ -38,7 +38,7 @@ export class ProductUpdateDto {
   @ApiProperty({ example: true })
   @IsNotEmpty()
   @IsBoolean()
-  enabled: boolean = true;
+  enabled: boolean;
 
   @ApiProperty({ example: 29.99, required: true })
   @IsNotEmpty()
