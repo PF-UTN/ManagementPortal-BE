@@ -3,10 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductRequest } from '@mp/common/dtos';
-import { productCreationDtoMock } from '@mp/common/testing';
+import { productCreationDtoMock, productUpdateDtoMock } from '@mp/common/testing';
 
 import { CreateProductCommand } from './command/create-product.command';
 import { SearchProductQuery } from './command/search-product-query';
+import { UpdateProductCommand } from './command/update-product.command';
 import { ProductController } from './product.controller';
 
 describe('ProductController', () => {
@@ -66,6 +67,20 @@ describe('ProductController', () => {
 
       // Act
       await controller.createProductAsync(productCreationDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updateProductAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateProductCommand(1, productUpdateDtoMock);
+
+      // Act
+      await controller.updateProductAsync(1, productUpdateDtoMock);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
