@@ -92,4 +92,90 @@ describe('ProductCategoryRepository', () => {
       });
     });
   });
+
+  describe('createProductCategoryAsync', () => {
+    it('should create a product category with the provided data', async () => {
+      // Arrange
+      const productCategoryData = {
+        name: 'New Category',
+        description: 'This is a new category',
+      };
+      jest
+        .spyOn(prismaService.productCategory, 'create')
+        .mockResolvedValueOnce(productCategory);
+
+      // Act
+      const result =
+        await repository.createProductCategoryAsync(productCategoryData);
+
+      // Assert
+      expect(result).toEqual(productCategory);
+    });
+
+    it('should call prismaService.productCategory.create with correct data', async () => {
+      // Arrange
+      const productCategoryData = {
+        name: 'New Category',
+        description: 'This is a new category',
+      };
+      jest
+        .spyOn(prismaService.productCategory, 'create')
+        .mockResolvedValueOnce(productCategory);
+
+      // Act
+      await repository.createProductCategoryAsync(productCategoryData);
+
+      // Assert
+      expect(prismaService.productCategory.create).toHaveBeenCalledWith({
+        data: productCategoryData,
+      });
+    });
+  });
+
+  describe('updateProductCategoryAsync', () => {
+    it('should update a product category with the provided data', async () => {
+      // Arrange
+      const productCategoryId = 1;
+      const updatedData = {
+        name: 'Updated Category',
+        description: 'This is an updated category',
+      };
+      jest
+        .spyOn(prismaService.productCategory, 'update')
+        .mockResolvedValueOnce(productCategory);
+
+      // Act
+      const result = await repository.updateProductCategoryAsync(
+        productCategoryId,
+        updatedData,
+      );
+
+      // Assert
+      expect(result).toEqual(productCategory);
+    });
+
+    it('should call prismaService.productCategory.update with correct data', async () => {
+      // Arrange
+      const productCategoryId = 1;
+      const updatedData = {
+        name: 'Updated Category',
+        description: 'This is an updated category',
+      };
+      jest
+        .spyOn(prismaService.productCategory, 'update')
+        .mockResolvedValueOnce(productCategory);
+
+      // Act
+      await repository.updateProductCategoryAsync(
+        productCategoryId,
+        updatedData,
+      );
+
+      // Assert
+      expect(prismaService.productCategory.update).toHaveBeenCalledWith({
+        where: { id: productCategoryId },
+        data: updatedData,
+      });
+    });
+  });
 });

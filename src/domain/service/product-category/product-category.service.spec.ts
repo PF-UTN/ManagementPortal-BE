@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
@@ -60,6 +61,81 @@ describe('ProductCategoryService', () => {
         productCategoryRepository.getProductCategoriesAsync,
       ).toHaveBeenCalled();
       expect(result).toEqual(productCategoryMockData);
+    });
+  });
+
+  describe('createOrUpdateProductCategoryAsync', () => {
+    it('should call productCategoryRepository.updateProductCategoryAsync with the correct data if id is provided', async () => {
+      // Arrange
+      const productCategoryCreationData = {
+        id: 1,
+        name: 'Updated Category',
+        description: 'Updated description',
+      };
+
+      jest
+        .spyOn(productCategoryRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryRepository, 'updateProductCategoryAsync')
+        .mockResolvedValueOnce(productCategoryCreationData);
+
+      // Act
+      await service.createOrUpdateProductCategoryAsync(
+        productCategoryCreationData,
+      );
+
+      // Assert
+      expect(
+        productCategoryRepository.updateProductCategoryAsync,
+      ).toHaveBeenCalledWith(1, {
+        name: 'Updated Category',
+        description: 'Updated description',
+      });
+    });
+
+    it('should call productCategoryRepository.createProductCategoryAsync with the correct data if id is not provided', async () => {
+      // Arrange
+      const productCategoryCreationData = {
+        name: 'New Category',
+        description: 'New description',
+      };
+
+      jest
+        .spyOn(productCategoryRepository, 'createProductCategoryAsync')
+        .mockResolvedValueOnce({ id: 1, ...productCategoryCreationData });
+
+      // Act
+      await service.createOrUpdateProductCategoryAsync({
+        id: undefined,
+        ...productCategoryCreationData,
+      });
+
+      // Assert
+      expect(
+        productCategoryRepository.createProductCategoryAsync,
+      ).toHaveBeenCalledWith({
+        name: 'New Category',
+        description: 'New description',
+      });
+    });
+
+    it('should throw BadRequestException if trying to update a non-existing category', async () => {
+      // Arrange
+      const productCategoryCreationData = {
+        id: 999,
+        name: 'Non-existing Category',
+        description: 'This category does not exist',
+      };
+
+      jest
+        .spyOn(productCategoryRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createOrUpdateProductCategoryAsync(productCategoryCreationData),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });
