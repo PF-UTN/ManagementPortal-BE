@@ -319,6 +319,39 @@ describe('ProductService', () => {
     });
   });
 
+  describe('updateEnabledProductAsync', () => {
+    it('should call updateEnabledProductAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const productId = 1;
+      const enabled = true;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest.spyOn(repository, 'updateEnabledProductAsync').mockResolvedValueOnce(product);
+
+      // Act
+      await service.updateEnabledProductAsync(productId, enabled);
+
+      // Assert
+      expect(repository.updateEnabledProductAsync).toHaveBeenCalledWith(
+        productId,
+        enabled,
+      );
+    });
+
+    it('should throw NotFoundException if product does not exist', async () => {
+      // Arrange
+      const productId = 1;
+      const enabled = true;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateEnabledProductAsync(productId, enabled),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('findProductByIdAsync', () => {
     it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
       // Arrange

@@ -111,6 +111,16 @@ export class ProductService {
     return updatedProduct;
   }
 
+  async updateEnabledProductAsync(id: number, enabled: boolean) {
+    const existsProduct = await this.productRepository.existsAsync(id);
+
+    if (!existsProduct) {
+      throw new NotFoundException(`Product with id ${id} does not exist.`);
+    }
+
+    return this.productRepository.updateEnabledProductAsync(id, enabled);
+  }
+
   async findProductByIdAsync(productId: number) {
     return this.productRepository.findProductWithDetailsByIdAsync(productId);
   }
