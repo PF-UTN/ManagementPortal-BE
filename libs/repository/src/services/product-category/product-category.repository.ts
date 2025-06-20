@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 
@@ -19,6 +20,22 @@ export class ProductCategoryRepository {
       orderBy: {
         name: 'asc',
       },
+    });
+  }
+
+  async createProductCategoryAsync(data: Prisma.ProductCategoryCreateInput) {
+    return this.prisma.productCategory.create({
+      data,
+    });
+  }
+
+  async updateProductCategoryAsync(
+    id: number,
+    data: Prisma.ProductCategoryUpdateInput,
+  ) {
+    return this.prisma.productCategory.update({
+      where: { id },
+      data,
     });
   }
 }
