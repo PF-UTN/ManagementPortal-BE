@@ -169,6 +169,13 @@ export class ProductRepository {
         });
     }
 
+    async updateEnabledProductAsync(id: number, enabled: boolean) {
+        return this.prisma.product.update({
+            where: { id },
+            data: { enabled },
+        });
+    }
+
     async existsAsync(id: number): Promise<boolean> {
     const product = await this.prisma.product.findUnique({
       select: { id: true },

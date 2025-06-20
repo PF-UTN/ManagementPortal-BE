@@ -285,6 +285,24 @@ describe('ProductRepository', () => {
         });
     });
 
+    describe('updateEnabledProductAsync', () => {
+        it('should update an existing product enabled status', async () => {
+            // Arrange
+            const enabled = true;
+
+            jest
+                .spyOn(prismaService.product, 'update')
+                .mockResolvedValueOnce(product);
+
+            // Act
+            const updatedProduct =
+                await repository.updateEnabledProductAsync(product.id, enabled);
+
+            // Assert
+            expect(updatedProduct).toEqual(product);
+        });
+    });
+
     describe('existsAsync', () => {
       it('should return true if product exists', async () => {
         // Arrange
