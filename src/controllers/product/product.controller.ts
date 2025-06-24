@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Put,
   Patch,
+  Delete,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -27,6 +28,7 @@ import {
 } from '@mp/common/dtos';
 
 import { CreateProductCommand } from './command/create-product.command';
+import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
 import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
@@ -124,5 +126,21 @@ export class ProductController {
   })
   getProductByIdAsync(@Param('id', ParseIntPipe) id: number) {
     return this.queryBus.execute(new GetProductByIdQuery(id));
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Product.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a product',
+    description: 'Delete the product with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the product to delete',
+  })
+  deleteProductAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new DeleteProductCommand(id));
   }
 }
