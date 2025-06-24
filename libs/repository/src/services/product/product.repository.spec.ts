@@ -102,6 +102,9 @@ describe('ProductRepository', () => {
                 expect.objectContaining({
                     where: {
                         AND: [
+                            { 
+                                deletedAt: null
+                            },
                             {
                                 enabled: filters.enabled,
                             },
@@ -146,6 +149,9 @@ describe('ProductRepository', () => {
                 expect.objectContaining({
                     where: {
                         AND: [
+                            { 
+                                deletedAt: null
+                            },
                             expect.any(Object),
                             expect.any(Object),
                             expect.any(Object),
@@ -213,6 +219,9 @@ describe('ProductRepository', () => {
                 expect.objectContaining({
                     where: {
                         AND: [
+                            { 
+                                deletedAt: null
+                            },
                             expect.any(Object),
                             expect.any(Object),
                             expect.any(Object),
@@ -326,7 +335,7 @@ describe('ProductRepository', () => {
         // Arrange
         const productId = 1;
         jest
-          .spyOn(prismaService.product, 'findUnique')
+          .spyOn(prismaService.product, 'findFirst')
           .mockResolvedValueOnce(product);
 
         // Act
@@ -340,7 +349,7 @@ describe('ProductRepository', () => {
         // Arrange
         const productId = 1;
         jest
-          .spyOn(prismaService.product, 'findUnique')
+          .spyOn(prismaService.product, 'findFirst')
           .mockResolvedValueOnce(null);
 
         // Act
@@ -350,56 +359,20 @@ describe('ProductRepository', () => {
         expect(exists).toBe(false);
       });
     });
-
+    
     describe('findProductWithDetailsByIdAsync', () => {
         it('should return product with details', async () => {
             // Arrange
             jest
-                .spyOn(prismaService.product, 'findUnique')
+                .spyOn(prismaService.product, 'findFirst')
                 .mockResolvedValueOnce(productMockData);
 
             // Act
             const result = await repository.findProductWithDetailsByIdAsync(1);
 
             // Assert
-            expect(prismaService.product.findUnique).toHaveBeenCalledWith({
-                where: { id: 1 },
-                include: {
-                    category: {
-                        select: { name: true },
-                    },
-                    supplier: {
-                        select: {
-                            businessName: true,
-                            email: true,
-                            phone: true,
-                        },
-                    },
-                    stock: {
-                        select: {
-                            quantityAvailable: true,
-                            quantityReserved: true,
-                            quantityOrdered: true,
-                        },
-                    },
-                },
-            });
-            expect(result).toEqual(productMockData);
-        });
-    });
-    describe('findProductWithDetailsByIdAsync', () => {
-        it('should return product with details', async () => {
-            // Arrange
-            jest
-                .spyOn(prismaService.product, 'findUnique')
-                .mockResolvedValueOnce(productMockData);
-
-            // Act
-            const result = await repository.findProductWithDetailsByIdAsync(1);
-
-            // Assert
-            expect(prismaService.product.findUnique).toHaveBeenCalledWith({
-                where: { id: 1 },
+            expect(prismaService.product.findFirst).toHaveBeenCalledWith({
+                where: { AND: [{ id: 1 }, { deletedAt: null }] },
                 include: {
                     category: {
                         select: { name: true },

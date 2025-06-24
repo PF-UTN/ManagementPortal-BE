@@ -19,6 +19,7 @@ export class ProductRepository {
             this.prisma.product.findMany({
                 where: {
                     AND: [
+                        { deletedAt: null },
                         filters.enabled !== undefined ? { enabled: filters.enabled } : {},
                         filters.categoryName?.length
                             ? {
@@ -81,6 +82,7 @@ export class ProductRepository {
             this.prisma.product.count({
                 where: {
                     AND: [
+                        { deletedAt: null },
                         filters.enabled !== undefined ? { enabled: filters.enabled } : {},
                         filters.categoryName?.length
                             ? {
@@ -184,16 +186,16 @@ export class ProductRepository {
     }
 
     async existsAsync(id: number): Promise<boolean> {
-    const product = await this.prisma.product.findUnique({
+    const product = await this.prisma.product.findFirst({
       select: { id: true },
-      where: { id },
+      where: { AND: [{ id: id }, { deletedAt: null }] },
     });
     return !!product;
     }
 
     async findProductWithDetailsByIdAsync(productId: number) {
-        return this.prisma.product.findUnique({
-            where: { id: productId },
+        return this.prisma.product.findFirst({
+            where: { AND: [{ id: productId }, { deletedAt: null }] },
             include: {
                 category: {
                     select: {
