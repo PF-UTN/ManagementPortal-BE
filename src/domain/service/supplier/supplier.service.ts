@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, Supplier } from '@prisma/client';
 
 import { SupplierCreationDataDto, SupplierCreationDto } from '@mp/common/dtos';
@@ -91,5 +95,20 @@ export class SupplierService {
 
       return this.supplierRepository.createSupplierAsync(supplierData, tx);
     });
+  }
+
+  async findByDocumentAsync(documentType: string, documentNumber: string) {
+    const foundSupplier = await this.supplierRepository.findByDocumentAsync(
+      documentType,
+      documentNumber,
+    );
+
+    if (!foundSupplier) {
+      throw new NotFoundException(
+        `Supplier with document type ${documentType} and number ${documentNumber} does not exist.`,
+      );
+    }
+
+    return foundSupplier;
   }
 }

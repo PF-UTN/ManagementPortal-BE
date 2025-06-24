@@ -7,7 +7,7 @@ import { suppliersMock } from '@mp/common/testing';
 import { SuppliersQueryHandler } from './suppliers.query.handler';
 import { SupplierService } from '../../../domain/service/supplier/supplier.service';
 
-describe('GetRegistrationRequestByIdQueryHandler', () => {
+describe('SuppliersQueryHandler', () => {
   let handler: SuppliersQueryHandler;
   let supplierService: SupplierService;
 

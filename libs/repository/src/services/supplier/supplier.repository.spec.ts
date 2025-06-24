@@ -6,6 +6,7 @@ import {
   supplierCreationDataMock,
   supplierMock,
   suppliersMock,
+  supplierWithAddressAndTownMock,
 } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
@@ -66,6 +67,44 @@ describe('SupplierRepository', () => {
 
       // Assert
       expect(exists).toBe(false);
+    });
+  });
+
+  describe('findByDocumentAsync', () => {
+    it('should return supplier with address if found', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+      jest
+        .spyOn(prismaService.supplier, 'findFirst')
+        .mockResolvedValueOnce(supplierWithAddressAndTownMock);
+
+      // Act
+      const result = await repository.findByDocumentAsync(
+        documentType,
+        documentNumber,
+      );
+
+      // Assert
+      expect(result).toEqual(supplierWithAddressAndTownMock);
+    });
+
+    it('should return null if supplier not found', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+      jest
+        .spyOn(prismaService.supplier, 'findFirst')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const result = await repository.findByDocumentAsync(
+        documentType,
+        documentNumber,
+      );
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 

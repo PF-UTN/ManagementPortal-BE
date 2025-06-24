@@ -29,6 +29,28 @@ export const supplierMock = {
   addressId: 1,
 };
 
+export const supplierWithAddressAndTownMock = {
+  id: 1,
+  businessName: 'Test Supplier',
+  documentType: 'CUIT',
+  documentNumber: '12345678901',
+  email: 'test-supplier@mp.com',
+  phone: '1234567890',
+  addressId: 1,
+  address: {
+    id: 1,
+    townId: 1,
+    street: 'Main St',
+    streetNumber: 12345,
+    town: {
+      id: 1,
+      name: 'Test Town',
+      zipCode: '12345',
+      provinceId: 1,
+    },
+  },
+};
+
 export const supplierCreationDataMock = {
   businessName: 'Test Supplier',
   documentType: 'CUIT',

@@ -2,9 +2,13 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { supplierCreationDtoMock } from '@mp/common/testing';
+import {
+  supplierCreationDtoMock,
+  supplierWithAddressAndTownMock,
+} from '@mp/common/testing';
 
 import { CreateSupplierCommand } from './command/create-supplier.command';
+import { SupplierByDocumentQuery } from './query/supplier-by-document.query';
 import { SupplierController } from './supplier.controller';
 
 describe('SupplierController', () => {
@@ -59,6 +63,28 @@ describe('SupplierController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('getSupplierByDocumentAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+      const executeSpy = jest.spyOn(queryBus, 'execute');
+      const expectedQuery = new SupplierByDocumentQuery({
+        documentType,
+        documentNumber,
+      });
+
+      // Act
+      await controller.getSupplierByDocumentAsync({
+        documentType,
+        documentNumber,
+      });
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
 });

@@ -23,6 +23,11 @@ export class SupplierRepository {
         documentType,
         documentNumber,
       },
+      include: {
+        address: {
+          include: { town: true },
+        },
+      },
     });
   }
 
