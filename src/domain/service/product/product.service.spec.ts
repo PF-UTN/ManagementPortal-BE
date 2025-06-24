@@ -319,6 +319,34 @@ describe('ProductService', () => {
     });
   });
 
+  describe('deleteProductAsync', () => {
+    it('should call deleteProductAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const productId = 1;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest.spyOn(repository, 'deleteProductAsync').mockResolvedValueOnce(product);
+
+      // Act
+      await service.deleteProductAsync(productId);
+
+      // Assert
+      expect(repository.deleteProductAsync).toHaveBeenCalledWith(productId, expect.any(Date));
+    });
+
+    it('should throw NotFoundException if product does not exist', async () => {
+      // Arrange
+      const productId = 1;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(service.deleteProductAsync(productId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe('updateEnabledProductAsync', () => {
     it('should call updateEnabledProductAsync on the repository with correct parameters', async () => {
       // Arrange
