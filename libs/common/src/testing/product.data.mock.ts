@@ -25,6 +25,7 @@ export const productMockData = {
         email: 'supplier@mail.com',
         phone: '555-1234-5678',
     },
+    deletedAt: null,
 };
 
 export const getProductByIdQueryMock = new GetProductByIdQuery(1);
