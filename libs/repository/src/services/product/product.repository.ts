@@ -176,6 +176,13 @@ export class ProductRepository {
         });
     }
 
+    async deleteProductAsync(id: number, deletedAt: Date) {
+        return this.prisma.product.update({
+            where: { id },
+            data: { deletedAt },
+        });
+    }
+
     async existsAsync(id: number): Promise<boolean> {
     const product = await this.prisma.product.findUnique({
       select: { id: true },

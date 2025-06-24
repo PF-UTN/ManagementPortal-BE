@@ -303,6 +303,24 @@ describe('ProductRepository', () => {
         });
     });
 
+    describe('deleteProductAsync', () => {
+        it('should update an existing product deletedAt field', async () => {
+            // Arrange
+            const deletedAt = new Date();
+
+            jest
+                .spyOn(prismaService.product, 'update')
+                .mockResolvedValueOnce(product);
+
+            // Act
+            const updatedProduct =
+                await repository.deleteProductAsync(product.id, deletedAt);
+
+            // Assert
+            expect(updatedProduct).toEqual(product);
+        });
+    });
+
     describe('existsAsync', () => {
       it('should return true if product exists', async () => {
         // Arrange
