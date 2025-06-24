@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
@@ -7,8 +7,8 @@ import {
   addressMock,
   supplierCreationDataMock,
   supplierCreationDtoMock,
-  supplierMock,
   suppliersMock,
+  supplierWithAddressAndTownMock,
 } from '@mp/common/testing';
 import {
   AddressRepository,
@@ -228,10 +228,10 @@ describe('SupplierService', () => {
     jest.spyOn(townService, 'existsAsync').mockResolvedValueOnce(true);
     jest
       .spyOn(supplierRepository, 'findByDocumentAsync')
-      .mockResolvedValueOnce(supplierMock);
+      .mockResolvedValueOnce(supplierWithAddressAndTownMock);
     jest
       .spyOn(supplierRepository, 'findByEmailAsync')
-      .mockResolvedValueOnce({ id: supplierMock.id });
+      .mockResolvedValueOnce({ id: supplierWithAddressAndTownMock.id });
 
     const txMock = {} as Prisma.TransactionClient;
 
@@ -241,14 +241,14 @@ describe('SupplierService', () => {
 
     jest
       .spyOn(addressRepository, 'updateAddressAsync')
-      .mockResolvedValueOnce({ id: supplierMock.addressId, ...addressMock });
+      .mockResolvedValueOnce({ id: supplierWithAddressAndTownMock.addressId, ...addressMock });
 
     // Act
     await service.createOrUpdateSupplierAsync(supplierCreationDtoMock);
 
     // Assert
     expect(supplierRepository.updateSupplierAsync).toHaveBeenCalledWith(
-      supplierMock.id,
+      supplierWithAddressAndTownMock.id,
       supplierCreationDataMock,
       txMock,
     );
@@ -259,10 +259,10 @@ describe('SupplierService', () => {
     jest.spyOn(townService, 'existsAsync').mockResolvedValueOnce(true);
     jest
       .spyOn(supplierRepository, 'findByDocumentAsync')
-      .mockResolvedValueOnce(supplierMock);
+      .mockResolvedValueOnce(supplierWithAddressAndTownMock);
     jest
       .spyOn(supplierRepository, 'findByEmailAsync')
-      .mockResolvedValueOnce({ id: supplierMock.id });
+      .mockResolvedValueOnce({ id: supplierWithAddressAndTownMock.id });
 
     const txMock = {} as Prisma.TransactionClient;
 
@@ -272,16 +272,69 @@ describe('SupplierService', () => {
 
     jest
       .spyOn(addressRepository, 'updateAddressAsync')
-      .mockResolvedValueOnce({ id: supplierMock.addressId, ...addressMock });
+      .mockResolvedValueOnce({ id: supplierWithAddressAndTownMock.addressId, ...addressMock });
 
     // Act
     await service.createOrUpdateSupplierAsync(supplierCreationDtoMock);
 
     // Assert
     expect(addressRepository.updateAddressAsync).toHaveBeenCalledWith(
-      supplierMock.addressId,
+      supplierWithAddressAndTownMock.addressId,
       supplierCreationDtoMock.address,
       txMock,
     );
+  });
+
+  describe('findByDocumentAsync', () => {
+    it('should call supplierRepository.findByDocumentAsync with the correct parameters', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+
+      jest
+        .spyOn(supplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(supplierWithAddressAndTownMock);
+
+      // Act
+      await service.findByDocumentAsync(documentType, documentNumber);
+
+      // Assert
+      expect(supplierRepository.findByDocumentAsync).toHaveBeenCalledWith(
+        documentType,
+        documentNumber,
+      );
+    });
+
+    it('should return the supplier found by document', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+      jest
+        .spyOn(supplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(supplierWithAddressAndTownMock);
+
+      // Act
+      const result = await service.findByDocumentAsync(
+        documentType,
+        documentNumber,
+      );
+
+      // Assert
+      expect(result).toEqual(supplierWithAddressAndTownMock);
+    });
+
+    it('should throw NotFoundException if no supplier is found', async () => {
+      // Arrange
+      const documentType = supplierWithAddressAndTownMock.documentType;
+      const documentNumber = supplierWithAddressAndTownMock.documentNumber;
+      jest
+        .spyOn(supplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.findByDocumentAsync(documentType, documentNumber),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 });
