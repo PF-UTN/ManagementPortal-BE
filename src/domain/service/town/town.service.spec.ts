@@ -5,6 +5,7 @@ import { townMockData } from '@mp/common/testing';
 import { TownRepository } from '@mp/repository';
 
 import { TownService } from './town.service';
+import { SearchTownQuery } from '../../../controllers/town/query/search-town-query';
 
 describe('TownService', () => {
   let service: TownService;
@@ -41,6 +42,30 @@ describe('TownService', () => {
       // Assert
       expect(searchTownsByTextAsyncSpy).toHaveBeenCalledWith(searchText);
       expect(result).toEqual(townMockData);
+    });
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchTownQuery({
+        searchText,
+        page,
+        pageSize,
+      });
+
+      // Act
+      await service.searchWithFiltersAsync(query);
+
+      // Assert
+      expect(townRepository.searchWithFiltersAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.page,
+        query.pageSize,
+      );
     });
   });
 
