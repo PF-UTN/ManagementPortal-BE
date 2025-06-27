@@ -22,5 +22,11 @@ export const PermissionCodes = {
     CREATE: 'supplier:create',
     UPDATE: 'supplier:update',
     DELETE: 'supplier:delete',
-  }
+  },
+  Vehicle: {
+    READ: 'vehicle:read',
+    CREATE: 'vehicle:create',
+    UPDATE: 'vehicle:update',
+    DELETE: 'vehicle:delete',
+  },
 };
