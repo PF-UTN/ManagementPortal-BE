@@ -65,7 +65,7 @@ describe('TownRepository', () => {
         },
         orderBy: { name: 'asc' },
       });
-    })
+    });
 
     it('should return an empty array if no towns match the search text', async () => {
       // Arrange
@@ -82,23 +82,84 @@ describe('TownRepository', () => {
     it('should return all town when a searchText is not provided', async () => {
       // Arrange
       prismaService.town.findMany.mockResolvedValueOnce(townMockData);
-  
+
       // Act
       const result = await repository.searchTownsByTextAsync('');
-  
+
       // Assert
       expect(result).toEqual(townMockData);
     });
-  
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    it('should construct the correct query with search text filter', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchWithFiltersAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.town.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            OR: [
+              { name: { contains: searchText, mode: 'insensitive' } },
+              { zipCode: { contains: searchText, mode: 'insensitive' } },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('should construct the correct query with skip and take', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 2;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchWithFiltersAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.town.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+      );
+    });
+
+    it('should construct the correct query with count of total items matched', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 2;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchWithFiltersAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.town.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            OR: [
+              { name: { contains: searchText, mode: 'insensitive' } },
+              { zipCode: { contains: searchText, mode: 'insensitive' } },
+            ],
+          },
+        }),
+      );
+    });
   });
 
   describe('existsAsync', () => {
     it('should return true if town exists', async () => {
       // Arrange
       const townId = 1;
-      jest
-        .spyOn(prismaService.town, 'findUnique')
-        .mockResolvedValueOnce(town);
+      jest.spyOn(prismaService.town, 'findUnique').mockResolvedValueOnce(town);
 
       // Act
       const exists = await repository.existsAsync(townId);
@@ -110,9 +171,7 @@ describe('TownRepository', () => {
     it('should return false if town does not exist', async () => {
       // Arrange
       const townId = 1;
-      jest
-        .spyOn(prismaService.town, 'findUnique')
-        .mockResolvedValueOnce(null);
+      jest.spyOn(prismaService.town, 'findUnique').mockResolvedValueOnce(null);
 
       // Act
       const exists = await repository.existsAsync(townId);

@@ -1,9 +1,11 @@
 import { QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { SearchTownRequest } from '@mp/common/dtos';
 import { townMockData, QueryBusMock } from '@mp/common/testing';
 
 import { GetTownsByTextQuery } from './query/get-towns-by-text.query';
+import { SearchTownQuery } from './query/search-town-query';
 import { TownController } from './town.controller';
 
 describe('TownController', () => {
@@ -53,6 +55,22 @@ describe('TownController', () => {
       // Assert
       expect(queryBusMock.execute).toHaveBeenCalledWith(expectedQuery);
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('searchAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      const request: SearchTownRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+      };
+
+      await controller.searchAsync(request);
+
+      expect(queryBusMock.execute).toHaveBeenCalledWith(
+        new SearchTownQuery(request),
+      );
     });
   });
 });

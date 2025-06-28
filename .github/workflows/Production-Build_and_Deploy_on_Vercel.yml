@@ -25,6 +25,9 @@ jobs:
       - name: Build NestJS Project
         run: npm run build
 
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      
       - name: Pull Vercel Environment Variables
         run: vercel env pull .env --environment=production --token=${{ secrets.VERCEL_TOKEN }}
       

@@ -38,7 +38,7 @@ describe('CreateVehicleCommandHandler', () => {
       brand: 'Toyota',
       model: 'Corolla',
       kmTraveled: 25000,
-      admissionDate: '2023-10-01',
+      admissionDate: new Date('2023-10-01'),
       enabled: true,
       deleted: false,
     };
