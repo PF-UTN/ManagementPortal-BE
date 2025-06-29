@@ -8,6 +8,7 @@ import { ProductCategoryModule } from './controllers/product-category/product-ca
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
 import { SupplierModule } from './controllers/supplier/supplier.controller.module';
 import { TownModule } from './controllers/town/town.controller.module';
+import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { TownModule } from './controllers/town/town.controller.module';
     ProductModule,
     ProductCategoryModule,
     SupplierModule,
+    VehicleModule
   ],
   controllers: [],
   providers: [],

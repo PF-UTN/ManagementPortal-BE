@@ -10,3 +10,4 @@ export * from './product-category/product-category.repository';
 export * from './supplier/supplier.repository';
 export * from './stock/stock.repository';
 export * from './address/address.repository';
+export * from './vehicle/vehicle.repository';
