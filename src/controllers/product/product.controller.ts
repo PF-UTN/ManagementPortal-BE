@@ -22,7 +22,7 @@ import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
   ProductCreationDto,
-  ProductPauseOrResumeDto,
+  ProductToggleDto,
   ProductUpdateDto,
   SearchProductRequest,
 } from '@mp/common/dtos';
@@ -102,10 +102,10 @@ export class ProductController {
     name: 'id',
     description: 'ID of the product to pause or resume',
   })
-  @ApiBody({ type: ProductPauseOrResumeDto })
+  @ApiBody({ type: ProductToggleDto })
   updateEnabledProductAsync(
     @Param('id', ParseIntPipe) id: number,
-    @Body() { enabled }: ProductPauseOrResumeDto,
+    @Body() { enabled }: ProductToggleDto,
   ) {
     return this.commandBus.execute(
       new UpdateEnabledProductCommand(id, enabled),

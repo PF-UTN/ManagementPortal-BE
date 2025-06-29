@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsNotEmpty } from 'class-validator';
 
-export class ProductPauseOrResumeDto {
+export class ProductToggleDto {
   @ApiProperty({
     description: 'Indicates whether the product is enabled or disabled',
     example: true,
