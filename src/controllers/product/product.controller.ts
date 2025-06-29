@@ -90,13 +90,13 @@ export class ProductController {
     );
   }
 
-  @Patch(':id/pause')
+  @Patch(':id/toggle')
   @HttpCode(200)
   @RequiredPermissions(PermissionCodes.Product.UPDATE)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Pause or resume a product',
-    description: 'Pause or resume the product with the provided ID.',
+    summary: 'Update product enabled status',
+    description: 'Pause or resume a product by updating its enabled status.',
   })
   @ApiParam({
     name: 'id',
