@@ -7,20 +7,30 @@ import {
   Param,
   ParseIntPipe,
   Put,
+  Patch,
+  Delete,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiParam,
 } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { ProductCreationDto, ProductUpdateDto, SearchProductRequest } from '@mp/common/dtos';
+import {
+  ProductCreationDto,
+  ProductToggleDto,
+  ProductUpdateDto,
+  SearchProductRequest,
+} from '@mp/common/dtos';
 
 import { CreateProductCommand } from './command/create-product.command';
+import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
+import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
 import { GetProductByIdQuery } from './query/get-product-by-id.query';
 
@@ -80,6 +90,28 @@ export class ProductController {
     );
   }
 
+  @Patch(':id/toggle')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Product.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update product enabled status',
+    description: 'Pause or resume a product by updating its enabled status.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the product to pause or resume',
+  })
+  @ApiBody({ type: ProductToggleDto })
+  updateEnabledProductAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() { enabled }: ProductToggleDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateEnabledProductCommand(id, enabled),
+    );
+  }
+
   @Get(':id')
   @HttpCode(200)
   @ApiBearerAuth()
@@ -92,9 +124,23 @@ export class ProductController {
     name: 'id',
     description: 'ID of the product to retrieve',
   })
-  getProductByIdAsync(
-    @Param('id', ParseIntPipe) id: number)
-  {
+  getProductByIdAsync(@Param('id', ParseIntPipe) id: number) {
     return this.queryBus.execute(new GetProductByIdQuery(id));
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Product.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a product',
+    description: 'Delete the product with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the product to delete',
+  })
+  deleteProductAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new DeleteProductCommand(id));
   }
 }

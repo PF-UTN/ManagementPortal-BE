@@ -11,4 +11,5 @@ model Product {
     supplierId   Int
     stock        Stock?
     priceHistory PriceHistory[]
+    deletedAt    DateTime?        @db.Timestamp(6)
 }

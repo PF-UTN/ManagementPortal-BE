@@ -3,10 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductRequest } from '@mp/common/dtos';
-import { productCreationDtoMock, productUpdateDtoMock } from '@mp/common/testing';
+import {
+  productCreationDtoMock,
+  productUpdateDtoMock,
+} from '@mp/common/testing';
 
 import { CreateProductCommand } from './command/create-product.command';
+import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
+import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
 import { ProductController } from './product.controller';
 
@@ -81,6 +86,35 @@ describe('ProductController', () => {
 
       // Act
       await controller.updateProductAsync(1, productUpdateDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updateEnabledProductAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const enabled = false;
+      const expectedCommand = new UpdateEnabledProductCommand(1, enabled);
+
+      // Act
+      await controller.updateEnabledProductAsync(1, { enabled });
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('deleteProductAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new DeleteProductCommand(1);
+
+      // Act
+      await controller.deleteProductAsync(1);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
