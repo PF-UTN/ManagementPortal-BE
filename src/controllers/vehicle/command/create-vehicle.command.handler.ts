@@ -1,5 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 
+import { VehicleDto } from '@mp/common/dtos';
+
 import { CreateVehicleCommand } from './create-vehicle.command';
 import { VehicleService } from '../../../domain/service/vehicle/vehicle.service';
 
@@ -13,6 +15,16 @@ export class CreateVehicleCommandHandler
     const vehicle = await this.vehicleService.createVehicleAsync(
       command.vehicleCreationDto,
     );
-    return vehicle;
+
+    const vehicleDto: VehicleDto = {
+      id: vehicle.id,
+      licensePlate: vehicle.licensePlate,
+      brand: vehicle.brand,
+      model: vehicle.model,
+      kmTraveled: vehicle.kmTraveled,
+      admissionDate: vehicle.admissionDate,
+      enabled: vehicle.enabled,
+    };
+    return vehicleDto;
   }
 }

@@ -1,9 +1,8 @@
 import { Command } from '@nestjs/cqrs';
-import { Vehicle } from '@prisma/client';
 
-import { VehicleCreationDto } from '@mp/common/dtos';
+import { VehicleCreationDto, VehicleDto } from '@mp/common/dtos';
 
-export class CreateVehicleCommand extends Command<Vehicle> {
+export class CreateVehicleCommand extends Command<VehicleDto> {
   constructor(
     public readonly vehicleCreationDto: VehicleCreationDto,
   ) {

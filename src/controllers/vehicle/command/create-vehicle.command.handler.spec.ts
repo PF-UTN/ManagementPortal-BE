@@ -43,11 +43,23 @@ describe('CreateVehicleCommandHandler', () => {
       deleted: false,
     };
 
+    const vehicleMock = {
+      id: 1,
+      licensePlate: 'AB213LM',
+      brand: 'Toyota',
+      model: 'Corolla',
+      kmTraveled: 25000,
+      admissionDate: new Date('2023-10-01'),
+      enabled: true,
+      deleted: false,
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-02-01'),
+    };
+
     const command = new CreateVehicleCommand(vehicleCreationDtoMock);
-    const createVehicleAsyncSpy = jest.spyOn(
-      vehicleService,
-      'createVehicleAsync',
-    );
+    const createVehicleAsyncSpy = jest
+      .spyOn(vehicleService, 'createVehicleAsync')
+      .mockResolvedValueOnce(vehicleMock);
 
     // Act
     await handler.execute(command);
