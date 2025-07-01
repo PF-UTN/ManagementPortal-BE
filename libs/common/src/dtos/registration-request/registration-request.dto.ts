@@ -5,10 +5,18 @@ export class RegistrationRequestDto {
   user: UserDto;
 }
 
-export class UserDto {
+class UserDto {
   fullNameOrBusinessName: string;
   email: string;
   documentType: string;
   documentNumber: string;
   phone: string;
+  taxCategory: string;
+  address: AddressDto;
+}
+
+class AddressDto {
+  streetAddress: string;
+  town: string;
+  zipCode: string;
 }
