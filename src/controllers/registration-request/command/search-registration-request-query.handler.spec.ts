@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchRegistrationRequestResponse } from '@mp/common/dtos';
@@ -71,7 +71,25 @@ describe('SearchRegistrationRequestQueryHandler', () => {
         Prisma.RegistrationRequestGetPayload<{
           include: {
             status: true;
-            user: true;
+            user: {
+              include: {
+                client: {
+                  include: {
+                    taxCategory: true;
+                    address: {
+                      include: {
+                        town: {
+                          select: {
+                            name: true;
+                            zipCode: true;
+                          };
+                        };
+                      };
+                    };
+                  };
+                };
+              };
+            };
           };
         }>
       >({
@@ -81,7 +99,7 @@ describe('SearchRegistrationRequestQueryHandler', () => {
         note: 'Test note',
         requestDate: new Date(),
         status: { id: 5, code: 'Pending' },
-        user: mockDeep<User>({
+        user: {
           id: 10,
           firstName: 'John',
           lastName: 'Doe',
@@ -93,7 +111,20 @@ describe('SearchRegistrationRequestQueryHandler', () => {
           roleId: 1,
           accountLockedUntil: null,
           failedLoginAttempts: 0,
-        }),
+          client: {
+            taxCategory: {
+              name: 'Monotributo',
+            },
+            address: {
+              street: 'Main St',
+              streetNumber: 56,
+              town: {
+                name: 'Springfield',
+                zipCode: '12345',
+              },
+            },
+          },
+        },
       }),
     ];
 
@@ -111,6 +142,15 @@ describe('SearchRegistrationRequestQueryHandler', () => {
           documentType: registrationRequest.user.documentType,
           email: registrationRequest.user.email,
           phone: registrationRequest.user.phone,
+          taxCategory: registrationRequest.user.client!.taxCategory.name,
+          address: {
+            streetAddress:
+              registrationRequest.user.client!.address.street +
+              ' ' +
+              registrationRequest.user.client!.address.streetNumber,
+            town: registrationRequest.user.client!.address.town.name,
+            zipCode: registrationRequest.user.client!.address.town.zipCode,
+          },
         },
       })),
     });
