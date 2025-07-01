@@ -60,7 +60,25 @@ export class RegistrationRequestRepository {
         },
         include: {
           status: true,
-          user: true,
+          user: {
+            include: {
+              client: {
+                include: {
+                  taxCategory: true,
+                  address: {
+                    include: {
+                      town: {
+                        select: {
+                          name: true,
+                          zipCode: true,
+                        }
+                      }
+                    }
+                  }
+                },
+              }
+            }
+          },
         },
         skip: (page - 1) * pageSize,
         take: pageSize,

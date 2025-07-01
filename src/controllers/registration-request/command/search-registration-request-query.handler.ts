@@ -34,6 +34,12 @@ export class SearchRegistrationRequestQueryHandler
             documentType: registrationRequest.user.documentType,
             email: registrationRequest.user.email,
             phone: registrationRequest.user.phone,
+            taxCategory: registrationRequest.user.client!.taxCategory.name,
+            address: {
+              streetAddress: registrationRequest.user.client!.address.street + ' ' + registrationRequest.user.client!.address.streetNumber,
+              town: registrationRequest.user.client!.address.town.name,
+              zipCode: registrationRequest.user.client!.address.town.zipCode,
+            }
           },
         };
       },

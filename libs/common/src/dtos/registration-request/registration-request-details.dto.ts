@@ -1,9 +1,9 @@
-import { UserDto } from './registration-request.dto';
+import { UserBasicDto } from '../user';
 
 export class RegistrationRequestDetailsDto {
   id: number;
   status: string;
   requestDate: Date;
   note?: string;
-  user: UserDto;
+  user: UserBasicDto;
 }
