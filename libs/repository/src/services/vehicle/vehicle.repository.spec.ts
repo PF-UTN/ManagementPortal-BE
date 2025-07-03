@@ -20,9 +20,7 @@ describe('VehicleRepository', () => {
 
     prismaService = module.get<PrismaService>(PrismaService);
 
-    repository = module.get<VehicleRepository>(
-      VehicleRepository,
-    );
+    repository = module.get<VehicleRepository>(VehicleRepository);
 
     vehicle = mockDeep<Vehicle>();
 
@@ -78,8 +76,7 @@ describe('VehicleRepository', () => {
         .mockResolvedValueOnce(vehicle);
 
       // Act
-      const result =
-        await repository.createVehicleAsync(vehicleData);
+      const result = await repository.createVehicleAsync(vehicleData);
 
       // Assert
       expect(result).toEqual(vehicle);
@@ -100,6 +97,86 @@ describe('VehicleRepository', () => {
       expect(prismaService.vehicle.create).toHaveBeenCalledWith({
         data: vehicleData,
       });
+    });
+  });
+
+  describe('searchByTextAsync', () => {
+    it('should construct the correct query with search text filter', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchByTextAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.vehicle.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { deleted: false },
+              {
+                OR: [
+                  {
+                    licensePlate: { contains: searchText, mode: 'insensitive' },
+                  },
+                  { brand: { contains: searchText, mode: 'insensitive' } },
+                  { model: { contains: searchText, mode: 'insensitive' } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('should construct the correct query with skip and take', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 2;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchByTextAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.vehicle.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+      );
+    });
+
+    it('should construct the correct query with count of total items matched', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 2;
+      const pageSize = 10;
+
+      // Act
+      await repository.searchByTextAsync(searchText, page, pageSize);
+
+      // Assert
+      expect(prismaService.vehicle.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { deleted: false },
+              {
+                OR: [
+                  {
+                    licensePlate: { contains: searchText, mode: 'insensitive' },
+                  },
+                  { brand: { contains: searchText, mode: 'insensitive' } },
+                  { model: { contains: searchText, mode: 'insensitive' } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
     });
   });
 });
