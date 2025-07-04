@@ -4,6 +4,8 @@ import { Vehicle } from '@prisma/client';
 import { VehicleCreationDto } from '@mp/common/dtos';
 import { VehicleRepository } from '@mp/repository';
 
+import { SearchVehicleQuery } from '../../../controllers/vehicle/query/search-vehicle-query';
+
 @Injectable()
 export class VehicleService {
   constructor(private readonly vehicleRepository: VehicleRepository) {}
@@ -23,4 +25,12 @@ export class VehicleService {
 
     return await this.vehicleRepository.createVehicleAsync(vehicleCreationDto);
   }
+
+  async searchByTextAsync(query: SearchVehicleQuery) {
+      return await this.vehicleRepository.searchByTextAsync(
+        query.searchText,
+        query.page,
+        query.pageSize,
+      );
+    }
 }
