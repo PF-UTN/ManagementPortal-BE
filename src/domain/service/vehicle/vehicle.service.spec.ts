@@ -7,6 +7,7 @@ import { VehicleCreationDto } from '@mp/common/dtos';
 import { VehicleRepository } from '@mp/repository';
 
 import { VehicleService } from './vehicle.service';
+import { SearchVehicleQuery } from '../../../controllers/vehicle/query/search-vehicle-query';
 
 describe('VehicleService', () => {
   let service: VehicleService;
@@ -109,4 +110,28 @@ describe('VehicleService', () => {
       expect(repository.createVehicleAsync).toHaveBeenCalledWith(vehicleData);
     });
   });
+
+  describe('searchWithFiltersAsync', () => {
+      it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+        // Arrange
+        const searchText = 'test';
+        const page = 1;
+        const pageSize = 10;
+        const query = new SearchVehicleQuery({
+          searchText,
+          page,
+          pageSize,
+        });
+  
+        // Act
+        await service.searchByTextAsync(query);
+  
+        // Assert
+        expect(repository.searchByTextAsync).toHaveBeenCalledWith(
+          query.searchText,
+          query.page,
+          query.pageSize,
+        );
+      });
+    });
 });

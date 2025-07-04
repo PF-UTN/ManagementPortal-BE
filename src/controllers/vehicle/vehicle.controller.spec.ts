@@ -1,18 +1,26 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
+import { SearchVehicleRequest } from '@mp/common/dtos';
+
 import { CreateVehicleCommand } from './command/create-vehicle.command';
+import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
 
 describe('VehicleController', () => {
   let controller: VehicleController;
+  let queryBus: QueryBus;
   let commandBus: CommandBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [VehicleController],
       providers: [
+        {
+          provide: QueryBus,
+          useValue: mockDeep<QueryBus>(),
+        },
         {
           provide: CommandBus,
           useValue: mockDeep<CommandBus>(),
@@ -21,6 +29,7 @@ describe('VehicleController', () => {
     }).compile();
 
     controller = module.get<VehicleController>(VehicleController);
+    queryBus = module.get<QueryBus>(QueryBus);
     commandBus = module.get<CommandBus>(CommandBus);
   });
 
@@ -48,6 +57,22 @@ describe('VehicleController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('searchAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      const request: SearchVehicleRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+      };
+
+      await controller.searchAsync(request);
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchVehicleQuery(request),
+      );
     });
   });
 });

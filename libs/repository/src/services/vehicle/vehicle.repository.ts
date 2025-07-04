@@ -20,4 +20,48 @@ export class VehicleRepository {
       data,
     });
   }
+
+  async searchByTextAsync(
+    searchText: string,
+    page: number,
+    pageSize: number,
+  ) {
+    const [data, total] = await Promise.all([
+      this.prisma.vehicle.findMany({
+        where: {
+          AND: [
+            { deleted: false },
+            {
+              OR: [
+                { licensePlate: { contains: searchText, mode: 'insensitive' } },
+                { brand: { contains: searchText, mode: 'insensitive' } },
+                { model: { contains: searchText, mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+          licensePlate: 'asc',
+        },
+      }),
+      this.prisma.vehicle.count({
+        where: {
+          AND: [
+            { deleted: false },
+            {
+              OR: [
+                { licensePlate: { contains: searchText, mode: 'insensitive' } },
+                { brand: { contains: searchText, mode: 'insensitive' } },
+                { model: { contains: searchText, mode: 'insensitive' } },
+              ],
+            },
+          ],
+        },
+      }),
+    ]);
+
+    return { data, total };
+  }
 }
