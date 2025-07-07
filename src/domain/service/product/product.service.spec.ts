@@ -110,6 +110,7 @@ describe('ProductService', () => {
         supplierBusinessName: ['Supplier A'],
         enabled: true,
       };
+      const order = { field: 'name', direction: 'asc' } as const;
       const page = 1;
       const pageSize = 10;
       const query = new SearchProductQuery({
@@ -117,6 +118,7 @@ describe('ProductService', () => {
         filters,
         page,
         pageSize,
+        order,
       });
 
       // Act
@@ -128,6 +130,7 @@ describe('ProductService', () => {
         query.filters,
         query.page,
         query.pageSize,
+        query.order,
       );
     });
   });
