@@ -7,3 +7,4 @@ export * from './product-creation-data.dto';
 export * from './product-details.dto';
 export * from './product-update.dto';
 export * from './product-toggle.dto';
+export * from './product-order.dto';

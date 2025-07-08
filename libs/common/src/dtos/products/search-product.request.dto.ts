@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDefined,
@@ -6,8 +6,10 @@ import {
   IsString,
   MaxLength,
   ValidateNested,
+  IsOptional,
 } from 'class-validator';
 
+import { ProductSortDto } from './product-order.dto';
 import { SearchProductFiltersDto } from './search-product-filters.dto';
 
 export class SearchProductRequest {
@@ -43,4 +45,14 @@ export class SearchProductRequest {
   @ValidateNested()
   @Type(() => SearchProductFiltersDto)
   filters: SearchProductFiltersDto;
+
+  @ApiPropertyOptional({
+    description: 'Order for the results',
+    type: ProductSortDto,
+    example: { field: 'name', direction: 'asc' },
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => ProductSortDto)
+  orderBy?: ProductSortDto;
 }

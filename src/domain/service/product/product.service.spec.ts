@@ -3,7 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { SearchProductFiltersDto } from '@mp/common/dtos';
+import { OrderDirection, ProductOrderField } from '@mp/common/constants';
+import { SearchProductFiltersDto  } from '@mp/common/dtos';
 import {
   productCreationDtoMock,
   productUpdateDtoMock,
@@ -110,6 +111,10 @@ describe('ProductService', () => {
         supplierBusinessName: ['Supplier A'],
         enabled: true,
       };
+      const orderBy = {
+        field: ProductOrderField.NAME,
+        direction: OrderDirection.ASC,
+      };
       const page = 1;
       const pageSize = 10;
       const query = new SearchProductQuery({
@@ -117,6 +122,7 @@ describe('ProductService', () => {
         filters,
         page,
         pageSize,
+        orderBy,
       });
 
       // Act
@@ -128,6 +134,7 @@ describe('ProductService', () => {
         query.filters,
         query.page,
         query.pageSize,
+        query.orderBy,
       );
     });
   });

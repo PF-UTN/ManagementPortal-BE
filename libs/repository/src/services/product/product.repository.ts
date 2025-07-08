@@ -14,7 +14,14 @@ export class ProductRepository {
         filters: SearchProductFiltersDto,
         page: number,
         pageSize: number,
+        orderBy: { field: 'name' | 'price'; direction: 'asc' | 'desc' } = { field: 'name', direction: 'asc' }
     ) {
+
+        const prismaOrderBy =
+        orderBy && (orderBy.field === 'name' || orderBy.field === 'price') && (orderBy.direction === 'asc' || orderBy.direction === 'desc')
+            ? { [orderBy.field]: orderBy.direction as 'asc' | 'desc' }
+            : { name: 'asc' as const };
+
         const [data, total] = await Promise.all([
             this.prisma.product.findMany({
                 where: {
@@ -77,7 +84,7 @@ export class ProductRepository {
                 },
                 skip: (page - 1) * pageSize,
                 take: pageSize,
-                orderBy: { name: 'asc' },
+                orderBy: prismaOrderBy,
             }),
             this.prisma.product.count({
                 where: {
