@@ -9,7 +9,7 @@ import {
   IsOptional,
 } from 'class-validator';
 
-import { ProductOrderDto } from './product-order.dto';
+import { ProductSortDto } from './product-order.dto';
 import { SearchProductFiltersDto } from './search-product-filters.dto';
 
 export class SearchProductRequest {
@@ -48,11 +48,11 @@ export class SearchProductRequest {
 
   @ApiPropertyOptional({
     description: 'Order for the results',
-    type: ProductOrderDto,
+    type: ProductSortDto,
     example: { field: 'name', direction: 'asc' },
   })
   @IsOptional()
   @ValidateNested()
-  @Type(() => ProductOrderDto)
-  order?: ProductOrderDto;
+  @Type(() => ProductSortDto)
+  orderBy?: ProductSortDto;
 }

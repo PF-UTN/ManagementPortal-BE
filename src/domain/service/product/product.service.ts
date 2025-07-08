@@ -32,7 +32,7 @@ export class ProductService {
       query.filters,
       query.page,
       query.pageSize,
-      query.order,
+      query.orderBy,
     );
   }
 

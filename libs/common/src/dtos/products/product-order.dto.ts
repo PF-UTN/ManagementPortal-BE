@@ -1,12 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+import { IsEnum } from 'class-validator';
 
-export class ProductOrderDto {
-  @ApiProperty({ enum: ['name', 'price'], example: 'name' })
-  @IsIn(['name', 'price'])
-  field: 'name' | 'price';
+import { OrderDirection, ProductOrderField } from '@mp/common/constants';
 
-  @ApiProperty({ enum: ['asc', 'desc'], example: 'asc' })
-  @IsIn(['asc', 'desc'])
-  direction: 'asc' | 'desc';
+export class ProductSortDto {
+  @ApiProperty({ example: 'NAME' })
+  @IsEnum(ProductOrderField)
+  field: ProductOrderField;
+
+  @ApiProperty({ example: 'ASC' })
+  @IsEnum(OrderDirection)
+  direction: OrderDirection;
 }
