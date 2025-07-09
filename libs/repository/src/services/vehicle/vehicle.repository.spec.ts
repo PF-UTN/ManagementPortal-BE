@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Vehicle } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { UpdateVehicleDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 import { VehicleRepository } from './vehicle.repository';
 
@@ -66,7 +68,7 @@ describe('VehicleRepository', () => {
     });
   });
 
-  describe('createProductCategoryAsync', () => {
+  describe('createVehicleCategoryAsync', () => {
     it('should create a vehicle with the provided data', async () => {
       // Arrange
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -219,6 +221,32 @@ describe('VehicleRepository', () => {
 
       // Act
       const updatedVehicle = await repository.deleteVehicleAsync(vehicle.id);
+
+      // Assert
+      expect(updatedVehicle).toEqual(vehicle);
+    });
+  });
+
+  describe('updateVehicleAsync', () => {
+    it('should update an existing vehicle', async () => {
+      // Arrange
+      const vehicleUpdateInput: UpdateVehicleDto = {
+        brand: vehicle.brand,
+        model: vehicle.model,
+        kmTraveled: vehicle.kmTraveled,
+        admissionDate: vehicle.admissionDate,
+        enabled: vehicle.enabled,
+      };
+
+      jest
+        .spyOn(prismaService.vehicle, 'update')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      const updatedVehicle = await repository.updateVehicleAsync(
+        vehicle.id,
+        vehicleUpdateInput,
+      );
 
       // Assert
       expect(updatedVehicle).toEqual(vehicle);

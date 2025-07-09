@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { UpdateVehicleDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -73,6 +75,15 @@ export class VehicleRepository {
     return this.prisma.vehicle.update({
       where: { id },
       data: { deleted: true },
+    });
+  }
+
+  async updateVehicleAsync(id: number, data: UpdateVehicleDto) {
+    return this.prisma.vehicle.update({
+      where: { id },
+      data: {
+        ...data,
+      },
     });
   }
 }

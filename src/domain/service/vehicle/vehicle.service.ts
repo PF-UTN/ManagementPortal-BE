@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Vehicle } from '@prisma/client';
 
-import { VehicleCreationDto } from '@mp/common/dtos';
+import { UpdateVehicleDto, VehicleCreationDto } from '@mp/common/dtos';
 import { VehicleRepository } from '@mp/repository';
 
 import { SearchVehicleQuery } from '../../../controllers/vehicle/query/search-vehicle-query';
@@ -50,5 +50,15 @@ export class VehicleService {
     }
 
     return await this.vehicleRepository.deleteVehicleAsync(id);
+  }
+
+  async updateVehicleAsync(id: number, updateVehicle: UpdateVehicleDto) {
+    const existsVehicle = await this.vehicleRepository.existsAsync(id);
+
+    if (!existsVehicle) {
+      throw new NotFoundException(`Vehicle with id ${id} does not exist.`);
+    }
+
+    return await this.vehicleRepository.updateVehicleAsync(id, updateVehicle);
   }
 }

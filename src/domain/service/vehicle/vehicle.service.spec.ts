@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Vehicle } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { VehicleCreationDto } from '@mp/common/dtos';
+import { UpdateVehicleDto, VehicleCreationDto } from '@mp/common/dtos';
 import { VehicleRepository } from '@mp/repository';
 
 import { VehicleService } from './vehicle.service';
@@ -164,6 +164,48 @@ describe('VehicleService', () => {
       await expect(service.deleteVehicleAsync(vehicleId)).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('updateVehicleAsync', () => {
+    let vehicleUpdateDtoMock: UpdateVehicleDto;
+
+    beforeEach(() => {
+      vehicleUpdateDtoMock = {
+        brand: vehicle.brand,
+        model: vehicle.model,
+        kmTraveled: vehicle.kmTraveled,
+        admissionDate: vehicle.admissionDate,
+        enabled: vehicle.enabled,
+      };
+    });
+
+    it('should call vehicleRepository.updateVehicleAsync with correct data', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+
+      const updateVehicleAsyncSpy = jest
+        .spyOn(repository, 'updateVehicleAsync')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      await service.updateVehicleAsync(vehicle.id, vehicleUpdateDtoMock);
+
+      // Assert
+      expect(updateVehicleAsyncSpy).toHaveBeenCalledWith(
+        vehicle.id,
+        vehicleUpdateDtoMock,
+      );
+    });
+
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateVehicleAsync(vehicle.id, vehicleUpdateDtoMock),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
