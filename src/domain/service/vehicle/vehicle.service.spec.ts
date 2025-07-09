@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Vehicle } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
@@ -25,9 +25,7 @@ describe('VehicleService', () => {
       ],
     }).compile();
 
-    repository = module.get<VehicleRepository>(
-      VehicleRepository,
-    );
+    repository = module.get<VehicleRepository>(VehicleRepository);
 
     service = module.get<VehicleService>(VehicleService);
 
@@ -58,7 +56,9 @@ describe('VehicleService', () => {
       await service.existsByLicensePlateAsync(licensePlate);
 
       // Assert
-      expect(repository.existsByLicensePlateAsync).toHaveBeenCalledWith(licensePlate);
+      expect(repository.existsByLicensePlateAsync).toHaveBeenCalledWith(
+        licensePlate,
+      );
     });
   });
 
@@ -80,9 +80,9 @@ describe('VehicleService', () => {
         .mockResolvedValueOnce(true);
 
       // Act & Assert
-      await expect(
-        service.createVehicleAsync(vehicleData),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createVehicleAsync(vehicleData)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should call repository.createVehicleAsync with the correct data', async () => {
@@ -101,7 +101,9 @@ describe('VehicleService', () => {
         .spyOn(repository, 'existsByLicensePlateAsync')
         .mockResolvedValueOnce(false);
 
-      jest.spyOn(repository, 'createVehicleAsync').mockResolvedValueOnce(vehicle);
+      jest
+        .spyOn(repository, 'createVehicleAsync')
+        .mockResolvedValueOnce(vehicle);
 
       // Act
       await service.createVehicleAsync(vehicleData);
@@ -112,26 +114,56 @@ describe('VehicleService', () => {
   });
 
   describe('searchWithFiltersAsync', () => {
-      it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
-        // Arrange
-        const searchText = 'test';
-        const page = 1;
-        const pageSize = 10;
-        const query = new SearchVehicleQuery({
-          searchText,
-          page,
-          pageSize,
-        });
-  
-        // Act
-        await service.searchByTextAsync(query);
-  
-        // Assert
-        expect(repository.searchByTextAsync).toHaveBeenCalledWith(
-          query.searchText,
-          query.page,
-          query.pageSize,
-        );
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchVehicleQuery({
+        searchText,
+        page,
+        pageSize,
       });
+
+      // Act
+      await service.searchByTextAsync(query);
+
+      // Assert
+      expect(repository.searchByTextAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.page,
+        query.pageSize,
+      );
     });
+  });
+
+  describe('deleteVehicleAsync', () => {
+    it('should call deleteVehicleAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const vehicleId = 1;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'deleteVehicleAsync')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      await service.deleteVehicleAsync(vehicleId);
+
+      // Assert
+      expect(repository.deleteVehicleAsync).toHaveBeenCalledWith(vehicleId);
+    });
+
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const vehicleId = 1;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(service.deleteVehicleAsync(vehicleId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
 });

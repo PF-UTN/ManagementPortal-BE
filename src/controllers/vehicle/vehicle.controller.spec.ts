@@ -5,6 +5,7 @@ import { mockDeep } from 'jest-mock-extended';
 import { SearchVehicleRequest } from '@mp/common/dtos';
 
 import { CreateVehicleCommand } from './command/create-vehicle.command';
+import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
 
@@ -73,6 +74,20 @@ describe('VehicleController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchVehicleQuery(request),
       );
+    });
+  });
+
+  describe('deleteVehicleAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new DeleteVehicleCommand(1);
+
+      // Act
+      await controller.deleteVehicleAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });

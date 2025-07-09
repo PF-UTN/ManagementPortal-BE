@@ -179,4 +179,49 @@ describe('VehicleRepository', () => {
       );
     });
   });
+
+  describe('existsAsync', () => {
+    it('should return true if vehicle exists', async () => {
+      // Arrange
+      const vehicleId = 1;
+      jest
+        .spyOn(prismaService.vehicle, 'findFirst')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      const exists = await repository.existsAsync(vehicleId);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if vehicle does not exist', async () => {
+      // Arrange
+      const vehicleId = 1;
+      jest
+        .spyOn(prismaService.vehicle, 'findFirst')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const exists = await repository.existsAsync(vehicleId);
+
+      // Assert
+      expect(exists).toBe(false);
+    });
+  });
+
+  describe('deleteVehicleAsync', () => {
+    it('should update an existing vehicle deleted field', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.vehicle, 'update')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      const updatedVehicle = await repository.deleteVehicleAsync(vehicle.id);
+
+      // Assert
+      expect(updatedVehicle).toEqual(vehicle);
+    });
+  });
 });

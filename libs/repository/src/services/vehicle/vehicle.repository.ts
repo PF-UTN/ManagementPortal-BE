@@ -21,11 +21,7 @@ export class VehicleRepository {
     });
   }
 
-  async searchByTextAsync(
-    searchText: string,
-    page: number,
-    pageSize: number,
-  ) {
+  async searchByTextAsync(searchText: string, page: number, pageSize: number) {
     const [data, total] = await Promise.all([
       this.prisma.vehicle.findMany({
         where: {
@@ -63,5 +59,20 @@ export class VehicleRepository {
     ]);
 
     return { data, total };
+  }
+
+  async existsAsync(id: number): Promise<boolean> {
+    const vehicle = await this.prisma.vehicle.findFirst({
+      select: { id: true },
+      where: { AND: [{ id: id }, { deleted: false }] },
+    });
+    return !!vehicle;
+  }
+
+  async deleteVehicleAsync(id: number) {
+    return this.prisma.vehicle.update({
+      where: { id },
+      data: { deleted: true },
+    });
   }
 }
