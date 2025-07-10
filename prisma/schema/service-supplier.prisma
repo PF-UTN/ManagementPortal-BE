@@ -1,0 +1,12 @@
+model ServiceSupplier {
+    id             Int     @id @default(autoincrement())
+    businessName   String  @db.VarChar(255)
+    documentType   String  @db.VarChar(4)
+    documentNumber String  @db.VarChar(11)
+    email          String  @unique @db.VarChar(250)
+    phone          String  @db.VarChar(20)
+    address        Address @relation(fields: [addressId], references: [id])
+    addressId      Int     @unique
+
+    @@unique([documentType, documentNumber])
+}
