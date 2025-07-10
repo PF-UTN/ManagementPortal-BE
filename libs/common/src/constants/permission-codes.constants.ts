@@ -29,4 +29,10 @@ export const PermissionCodes = {
     UPDATE: 'vehicle:update',
     DELETE: 'vehicle:delete',
   },
+  Repair: {
+    READ: 'repair:read',
+    CREATE: 'repair:create',
+    UPDATE: 'repair:update',
+    DELETE: 'repair:delete',
+  },
 };
