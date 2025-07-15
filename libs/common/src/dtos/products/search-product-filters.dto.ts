@@ -3,7 +3,7 @@ import { IsArray, IsBoolean, IsOptional, IsString, ValidateIf } from 'class-vali
 
 export class SearchProductFiltersDto {
     @ApiProperty({
-        example: ['Electronics, Home'],
+        example: ['Electronics', 'Home'],
         description: 'Filter by product category descriptions',
         required: false,
     })
