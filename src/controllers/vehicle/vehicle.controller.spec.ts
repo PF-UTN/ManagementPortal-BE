@@ -2,11 +2,12 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { SearchVehicleRequest } from '@mp/common/dtos';
+import { SearchVehicleRequest, UpdateVehicleDto } from '@mp/common/dtos';
 
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
+import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
 
@@ -86,6 +87,27 @@ describe('VehicleController', () => {
 
       // Act
       await controller.deleteVehicleAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updateVehicleAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const vehicleUpdateDtoMock: UpdateVehicleDto = {
+        brand: 'Toyota',
+        model: 'Corolla',
+        kmTraveled: 25000,
+        admissionDate: new Date('2023-10-01'),
+        enabled: true,
+      };
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateVehicleCommand(1, vehicleUpdateDtoMock);
+
+      // Act
+      await controller.updateVehicleAsync(1, vehicleUpdateDtoMock);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
