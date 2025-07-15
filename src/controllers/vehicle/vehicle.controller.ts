@@ -16,6 +16,7 @@ import { RequiredPermissions } from '@mp/common/decorators';
 import { SearchVehicleRequest, UpdateVehicleDto, VehicleCreationDto } from '@mp/common/dtos';
 
 import { CreateVehicleCommand } from './command/create-vehicle.command';
+import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
@@ -88,5 +89,21 @@ export class VehicleController {
     return this.commandBus.execute(
       new UpdateVehicleCommand(id, updateVehicleDto),
     );
+  }
+
+  @Delete('repair/:repairId')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Repair.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a vehicle repair',
+    description: 'Delete the vehicle repair with the provided ID.',
+  })
+  @ApiParam({
+    name: 'repairId',
+    description: 'ID of the vehicle repair to delete',
+  })
+  deleteVehicleRepairAsync(@Param('repairId', ParseIntPipe) repairId: number) {
+    return this.commandBus.execute(new DeleteVehicleRepairCommand(repairId));
   }
 }
