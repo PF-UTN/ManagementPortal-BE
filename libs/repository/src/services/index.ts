@@ -12,3 +12,4 @@ export * from './stock/stock.repository';
 export * from './address/address.repository';
 export * from './vehicle/vehicle.repository';
 export * from './repair/repair.repository';
+export * from './service-supplier/service-supplier.repository';

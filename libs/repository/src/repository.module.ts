@@ -15,6 +15,7 @@ import {
   AddressRepository,
   VehicleRepository,
   RepairRepository,
+  ServiceSupplierRepository,
 } from './services';
 @Module({
   providers: [
@@ -34,6 +35,7 @@ import {
     TownRepository,
     VehicleRepository,
     RepairRepository,
+    ServiceSupplierRepository,
   ],
   exports: [
     UserRepository,
@@ -51,6 +53,7 @@ import {
     TownRepository,
     VehicleRepository,
     RepairRepository,
+    ServiceSupplierRepository,
   ],
 })
 export class RepositoryModule {}
