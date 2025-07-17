@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repair } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { RepairCreationDataDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 import { RepairRepository } from './repair.repository';
 
@@ -30,6 +32,7 @@ describe('RepairRepository', () => {
     repair.kmPerformed = 5000;
     repair.deleted = false;
     repair.vehicleId = 1;
+    repair.serviceSupplierId = 1;
   });
 
   describe('existsAsync', () => {
@@ -70,6 +73,30 @@ describe('RepairRepository', () => {
 
       // Assert
       expect(updatedRepair).toEqual(repair);
+    });
+  });
+
+  describe('createRepairAsync', () => {
+    it('should create a new repair', async () => {
+      // Arrange
+      const repairCreationDataMock: RepairCreationDataDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        vehicleId: repair.vehicleId,
+        serviceSupplierId: repair.serviceSupplierId,
+      }
+
+      jest
+        .spyOn(prismaService.repair, 'create')
+        .mockResolvedValueOnce(repair);
+
+      // Act
+      const createdRepair =
+        await repository.createRepairAsync(repairCreationDataMock);
+
+      // Assert
+      expect(createdRepair).toEqual(repair);
     });
   });
 });
