@@ -2,8 +2,13 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { SearchVehicleRequest, UpdateVehicleDto } from '@mp/common/dtos';
+import {
+  RepairCreationDto,
+  SearchVehicleRequest,
+  UpdateVehicleDto,
+} from '@mp/common/dtos';
 
+import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
@@ -122,6 +127,35 @@ describe('VehicleController', () => {
 
       // Act
       await controller.deleteVehicleRepairAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('createVehicleRepairAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const vehicleId = 1;
+
+      const repairCreationDtoMock: RepairCreationDto = {
+        date: new Date('1960-01-01'),
+        description: 'Puncture',
+        kmPerformed: 25000,
+        serviceSupplierId: 1,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateVehicleRepairCommand(
+        vehicleId,
+        repairCreationDtoMock,
+      );
+
+      // Act
+      await controller.createVehicleRepairAsync(
+        vehicleId,
+        repairCreationDtoMock,
+      );
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);

@@ -3,13 +3,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repair } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { RepairRepository } from '@mp/repository';
+import { RepairCreationDataDto, RepairCreationDto } from '@mp/common/dtos';
+import {
+  RepairRepository,
+  ServiceSupplierRepository,
+  VehicleRepository,
+} from '@mp/repository';
 
 import { RepairService } from './repair.service';
 
 describe('RepairService', () => {
   let service: RepairService;
   let repository: RepairRepository;
+  let vehicleRepository: VehicleRepository;
+  let serviceSupplierRepository: ServiceSupplierRepository;
   let repair: ReturnType<typeof mockDeep<Repair>>;
 
   beforeEach(async () => {
@@ -20,10 +27,22 @@ describe('RepairService', () => {
           provide: RepairRepository,
           useValue: mockDeep(RepairRepository),
         },
+        {
+          provide: VehicleRepository,
+          useValue: mockDeep(VehicleRepository),
+        },
+        {
+          provide: ServiceSupplierRepository,
+          useValue: mockDeep(ServiceSupplierRepository),
+        },
       ],
     }).compile();
 
     repository = module.get<RepairRepository>(RepairRepository);
+    vehicleRepository = module.get<VehicleRepository>(VehicleRepository);
+    serviceSupplierRepository = module.get<ServiceSupplierRepository>(
+      ServiceSupplierRepository,
+    );
 
     service = module.get<RepairService>(RepairService);
 
@@ -34,7 +53,7 @@ describe('RepairService', () => {
     repair.description = 'Puncture';
     repair.kmPerformed = 5000;
     repair.deleted = false;
-    repair.vehicleId = 1;
+    repair.serviceSupplierId = 1;
   });
 
   describe('deleteRepairAsync', () => {
@@ -61,6 +80,75 @@ describe('RepairService', () => {
       // Act & Assert
       await expect(service.deleteRepairAsync(repairId)).rejects.toThrow(
         NotFoundException,
+      );
+    });
+  });
+
+  describe('createRepairAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const repairCreationDtoMock: RepairCreationDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createRepairAsync(repair.vehicleId, repairCreationDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if service supplier does not exist', async () => {
+      // Arrange
+      const repairCreationDtoMock: RepairCreationDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createRepairAsync(repair.vehicleId, repairCreationDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.createRepairAsync with the correct data', async () => {
+      // Arrange
+      const repairCreationDtoMock: RepairCreationDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      const repairCreationDataDtoMock: RepairCreationDataDto = {
+        vehicleId: repair.vehicleId,
+        ...repairCreationDtoMock,
+      };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+
+      jest.spyOn(repository, 'createRepairAsync').mockResolvedValueOnce(repair);
+
+      // Act
+      await service.createRepairAsync(repair.vehicleId, repairCreationDtoMock);
+
+      // Assert
+      expect(repository.createRepairAsync).toHaveBeenCalledWith(
+        repairCreationDataDtoMock,
       );
     });
   });

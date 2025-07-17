@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { CreateVehicleRepairCommandHandler } from './command/create-vehicle-repair.command.handler';
 import { CreateVehicleCommandHandler } from './command/create-vehicle.command.handler';
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
@@ -15,6 +16,7 @@ const commandHandlers = [
   DeleteVehicleCommandHandler,
   UpdateVehicleCommandHandler,
   DeleteVehicleRepairCommandHandler,
+  CreateVehicleRepairCommandHandler,
 ];
 
 @Module({
