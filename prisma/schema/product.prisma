@@ -12,4 +12,6 @@ model Product {
     stock        Stock?
     priceHistory PriceHistory[]
     deletedAt    DateTime?        @db.Timestamp(6)
+
+    StockChange StockChange[]
 }
