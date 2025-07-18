@@ -8,6 +8,7 @@ import {
   rolePostDeployAsync,
   taxCategoryPostDeployAsync,
 } from './table-population';
+import { stockChangeTypePostDeployAsync } from './table-population/stock-change-type.postdeploy';
 
 const prisma = new PrismaClient();
 
@@ -18,6 +19,7 @@ async function main() {
     permissionPostDeployAsync(),
     countryProvinceTownPostDeployAsync(),
     taxCategoryPostDeployAsync(),
+    stockChangeTypePostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);
