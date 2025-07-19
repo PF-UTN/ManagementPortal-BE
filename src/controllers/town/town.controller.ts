@@ -8,7 +8,7 @@ import { SearchTownRequest } from '@mp/common/dtos';
 import { GetTownsByTextQuery } from './query/get-towns-by-text.query';
 import { SearchTownQuery } from './query/search-town-query';
 
-@Controller('towns')
+@Controller('town')
 export class TownController {
   constructor(private readonly queryBus: QueryBus) {}
 

@@ -27,7 +27,7 @@ import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 
-@Controller('vehicles')
+@Controller('vehicle')
 export class VehicleController {
   constructor(
     private readonly queryBus: QueryBus,

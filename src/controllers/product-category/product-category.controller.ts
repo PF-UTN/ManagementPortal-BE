@@ -9,7 +9,7 @@ import { ProductCategoryCreationDto } from '@mp/common/dtos';
 import { CreateProductCategoryCommand } from './command/create-product-category.command';
 import { ProductCategoriesQuery } from './query/product-categories.query';
 
-@Controller('product-categories')
+@Controller('product-category')
 export class ProductCategoryController {
   constructor(
     private readonly queryBus: QueryBus,
