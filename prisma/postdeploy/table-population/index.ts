@@ -5,3 +5,5 @@ export * from './registration-request-status.postdeploy';
 export * from './role-permission.postdeploy';
 export * from './role.postdeploy';
 export * from './tax-category.postdeploy';
+export * from './stock-change-type.postdeploy';
+export * from './purchase-order-status.postdeploy';
