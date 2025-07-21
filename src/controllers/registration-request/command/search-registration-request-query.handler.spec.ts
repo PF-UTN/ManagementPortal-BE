@@ -98,7 +98,7 @@ describe('SearchRegistrationRequestQueryHandler', () => {
         userId: 10,
         note: 'Test note',
         requestDate: new Date(),
-        status: { id: 5, code: 'Pending' },
+        status: { id: 5, code: 'Pendiente' },
         user: {
           id: 10,
           firstName: 'John',

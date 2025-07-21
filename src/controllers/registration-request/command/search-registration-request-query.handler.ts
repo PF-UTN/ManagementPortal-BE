@@ -16,6 +16,12 @@ export class SearchRegistrationRequestQueryHandler
     private readonly registrationRequestDomainService: RegistrationRequestDomainService,
   ) {}
 
+  statusTranslations: Record<string, string> = {
+    Pending: 'Pendiente',
+    Approved: 'Aprobada',
+    Rejected: 'Rechazada',
+  };
+
   async execute(
     query: SearchRegistrationRequestQuery,
   ): Promise<SearchRegistrationRequestResponse> {
@@ -27,7 +33,7 @@ export class SearchRegistrationRequestQueryHandler
         return {
           id: registrationRequest.id,
           requestDate: registrationRequest.requestDate,
-          status: registrationRequest.status.code,
+          status: this.statusTranslations[registrationRequest.status.code] || registrationRequest.status.code,
           user: {
             fullNameOrBusinessName: `${registrationRequest.user.firstName} ${registrationRequest.user.lastName}`,
             documentNumber: registrationRequest.user.documentNumber,
