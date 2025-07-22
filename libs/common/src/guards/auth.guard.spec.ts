@@ -1,4 +1,4 @@
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, ForbiddenException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -117,7 +117,7 @@ describe('AuthGuard', () => {
     });
   });
 
-  it('should throw UnauthorizedException if the token is invalid', async () => {
+  it('should throw ForbiddenException if the token is invalid', async () => {
     //Arrange
     jest.spyOn(reflector, 'get').mockReturnValue(false);
     jest.spyOn(configService, 'get').mockReturnValue('test-secret');
@@ -140,7 +140,7 @@ describe('AuthGuard', () => {
 
     //Act & Assert
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
-      UnauthorizedException,
+      ForbiddenException,
     );
   });
 
@@ -177,7 +177,7 @@ describe('AuthGuard', () => {
     ]);
   });
 
-  it('should throw UnauthorizedException if permissions are insufficient', async () => {
+  it('should throw ForbiddenException if permissions are insufficient', async () => {
     //Arrange
     jest.spyOn(reflector, 'get').mockReturnValue(false);
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['write']);
@@ -202,7 +202,7 @@ describe('AuthGuard', () => {
 
     //Act & Assert
     await expect(guard.canActivate(mockContext)).rejects.toThrow(
-      UnauthorizedException,
+      ForbiddenException,
     );
   });
 });

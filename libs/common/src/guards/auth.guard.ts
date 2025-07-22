@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -42,7 +43,7 @@ export class AuthGuard implements CanActivate {
 
       this.ValidatePermissions(context, payload.permissions);
     } catch {
-      throw new UnauthorizedException();
+      throw new ForbiddenException();
     }
     return true;
   }
@@ -67,6 +68,6 @@ export class AuthGuard implements CanActivate {
       userPermissions.includes(permission),
     );
 
-    if (!hasPermissions) throw new UnauthorizedException('Acceso denegado');
+    if (!hasPermissions) throw new ForbiddenException('Acceso denegado');
   }
 }
