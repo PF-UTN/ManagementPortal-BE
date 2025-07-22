@@ -5,3 +5,4 @@ export * from './user-document-types.constant';
 export * from './tax-category.constant';
 export * from './order-direction.constants';
 export * from './product-order-field.constants';
+export * from './registration-request-status-translations.constant';
