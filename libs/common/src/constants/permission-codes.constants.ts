@@ -35,4 +35,10 @@ export const PermissionCodes = {
     UPDATE: 'repair:update',
     DELETE: 'repair:delete',
   },
+  PurchaseOrder: {
+    READ: 'purchase-order:read',
+    CREATE: 'purchase-order:create',
+    UPDATE: 'purchase-order:update',
+    DELETE: 'purchase-order:delete',
+  },
 };
