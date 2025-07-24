@@ -13,15 +13,21 @@ import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { SearchVehicleRequest, UpdateVehicleDto, VehicleCreationDto } from '@mp/common/dtos';
+import {
+  RepairCreationDto,
+  SearchVehicleRequest,
+  UpdateVehicleDto,
+  VehicleCreationDto,
+} from '@mp/common/dtos';
 
+import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 
-@Controller('vehicles')
+@Controller('vehicle')
 export class VehicleController {
   constructor(
     private readonly queryBus: QueryBus,
@@ -105,5 +111,26 @@ export class VehicleController {
   })
   deleteVehicleRepairAsync(@Param('repairId', ParseIntPipe) repairId: number) {
     return this.commandBus.execute(new DeleteVehicleRepairCommand(repairId));
+  }
+
+  @Post(':vehicleId/repair')
+  @HttpCode(201)
+  @RequiredPermissions(PermissionCodes.Repair.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a vehicle repair',
+    description: 'Creates a new repair for the vehicle with the provided ID.',
+  })
+  @ApiParam({
+    name: 'vehicleId',
+    description: 'ID of the vehicle to create a repair for',
+  })
+  async createVehicleRepairAsync(
+    @Param('vehicleId', ParseIntPipe) vehicleId: number,
+    @Body() repairCreationDto: RepairCreationDto,
+  ) {
+    return this.commandBus.execute(
+      new CreateVehicleRepairCommand(vehicleId, repairCreationDto),
+    );
   }
 }

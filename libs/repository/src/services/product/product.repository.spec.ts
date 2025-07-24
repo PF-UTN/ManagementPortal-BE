@@ -359,6 +359,38 @@ describe('ProductRepository', () => {
         expect(exists).toBe(false);
       });
     });
+
+    describe('existsManyAsync', () => {
+      it('should return true if all products exist', async () => {
+        // Arrange
+        const productIds = [1, 2, 3];
+        jest.spyOn(prismaService.product, 'findMany').mockResolvedValueOnce([
+          { ...product, id: 1 },
+          { ...product, id: 2 },
+          { ...product, id: 3 },
+        ]);
+
+        // Act
+        const exists = await repository.existsManyAsync(productIds);
+
+        // Assert
+        expect(exists).toBe(true);
+      });
+
+      it('should return false if not all products exist', async () => {
+        // Arrange
+        const productIds = [1, 2, 3];
+        jest.spyOn(prismaService.product, 'findMany').mockResolvedValueOnce([
+          { ...product, id: 1 },
+          { ...product, id: 2 },
+        ]);
+
+        // Act
+        const exists = await repository.existsManyAsync(productIds);
+        // Assert
+        expect(exists).toBe(false);
+      });
+    });
     
     describe('findProductWithDetailsByIdAsync', () => {
         it('should return product with details', async () => {

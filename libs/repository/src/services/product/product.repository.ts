@@ -200,6 +200,19 @@ export class ProductRepository {
     return !!product;
     }
 
+    async existsManyAsync(ids: number[]): Promise<boolean> {
+        const products = await this.prisma.product.findMany({
+            select: { id: true },
+            where: {
+                AND: [
+                    { id: { in: ids } },
+                    { deletedAt: null }
+                ]
+            }
+        });
+        return products.length === ids.length;
+    }
+
     async findProductWithDetailsByIdAsync(productId: number) {
         return this.prisma.product.findFirst({
             where: { AND: [{ id: productId }, { deletedAt: null }] },

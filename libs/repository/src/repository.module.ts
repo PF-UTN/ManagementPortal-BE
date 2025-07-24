@@ -15,7 +15,10 @@ import {
   AddressRepository,
   VehicleRepository,
   RepairRepository,
+  ServiceSupplierRepository,
 } from './services';
+import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
+import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
 @Module({
   providers: [
     PrismaService,
@@ -34,6 +37,9 @@ import {
     TownRepository,
     VehicleRepository,
     RepairRepository,
+    ServiceSupplierRepository,
+    PurchaseOrderRepository,
+    PurchaseOrderItemRepository,
   ],
   exports: [
     UserRepository,
@@ -51,6 +57,9 @@ import {
     TownRepository,
     VehicleRepository,
     RepairRepository,
+    ServiceSupplierRepository,
+    PurchaseOrderRepository,
+    PurchaseOrderItemRepository,
   ],
 })
 export class RepositoryModule {}

@@ -8,4 +8,7 @@ export * from './stock';
 export * from './client';
 export * from './supplier';
 export * from './vehicle';
+export * from './repair';
+export * from './purchase-order';
+export * from './purchase-order-item';
 export * from './cart';

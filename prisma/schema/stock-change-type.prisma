@@ -1,0 +1,6 @@
+model StockChangeType {
+    id           Int           @id @default(autoincrement())
+    name         String        @unique @db.VarChar(50)
+    description  String?       @db.VarChar(255)
+    stockChanges StockChange[]
+}

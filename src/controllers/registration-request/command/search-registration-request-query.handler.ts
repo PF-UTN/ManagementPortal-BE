@@ -1,5 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
+import { statusTranslations } from '@mp/common/constants';
 import {
   RegistrationRequestDto,
   SearchRegistrationRequestResponse,
@@ -27,7 +28,7 @@ export class SearchRegistrationRequestQueryHandler
         return {
           id: registrationRequest.id,
           requestDate: registrationRequest.requestDate,
-          status: registrationRequest.status.code,
+          status: statusTranslations[registrationRequest.status.code] || registrationRequest.status.code,
           user: {
             fullNameOrBusinessName: `${registrationRequest.user.firstName} ${registrationRequest.user.lastName}`,
             documentNumber: registrationRequest.user.documentNumber,
