@@ -4,14 +4,7 @@ import { createClient } from 'redis';
 const redisProvider = {
   provide: 'REDIS_CLIENT',
   useFactory: async () => {
-    const client = createClient({
-      username: process.env.REDIS_USERNAME,
-      password: process.env.REDIS_PASSWORD,
-      socket: {
-        host: process.env.REDIS_HOST,
-        port: process.env.REDIS_PORT ? parseInt(process.env.REDIS_PORT, 10) : undefined,
-      },
-    });
+    const client = createClient({ url: process.env.REDIS_URL });
     client.on('error', err => console.log('Redis Client Error', err));
     await client.connect();
     return client;
