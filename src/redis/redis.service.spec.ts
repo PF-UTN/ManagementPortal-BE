@@ -29,19 +29,19 @@ describe('RedisService', () => {
     quantity: 2,
   };
   const ttlSeconds = 3600;
-  describe('hset', () => {
+  describe('setFieldInHash', () => {
     it('should call hSet with correct key and field-value pairs', async () => {
       // Arrange
       const spy = jest.spyOn(redisClientMock, 'hSet');
 
       // Act
-      await service.hSet(key, value.productId, value.quantity);
+      await service.setFieldInHash (key, value.productId, value.quantity);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key, value.productId, value.quantity);
     });
   });
-  describe('hget', () => {
+  describe('getFieldValue', () => {
     it('should return the value of the given field', async () => {
       // Arrange
       jest
@@ -49,7 +49,7 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(value.quantity.toString());
 
       // Act
-      const result = await service.hGet(key, value.productId);
+      const result = await service.getFieldValue(key, value.productId);
 
       // Assert
       expect(result).toBe(value.quantity.toString());
@@ -59,44 +59,44 @@ describe('RedisService', () => {
       jest.spyOn(redisClientMock, 'hGet').mockResolvedValueOnce(null);
 
       // Act
-      const result = await service.hGet(key, 'nonexistent-product');
+      const result = await service.getFieldValue(key, 'nonexistent-product');
 
       // Assert
       expect(result).toBeNull();
     });
   });
-  describe('hdel', () => {
+  describe('removeFieldFromObject', () => {
     it('should call hDel with correct key and fields', async () => {
       // Arrange
       const spy = jest.spyOn(redisClientMock, 'hDel');
 
       // Act
-      await service.hDel(key, value.productId);
+      await service.removeFieldFromObject(key, value.productId);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key, value.productId);
     });
   });
-  describe('hgetall', () => {
+  describe('getObjectByKey', () => {
     it('should return all fields and values of the hash', async () => {
       // Arrange
       const hash = { product1: '5', product2: '3' };
       jest.spyOn(redisClientMock, 'hGetAll').mockResolvedValueOnce(hash);
 
       // Act
-      const result = await service.hGetAll(key);
+      const result = await service.getObjectByKey(key);
 
       // Assert
       expect(result).toEqual(hash);
     });
   });
-  describe('hExists', () => {
+  describe('fieldExistsInObject', () => {
     it('should return true when the field exists in the hash', async () => {
       // Arrange
       jest.spyOn(redisClientMock, 'hExists').mockResolvedValueOnce(1);
 
       // Act
-      const result = await service.hExists(key, value.productId);
+      const result = await service.fieldExistsInObject(key, value.productId);
 
       // Assert
       expect(result).toBe(true);
@@ -107,26 +107,26 @@ describe('RedisService', () => {
       jest.spyOn(redisClientMock, 'hExists').mockResolvedValueOnce(0);
 
       // Act
-      const result = await service.hExists(key, value.productId);
+      const result = await service.fieldExistsInObject(key, value.productId);
 
       // Assert
       expect(result).toBe(false);
     });
   });
-  describe('del', () => {
+  describe('deleteKey', () => {
     it('should call del with correct key', async () => {
       // Arrange
       const spy = jest.spyOn(redisClientMock, 'del');
 
       // Act
-      await service.del(key);
+      await service.deleteKey(key);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key);
     });
   });
 
-  describe('exists', () => {
+  describe('keyExists', () => {
     it('should return true when key exists', async () => {
       // Arrange
       const spy = jest
@@ -134,7 +134,7 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(1);
 
       // Act
-      const result = await service.exists(key);
+      const result = await service.keyExists(key);
 
       // Assert
       expect(result).toBe(true);
@@ -148,20 +148,20 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(0);
 
       // Act
-      const result = await service.exists(key);
+      const result = await service.keyExists(key);
 
       // Assert
       expect(result).toBe(false);
       expect(spy).toHaveBeenCalledWith(key);
     });
   });
-  describe('exists', () => {
+  describe('getAllFieldNames', () => {
     it('should return an empty array if no fields are present', async () => {
       // Arrange
       jest.spyOn(redisClientMock, 'hKeys').mockResolvedValueOnce([]);
 
       // Act
-      const result = await service.hKeys('cart:999');
+      const result = await service.getAllFieldNames('cart:999');
 
       // Assert
       expect(result).toEqual([]);
@@ -172,13 +172,13 @@ describe('RedisService', () => {
       jest.spyOn(redisClientMock, 'hKeys').mockResolvedValueOnce(mockFields);
 
       // Act
-      const result = await service.hKeys('cart:123');
+      const result = await service.getAllFieldNames('cart:123');
 
       // Assert
       expect(result).toEqual(mockFields);
     });
   });
-  describe('expire', () => {
+  describe('setKeyExpiration', () => {
     it('should return true if expire is set successfully', async () => {
       // Arrange
       const spy = jest
@@ -186,7 +186,7 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(1);
 
       // Act
-      const result = await service.expire(key, ttlSeconds);
+      const result = await service.setKeyExpiration(key, ttlSeconds);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key, ttlSeconds);
@@ -200,7 +200,7 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(0);
 
       // Act
-      const result = await service.expire(key, ttlSeconds);
+      const result = await service.setKeyExpiration(key, ttlSeconds);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key, ttlSeconds);
