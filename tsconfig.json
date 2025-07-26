@@ -43,6 +43,9 @@
       "@mp/common/testing": [
         "libs/common/src/testing"
       ],
+      "@mp/common/helpers": [
+        "libs/common/src/helpers"
+      ],
     }
   }
 }
