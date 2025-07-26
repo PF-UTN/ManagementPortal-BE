@@ -40,11 +40,10 @@ export class AuthGuard implements CanActivate {
         secret: this.configService.get<string>('JWT_SECRET'),
       });
       request['user'] = payload;
-
-      this.ValidatePermissions(context, payload.permissions);
     } catch {
-      throw new ForbiddenException();
+      throw new UnauthorizedException();
     }
+    this.ValidatePermissions(context, request['user'].permissions);
     return true;
   }
 
