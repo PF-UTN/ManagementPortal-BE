@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
 
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
+import { CartModule } from './controllers/cart/cart.module';
 import { ProductModule } from './controllers/product/product.module';
 import { ProductCategoryModule } from './controllers/product-category/product-category.module';
 import { PurchaseOrderModule } from './controllers/purchase-order/purchase-order.controller.module';
@@ -28,6 +29,7 @@ import { RedisModule } from './redis/redis.module';
     VehicleModule,
     PurchaseOrderModule,
     RedisModule,
+    CartModule,
   ],
   controllers: [],
   providers: [],
