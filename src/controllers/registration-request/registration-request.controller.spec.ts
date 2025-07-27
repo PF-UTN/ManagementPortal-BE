@@ -1,6 +1,7 @@
 import { StreamableFile } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
 
 import { SearchRegistrationRequestRequest } from '@mp/common/dtos';
 import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
@@ -17,7 +18,16 @@ describe('RegistrationRequestController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [RegistrationRequestController],
-      providers: [QueryBus, CommandBus],
+      providers: [
+        {
+          provide: QueryBus,
+          useValue: mockDeep(QueryBus),
+        },
+        {
+          provide: CommandBus,
+          useValue: mockDeep(CommandBus),
+        },
+      ],
     }).compile();
 
     controller = module.get<RegistrationRequestController>(
