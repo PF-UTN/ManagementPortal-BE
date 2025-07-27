@@ -6,7 +6,8 @@ import {
 } from '@mp/common/dtos';
 import { RegistrationRequestRepository } from '@mp/repository';
 
-import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
+import { DownloadRegistrationRequestQuery } from '../../../controllers/registration-request/query/download-registration-request-query';
+import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/query/search-registration-request-query';
 
 @Injectable()
 export class RegistrationRequestDomainService {
@@ -20,6 +21,13 @@ export class RegistrationRequestDomainService {
       query.filters,
       query.page,
       query.pageSize,
+    );
+  }
+
+  async downloadWithFiltersAsync(query: DownloadRegistrationRequestQuery) {
+    return await this.registrationRequestRepository.downloadWithFiltersAsync(
+      query.searchText,
+      query.filters,
     );
   }
 

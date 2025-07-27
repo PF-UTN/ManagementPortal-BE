@@ -1,30 +1,33 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
 
 import { SearchRegistrationRequestFiltersDto } from '@mp/common/dtos';
-import { RegistrationRequestRepositoryMock } from '@mp/common/testing';
 import { RegistrationRequestRepository } from '@mp/repository';
 
 import { RegistrationRequestDomainService } from './registration-request-domain.service';
-import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/command/search-registration-request-query';
+import { DownloadRegistrationRequestQuery } from '../../../controllers/registration-request/query/download-registration-request-query';
+import { SearchRegistrationRequestQuery } from '../../../controllers/registration-request/query/search-registration-request-query';
 
 describe('RegistrationRequestDomainService', () => {
   let service: RegistrationRequestDomainService;
-  let registrationRequestRepositoryMock: RegistrationRequestRepositoryMock;
+  let registrationRequestRepository: RegistrationRequestRepository;
 
   beforeEach(async () => {
-    registrationRequestRepositoryMock = new RegistrationRequestRepositoryMock();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RegistrationRequestDomainService,
         {
           provide: RegistrationRequestRepository,
-          useValue: registrationRequestRepositoryMock,
+          useValue: mockDeep(RegistrationRequestRepository),
         },
       ],
     }).compile();
 
     service = module.get<RegistrationRequestDomainService>(
       RegistrationRequestDomainService,
+    );
+    registrationRequestRepository = module.get<RegistrationRequestRepository>(
+      RegistrationRequestRepository,
     );
   });
 
@@ -53,13 +56,34 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        registrationRequestRepositoryMock.searchWithFiltersAsync,
+        registrationRequestRepository.searchWithFiltersAsync,
       ).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
         query.page,
         query.pageSize,
       );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // arrange
+      const query = {
+        searchText: 'foo',
+        filters: { status: ['Pending'] },
+      } as DownloadRegistrationRequestQuery;
+      jest
+        .spyOn(registrationRequestRepository, 'downloadWithFiltersAsync')
+        .mockResolvedValue([]);
+
+      // act
+      await service.downloadWithFiltersAsync(query);
+
+      // assert
+      expect(
+        registrationRequestRepository.downloadWithFiltersAsync,
+      ).toHaveBeenCalledWith(query.searchText, query.filters);
     });
   });
 
@@ -79,7 +103,7 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        registrationRequestRepositoryMock.createRegistrationRequestAsync,
+        registrationRequestRepository.createRegistrationRequestAsync,
       ).toHaveBeenCalledWith(registrationRequestCreationDto);
     });
   });
@@ -94,7 +118,7 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        registrationRequestRepositoryMock.findRegistrationRequestWithStatusByIdAsync,
+        registrationRequestRepository.findRegistrationRequestWithStatusByIdAsync,
       ).toHaveBeenCalledWith(registrationRequestId);
     });
   });
@@ -115,7 +139,7 @@ describe('RegistrationRequestDomainService', () => {
 
       // Assert
       expect(
-        registrationRequestRepositoryMock.updateRegistrationRequestStatusAsync,
+        registrationRequestRepository.updateRegistrationRequestStatusAsync,
       ).toHaveBeenCalledWith(
         updateRegistrationRequestStatusDto.registrationRequestId,
         {

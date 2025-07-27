@@ -203,6 +203,140 @@ describe('RegistrationRequestRepository', () => {
     });
   });
 
+  describe('downloadWithFiltersAsync', () => {
+    it('should call prisma.registrationRequest.findMany with correct filters', async () => {
+      // arrange
+      const searchText = 'test';
+      const filters: SearchRegistrationRequestFiltersDto = {
+        status: ['Pending'],
+      };
+
+      // act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // assert
+      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              {
+                status: {
+                  is: {
+                    code: { in: filters.status },
+                  },
+                },
+              },
+              expect.any(Object),
+            ],
+          },
+          include: expect.any(Object),
+          orderBy: { requestDate: 'desc' },
+        }),
+      );
+    });
+
+    it('should call prisma.registrationRequest.findMany with search text filter', async () => {
+      // arrange
+      const searchText = 'john';
+      const filters: SearchRegistrationRequestFiltersDto = {};
+
+      // act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // assert
+      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              expect.any(Object),
+              {
+                OR: [
+                  {
+                    user: {
+                      firstName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    user: {
+                      lastName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    user: {
+                      email: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('should include status, user, client, taxCategory, address, and town in the result', async () => {
+      // arrange
+      const searchText = '';
+      const filters: SearchRegistrationRequestFiltersDto = {};
+
+      // act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // assert
+      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          include: {
+            status: true,
+            user: {
+              include: {
+                client: {
+                  include: {
+                    taxCategory: true,
+                    address: {
+                      include: {
+                        town: {
+                          select: {
+                            name: true,
+                            zipCode: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
+      );
+    });
+
+    it('should order by requestDate descending', async () => {
+      // arrange
+      const searchText = '';
+      const filters: SearchRegistrationRequestFiltersDto = {};
+
+      // act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // assert
+      expect(prismaService.registrationRequest.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: { requestDate: 'desc' },
+        }),
+      );
+    });
+  });
+
   describe('createRegistrationRequestAsync', () => {
     it('should create a new registration request', async () => {
       // Arrange
