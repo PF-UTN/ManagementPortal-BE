@@ -2,12 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
-  IsDate,
   IsInt,
   IsNotEmpty,
   IsPositive,
   MaxLength,
 } from 'class-validator';
+
+import { IsDateWithMaxYear } from '@mp/common/decorators';
 
 export class UpdateVehicleDto {
   @ApiProperty({
@@ -41,7 +42,7 @@ export class UpdateVehicleDto {
   @ApiProperty({ example: '1990-01-15', type: String, format: 'date' })
   @IsNotEmpty()
   @Type(() => Date)
-  @IsDate()
+  @IsDateWithMaxYear()
   admissionDate: Date;
 
   @ApiProperty({
