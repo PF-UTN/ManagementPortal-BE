@@ -1,13 +1,14 @@
 model Vehicle {
-    id            Int      @id @default(autoincrement())
-    licensePlate  String   @unique @db.VarChar(7)
-    brand         String   @db.VarChar(50)
-    model         String   @db.VarChar(50)
-    kmTraveled    Int
-    admissionDate DateTime
-    enabled       Boolean  @default(true)
-    deleted       Boolean  @default(false)
-    repairs       Repair[]
+    id                   Int                   @id @default(autoincrement())
+    licensePlate         String                @unique @db.VarChar(7)
+    brand                String                @db.VarChar(50)
+    model                String                @db.VarChar(50)
+    kmTraveled           Int
+    admissionDate        DateTime
+    enabled              Boolean               @default(true)
+    deleted              Boolean               @default(false)
+    repairs              Repair[]
+    maintenancePlanItems MaintenancePlanItem[]
 
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
