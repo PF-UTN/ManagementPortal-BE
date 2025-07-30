@@ -3,8 +3,8 @@ import { CartRepository } from 'libs/repository/src/services/cart/cart.repositor
 
 import { RepositoryModule } from '@mp/repository';
 
-import { RedisModule } from './../../../redis/redis.service.module';
 import { CartService } from './cart.service';
+import { RedisModule } from '../../../../libs/common/src/services/redis/redis.service.module';
 
 @Module({
   imports: [RepositoryModule, RedisModule],

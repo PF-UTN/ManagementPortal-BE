@@ -11,7 +11,7 @@ import { RegistrationRequestModule } from './controllers/registration-request/re
 import { SupplierModule } from './controllers/supplier/supplier.controller.module';
 import { TownModule } from './controllers/town/town.controller.module';
 import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
-import { RedisModule } from './redis/redis.module';
+import { RedisModule } from '../libs/common/src/services/redis/redis.module';
 
 @Module({
   imports: [

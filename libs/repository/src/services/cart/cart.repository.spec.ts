@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
+import { RedisService } from '@mp/common/services';
 import { productDetailsDtoMock } from '@mp/common/testing';
 
-import { RedisService } from './../../../../../src/redis/redis.service';
 import { CartRepository } from './cart.repository';
 describe('ProductRedisRepository', () => {
   let cartRepository: CartRepository;
@@ -23,21 +23,26 @@ describe('ProductRedisRepository', () => {
   });
 
   describe('saveProductToRedisAsync', () => {
-    it('should call setMultipleFieldsInHash with correct key and fields', async () => {
-      // Arrange
-      const product = productDetailsDtoMock
-      const spy = jest
-        .spyOn(redisService, 'setMultipleFieldsInHash')
-      // Act
-      await cartRepository.saveProductToRedisAsync(product);
+  it('should call setFieldInHash with correct key, field, and value', async () => {
+    // Arrange
+    const product = productDetailsDtoMock;
+    const spy = jest.spyOn(redisService, 'setFieldInHash');
 
-      // Assert
-      expect(spy).toHaveBeenCalledWith('product:1', {
-        name: productDetailsDtoMock.name,
-        enabled: 'true',
-        stock: productDetailsDtoMock.stock.quantityAvailable,
-        price: productDetailsDtoMock.price,
-      });
-    });
+    // Act
+    await cartRepository.saveProductToRedisAsync(product);
+
+    // Assert
+    expect(spy).toHaveBeenCalledWith(
+      'products',                    
+      String(product.id),           
+      JSON.stringify({             
+        name: product.name,
+        enabled: product.enabled,
+        stock: product.stock.quantityAvailable,
+        price: product.price,
+      })
+    );
   });
+});
+
 });
