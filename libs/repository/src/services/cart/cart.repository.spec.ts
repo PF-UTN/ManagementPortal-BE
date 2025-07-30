@@ -9,7 +9,7 @@ describe('ProductRedisRepository', () => {
   let cartRepository: CartRepository;
   let redisService: RedisService;
 
-  beforeEach(async() => {
+  beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CartRepository,
@@ -19,30 +19,39 @@ describe('ProductRedisRepository', () => {
 
     redisService = module.get<RedisService>(RedisService);
 
-    cartRepository = module.get<CartRepository>(CartRepository)
+    cartRepository = module.get<CartRepository>(CartRepository);
   });
 
   describe('saveProductToRedisAsync', () => {
-  it('should call setFieldInHash with correct key, field, and value', async () => {
-    // Arrange
-    const product = productDetailsDtoMock;
-    const spy = jest.spyOn(redisService, 'setFieldInHash');
+    it('should call setFieldInHash with correct key, field, and value', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setFieldInHash');
 
-    // Act
-    await cartRepository.saveProductToRedisAsync(product);
+      // Act
+      await cartRepository.saveProductToRedisAsync(product);
 
-    // Assert
-    expect(spy).toHaveBeenCalledWith(
-      'products',                    
-      String(product.id),           
-      JSON.stringify({             
-        name: product.name,
-        enabled: product.enabled,
-        stock: product.stock.quantityAvailable,
-        price: product.price,
-      })
-    );
+      // Assert
+      expect(spy).toHaveBeenCalledWith(
+        'products',
+        String(product.id),
+        JSON.stringify({
+          name: product.name,
+          enabled: product.enabled,
+          stock: product.stock.quantityAvailable,
+          price: product.price,
+        }),
+      );
+    });
+    it('should set expiration on products hash', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await cartRepository.saveProductToRedisAsync(product);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', 5400);
+    });
   });
-});
-
 });

@@ -20,5 +20,6 @@ export class CartRepository {
       product.id.toString(),
       JSON.stringify(productData), 
     );
+    await this.redisService.setKeyExpiration('products', 5400); 
   }
 }
