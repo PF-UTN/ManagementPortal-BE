@@ -1,0 +1,5 @@
+model MaintenanceItem {
+    id          Int    @id @default(autoincrement())
+    description String @db.VarChar(500)
+    maintenancePlanItems MaintenancePlanItem[]
+}

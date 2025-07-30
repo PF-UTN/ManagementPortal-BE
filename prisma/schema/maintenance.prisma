@@ -1,0 +1,9 @@
+model Maintenance {
+    id                    Int                 @id @default(autoincrement())
+    date                  DateTime            @db.Date
+    kmPerformed           Int                 @db.Integer
+    maintenancePlanItem   MaintenancePlanItem @relation(fields: [maintenancePlanItemId], references: [id])
+    maintenancePlanItemId Int
+    serviceSupplier       ServiceSupplier     @relation(fields: [serviceSupplierId], references: [id])
+    serviceSupplierId     Int
+}
