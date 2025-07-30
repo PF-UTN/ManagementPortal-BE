@@ -28,7 +28,9 @@ export class SearchRegistrationRequestQueryHandler
         return {
           id: registrationRequest.id,
           requestDate: registrationRequest.requestDate,
-          status: statusTranslations[registrationRequest.status.code] || registrationRequest.status.code,
+          status:
+            statusTranslations[registrationRequest.status.code] ||
+            registrationRequest.status.code,
           user: {
             fullNameOrBusinessName: `${registrationRequest.user.firstName} ${registrationRequest.user.lastName}`,
             documentNumber: registrationRequest.user.documentNumber,
@@ -37,10 +39,13 @@ export class SearchRegistrationRequestQueryHandler
             phone: registrationRequest.user.phone,
             taxCategory: registrationRequest.user.client!.taxCategory.name,
             address: {
-              streetAddress: registrationRequest.user.client!.address.street + ' ' + registrationRequest.user.client!.address.streetNumber,
+              streetAddress:
+                registrationRequest.user.client!.address.street +
+                ' ' +
+                registrationRequest.user.client!.address.streetNumber,
               town: registrationRequest.user.client!.address.town.name,
               zipCode: registrationRequest.user.client!.address.town.zipCode,
-            }
+            },
           },
         };
       },

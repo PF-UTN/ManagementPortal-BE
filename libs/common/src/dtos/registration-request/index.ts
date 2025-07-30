@@ -1,4 +1,6 @@
 export * from './approve-registration-request.dto';
+export * from './download-registration-request.dto';
+export * from './download-registration-request.request.dto';
 export * from './registration-request-creation.dto';
 export * from './registration-request-details.dto';
 export * from './registration-request.dto';

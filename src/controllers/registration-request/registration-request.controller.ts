@@ -6,6 +6,7 @@ import {
   ParseIntPipe,
   HttpCode,
   Get,
+  StreamableFile,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -19,14 +20,17 @@ import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
   ApproveRegistrationRequestDto,
+  DownloadRegistrationRequestRequest,
   RejectRegistrationRequestDto,
   SearchRegistrationRequestRequest,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { ApproveRegistrationRequestCommand } from './command/approve-registration-request.command';
 import { RejectRegistrationRequestCommand } from './command/reject-registration-request.command';
-import { SearchRegistrationRequestQuery } from './command/search-registration-request-query';
+import { DownloadRegistrationRequestQuery } from './query/download-registration-request-query';
 import { GetRegistrationRequestByIdQuery } from './query/get-registration-request-by-id.query';
+import { SearchRegistrationRequestQuery } from './query/search-registration-request-query';
 
 @Controller('registration-request')
 export class RegistrationRequestController {
@@ -49,6 +53,33 @@ export class RegistrationRequestController {
     return this.queryBus.execute(
       new SearchRegistrationRequestQuery(searchRegistrationRequestRequest),
     );
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.RegistrationRequest.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download listed registration requests',
+    description:
+      'Download an XLSX for registration requests based on the provided filters and search text.',
+  })
+  async downloadAsync(
+    @Body()
+    downloadRegistrationRequestRequest: DownloadRegistrationRequestRequest,
+  ): Promise<StreamableFile> {
+    const registrationRequests = await this.queryBus.execute(
+      new DownloadRegistrationRequestQuery(downloadRegistrationRequestRequest),
+    );
+
+    const buffer = ExcelExportHelper.exportToExcelBuffer(registrationRequests);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Solicitudes de Registro`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Post(':id/approve')

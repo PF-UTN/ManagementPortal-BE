@@ -10,7 +10,10 @@ import { AuthenticationConfiguration } from './configuration/authentication.conf
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    exposedHeaders: ['Content-Disposition'],
+  });
 
   AuthenticationConfiguration(app);
   SwaggerConfiguration(app);

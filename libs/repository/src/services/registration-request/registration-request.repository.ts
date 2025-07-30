@@ -71,13 +71,13 @@ export class RegistrationRequestRepository {
                         select: {
                           name: true,
                           zipCode: true,
-                        }
-                      }
-                    }
-                  }
+                        },
+                      },
+                    },
+                  },
                 },
-              }
-            }
+              },
+            },
           },
         },
         skip: (page - 1) * pageSize,
@@ -130,6 +130,78 @@ export class RegistrationRequestRepository {
     ]);
 
     return { data, total };
+  }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchRegistrationRequestFiltersDto,
+  ) {
+    return await this.prisma.registrationRequest.findMany({
+      where: {
+        AND: [
+          filters.status?.length
+            ? {
+                status: {
+                  is: {
+                    code: { in: filters.status },
+                  },
+                },
+              }
+            : {},
+          {
+            OR: [
+              {
+                user: {
+                  firstName: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              {
+                user: {
+                  lastName: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              {
+                user: {
+                  email: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      include: {
+        status: true,
+        user: {
+          include: {
+            client: {
+              include: {
+                taxCategory: true,
+                address: {
+                  include: {
+                    town: {
+                      select: {
+                        name: true,
+                        zipCode: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { requestDate: 'desc' },
+    });
   }
 
   async createRegistrationRequestAsync(

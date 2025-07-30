@@ -19,6 +19,7 @@
     "@mp/common/models": "<rootDir>/../libs/common/src/models",    
     "@mp/common/guards": "<rootDir>/../libs/common/src/guards", 
     "@mp/common/decorators": "<rootDir>/../libs/common/src/decorators",
-    "@mp/common/testing": "<rootDir>/../libs/common/src/testing"
+    "@mp/common/testing": "<rootDir>/../libs/common/src/testing",
+    "@mp/common/helpers": "<rootDir>/../libs/common/src/helpers",
   }
 }
