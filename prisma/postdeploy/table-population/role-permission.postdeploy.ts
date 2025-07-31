@@ -32,6 +32,14 @@ export const rolePermissionPostDeployAsync = async () => {
     { roleId: 1, permissionId: 26 },
     { roleId: 1, permissionId: 27 },
     { roleId: 1, permissionId: 28 },
+    { roleId: 1, permissionId: 29 },
+    { roleId: 1, permissionId: 30 },
+    { roleId: 1, permissionId: 31 },
+    { roleId: 1, permissionId: 32 },
+    { roleId: 2, permissionId: 29 },
+    { roleId: 2, permissionId: 30 },
+    { roleId: 2, permissionId: 31 },
+    { roleId: 2, permissionId: 32 },
   ];
 
   await mergeTableData('RolePermission', sourceData, [

@@ -16,6 +16,13 @@ export class RedisService {
     await this.redisClient.hSet(key, field, value);
   }
 
+  async setMultipleFieldsInHash(
+    key: string,
+    fields: Record<string, string | number>,
+  ): Promise<void> {
+    await this.redisClient.hSet(key, fields);
+  }
+
   async getFieldValue(key: string, field: string): Promise<string | null> {
     return await this.redisClient.hGet(key, field);
   }

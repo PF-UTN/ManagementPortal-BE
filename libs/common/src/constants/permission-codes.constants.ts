@@ -41,4 +41,10 @@ export const PermissionCodes = {
     UPDATE: 'purchase-order:update',
     DELETE: 'purchase-order:delete',
   },
+  Cart: {
+    READ: 'cart:read',
+    CREATE: 'cart:create',
+    UPDATE: 'cart:update',
+    DELETE: 'cart:delete',
+  },
 };
