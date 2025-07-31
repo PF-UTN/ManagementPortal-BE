@@ -19,6 +19,7 @@ const commandHandlers = [
 
 @Module({
   imports: [ProductServiceModule],
+  exports: [ProductServiceModule],
   controllers: [ProductController],
   providers: [...queryHandlers, ...commandHandlers],
 })

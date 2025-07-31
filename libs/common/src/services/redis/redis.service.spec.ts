@@ -35,10 +35,23 @@ describe('RedisService', () => {
       const spy = jest.spyOn(redisClientMock, 'hSet');
 
       // Act
-      await service.setFieldInHash (key, value.productId, value.quantity);
+      await service.setFieldInHash(key, value.productId, value.quantity);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(key, value.productId, value.quantity);
+    });
+    it('should call hSet with correct key and fields flattened', async () => {
+      const hSetSpy = jest.spyOn(redisClientMock, 'hSet');
+      const key = 'product:123';
+      const fields = {
+        name: 'Zapatilla',
+        price: 19999,
+        stockAvailable: 20,
+      };
+
+      await service.setMultipleFieldsInHash(key, fields);
+
+      expect(hSetSpy).toHaveBeenCalledWith(key, fields);
     });
   });
   describe('getFieldValue', () => {
