@@ -16,4 +16,11 @@ export class PurchaseOrderItemRepository {
       data,
     });
   }
+
+  async findByPurchaseOrderIdAsync(orderId: number) {
+    return this.prisma.purchaseOrderItem.findMany({
+      where: { purchaseOrderId: orderId },
+      include: { product: true },
+    });
+  }
 }
