@@ -4,8 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { PurchaseOrderStatusId } from '@mp/common/constants';
-import { PurchaseOrderCreationDto } from '@mp/common/dtos';
+import {
+  PurchaseOrderStatusId,
+  purchaseOrderStatusTranslations,
+} from '@mp/common/constants';
+import {
+  PurchaseOrderCreationDto,
+  PurchaseOrderDetailsDto,
+  PurchaseOrderItemDetailsDto,
+} from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
   ProductRepository,
@@ -70,5 +77,50 @@ export class PurchaseOrderService {
         tx,
       );
     });
+  }
+
+  async findPurchaseOrderByIdAsync(id: number): Promise<PurchaseOrderDetailsDto> {
+    const purchaseOrder =
+      await this.purchaseOrderRepository.findByIdWithSupplierAndStatusAsync(id);
+    if (!purchaseOrder) {
+      throw new NotFoundException('Purchase order not found');
+    }
+
+    const items =
+      await this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(id);
+
+    const itemDtos: PurchaseOrderItemDetailsDto[] = items.map((item) => ({
+      id: item.id,
+      productId: item.productId,
+      productName: item.product.name,
+      unitPrice: Number(item.unitPrice),
+      quantity: item.quantity,
+      subtotalPrice: Number(item.unitPrice) * item.quantity,
+    }));
+
+    const totalAmount = itemDtos.reduce(
+      (sum, item) => sum + item.subtotalPrice,
+      0,
+    );
+
+    const orderDto: PurchaseOrderDetailsDto = {
+      id: purchaseOrder.id,
+      createdAt: purchaseOrder.createdAt,
+      estimatedDeliveryDate: purchaseOrder.estimatedDeliveryDate,
+      effectiveDeliveryDate: purchaseOrder.effectiveDeliveryDate,
+      observation: purchaseOrder.observation,
+      totalAmount,
+      status: {
+        id: purchaseOrder.purchaseOrderStatus.id,
+        name:
+          purchaseOrderStatusTranslations[
+            purchaseOrder.purchaseOrderStatus.name
+          ] || purchaseOrder.purchaseOrderStatus.name,
+      },
+      supplier: purchaseOrder.supplier.businessName,
+      purchaseOrderItems: itemDtos,
+    };
+
+    return orderDto;
   }
 }
