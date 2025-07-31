@@ -86,4 +86,86 @@ describe('PurchaseOrderRepository', () => {
       });
     });
   });
+  describe('searchWithFiltersAsync', () => {
+    it('should return filtered purchase orders with pagination', async () => {
+      // Arrange
+      const filters = {
+        statusId: [1, 2],
+        fromDate: '2023-01-01',
+        toDate: '2023-12-31',
+        fromDeliveryDate: '2023-06-01',
+        toDeliveryDate: '2023-06-30',
+      };
+
+      const page = 1;
+      const pageSize = 10;
+      const searchText = 'Test Supplier';
+
+      const mockData = [purchaseOrder];
+      const mockTotal = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findMany')
+        .mockResolvedValueOnce(mockData);
+      jest
+        .spyOn(prismaService.purchaseOrder, 'count')
+        .mockResolvedValueOnce(mockTotal);
+
+      // Act
+      const result = await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+      );
+
+      // Assert
+      expect(prismaService.purchaseOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              { purchaseOrderStatusId: { in: filters.statusId } },
+              { createdAt: { gte: new Date(filters.fromDate) } },
+              { createdAt: { lte: new Date(filters.toDate) } },
+              {
+                effectiveDeliveryDate: {
+                  gte: new Date(filters.fromDeliveryDate),
+                },
+              },
+              {
+                effectiveDeliveryDate: {
+                  lte: new Date(filters.toDeliveryDate),
+                },
+              },
+              {
+                OR: expect.arrayContaining([
+                  {
+                    supplier: {
+                      businessName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ]),
+              },
+            ]),
+          }),
+          skip: 0,
+          take: 10,
+        }),
+      );
+
+      expect(prismaService.purchaseOrder.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.any(Object),
+        }),
+      );
+
+      expect(result).toEqual({
+        data: mockData,
+        total: mockTotal,
+      });
+    });
+  });
 });
