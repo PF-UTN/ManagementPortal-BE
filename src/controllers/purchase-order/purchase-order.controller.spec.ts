@@ -9,6 +9,7 @@ import {
 } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
+import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 
@@ -89,7 +90,7 @@ describe('PurchaseOrderController', () => {
           {
             id: 1,
             productId: 1,
-            productName: 'Test Product',
+            productName: 'Test PurchaseOrder',
             unitPrice: 10.0,
             quantity: 10,
             subtotalPrice: 100.0,
@@ -108,6 +109,20 @@ describe('PurchaseOrderController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+
+  describe('deletePurchaseOrderAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new DeletePurchaseOrderCommand(1);
+
+      // Act
+      await controller.deletePurchaseOrderAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });
