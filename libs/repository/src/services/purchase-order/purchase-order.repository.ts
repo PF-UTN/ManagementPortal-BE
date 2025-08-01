@@ -28,6 +28,15 @@ export class PurchaseOrderRepository {
     });
   }
 
+  async findByIdAsync(id: number) {
+    return this.prisma.purchaseOrder.findUnique({
+      where: {
+        id,
+        purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+      },
+    });
+  }
+
   async existsAsync(id: number): Promise<boolean> {
     const purchaseOrder = await this.prisma.purchaseOrder.findFirst({
       select: { id: true },

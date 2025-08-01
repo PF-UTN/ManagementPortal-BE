@@ -126,6 +126,42 @@ describe('PurchaseOrderRepository', () => {
     });
   });
 
+  describe('findByIdAsync', () => {
+    it('should return a purchase order by id', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findUnique')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      const result = await repository.findByIdAsync(purchaseOrderId);
+
+      // Assert
+      expect(result).toEqual(purchaseOrder);
+    });
+
+    it('should call prisma.purchaseOrder.findUnique with correct id', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findUnique')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      await repository.findByIdAsync(purchaseOrderId);
+
+      // Assert
+      expect(prismaService.purchaseOrder.findUnique).toHaveBeenCalledWith({
+        where: {
+          id: purchaseOrderId,
+          purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+        },
+      });
+    });
+  });
+
   describe('existsAsync', () => {
     it('should return true if purchase order exists', async () => {
       // Arrange
