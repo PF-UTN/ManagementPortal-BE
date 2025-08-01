@@ -22,7 +22,7 @@ export class PurchaseOrderRepository {
     return this.prisma.purchaseOrder.findUnique({
       where: {
         id,
-        purchaseOrderStatusId: { not: PurchaseOrderStatusId.Rejected },
+        purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
       },
       include: { supplier: true, purchaseOrderStatus: true },
     });
@@ -34,7 +34,7 @@ export class PurchaseOrderRepository {
       where: {
         AND: [
           { id: id },
-          { purchaseOrderStatusId: { not: PurchaseOrderStatusId.Rejected } },
+          { purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted } },
         ],
       },
     });
@@ -44,7 +44,7 @@ export class PurchaseOrderRepository {
   async deletePurchaseOrderAsync(id: number) {
     return this.prisma.purchaseOrder.update({
       where: { id },
-      data: { purchaseOrderStatusId: PurchaseOrderStatusId.Rejected },
+      data: { purchaseOrderStatusId: PurchaseOrderStatusId.Deleted },
     });
   }
 }

@@ -119,7 +119,7 @@ describe('PurchaseOrderRepository', () => {
       expect(prismaService.purchaseOrder.findUnique).toHaveBeenCalledWith({
         where: {
           id: purchaseOrderId,
-          purchaseOrderStatusId: { not: PurchaseOrderStatusId.Rejected },
+          purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
         },
         include: { supplier: true, purchaseOrderStatus: true },
       });
@@ -157,7 +157,7 @@ describe('PurchaseOrderRepository', () => {
   });
 
   describe('deletePurchaseOrderAsync', () => {
-    it('should update an existing purchase order status to rejected', async () => {
+    it('should update an existing purchase order status to deleted', async () => {
       // Arrange
       const purchaseOrderId = 1;
 
