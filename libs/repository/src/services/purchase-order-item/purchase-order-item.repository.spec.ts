@@ -86,4 +86,38 @@ describe('PurchaseOrderItemRepository', () => {
       });
     });
   });
+
+  describe('findByPurchaseOrderIdAsync', () => {
+    it('should return purchase order items for the given purchase order ID', async () => {
+      // Arrange
+      const orderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrderItem, 'findMany')
+        .mockResolvedValueOnce([purchaseOrderItem]);
+
+      // Act
+      const result = await repository.findByPurchaseOrderIdAsync(orderId);
+
+      // Assert
+      expect(result).toEqual([purchaseOrderItem]);
+    });
+
+    it('should call prisma.purchaseOrderItem.findMany with correct order ID', async () => {
+      // Arrange
+      const orderId = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrderItem, 'findMany')
+        .mockResolvedValueOnce([purchaseOrderItem]);
+
+      // Act
+      await repository.findByPurchaseOrderIdAsync(orderId);
+
+      // Assert
+      expect(prismaService.purchaseOrderItem.findMany).toHaveBeenCalledWith({
+        where: { purchaseOrderId: orderId },
+        include: { product: true },
+      });
+    });
+  });
 });

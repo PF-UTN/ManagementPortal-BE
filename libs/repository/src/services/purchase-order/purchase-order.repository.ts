@@ -16,4 +16,11 @@ export class PurchaseOrderRepository {
     const client = tx ?? this.prisma;
     return client.purchaseOrder.create({ data });
   }
+
+  async findByIdWithSupplierAndStatusAsync(id: number) {
+    return this.prisma.purchaseOrder.findUnique({
+      where: { id },
+      include: { supplier: true, purchaseOrderStatus: true },
+    });
+  }
 }
