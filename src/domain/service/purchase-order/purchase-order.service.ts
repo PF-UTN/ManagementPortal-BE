@@ -127,12 +127,20 @@ export class PurchaseOrderService {
   }
 
   async deletePurchaseOrderAsync(id: number) {
-    const existsPurchaseOrder =
-      await this.purchaseOrderRepository.existsAsync(id);
+    const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
 
-    if (!existsPurchaseOrder) {
+    if (!purchaseOrder) {
       throw new NotFoundException(
         `Purchase order with id ${id} does not exist.`,
+      );
+    }
+
+    if (
+      purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Ordered ||
+      purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Received
+    ) {
+      throw new BadRequestException(
+        `Purchase order with id ${id} cannot be deleted because it is in an active state.`,
       );
     }
 
