@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from '@prisma/client';
+import { Prisma, PurchaseOrder } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { PurchaseOrderStatusId } from '@mp/common/constants';
@@ -348,6 +348,40 @@ describe('PurchaseOrderService', () => {
 
       // Assert
       expect(result).toEqual(purchaseOrderDetailsDtoMockWithTranslations);
+    });
+  });
+
+  describe('deletePurchaseOrderAsync', () => {
+    it('should throw NotFoundException if purchase order does not exist', async () => {
+      // Arrange
+      const id = 999;
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(service.deletePurchaseOrderAsync(id)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should call purchaseOrderRepository.deletePurchaseOrderAsync with the correct id', async () => {
+      // Arrange
+      const id = 1;
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(purchaseOrderRepository, 'deletePurchaseOrderAsync')
+        .mockResolvedValueOnce({} as PurchaseOrder);
+
+      // Act
+      await service.deletePurchaseOrderAsync(id);
+
+      // Assert
+      expect(
+        purchaseOrderRepository.deletePurchaseOrderAsync,
+      ).toHaveBeenCalledWith(id);
     });
   });
 });

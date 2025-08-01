@@ -79,7 +79,9 @@ export class PurchaseOrderService {
     });
   }
 
-  async findPurchaseOrderByIdAsync(id: number): Promise<PurchaseOrderDetailsDto> {
+  async findPurchaseOrderByIdAsync(
+    id: number,
+  ): Promise<PurchaseOrderDetailsDto> {
     const purchaseOrder =
       await this.purchaseOrderRepository.findByIdWithSupplierAndStatusAsync(id);
     if (!purchaseOrder) {
@@ -122,5 +124,18 @@ export class PurchaseOrderService {
     };
 
     return orderDto;
+  }
+
+  async deletePurchaseOrderAsync(id: number) {
+    const existsPurchaseOrder =
+      await this.purchaseOrderRepository.existsAsync(id);
+
+    if (!existsPurchaseOrder) {
+      throw new NotFoundException(
+        `Purchase order with id ${id} does not exist.`,
+      );
+    }
+
+    return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
   }
 }
