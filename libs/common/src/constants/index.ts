@@ -7,4 +7,5 @@ export * from './order-direction.constants';
 export * from './product-order-field.constants';
 export * from './purchase-order-status.constant';
 export * from './registration-request-status-translations.constant';
+export * from './purchase-order-status-translations.constant';
 export * from './purchase-order-field.constants';

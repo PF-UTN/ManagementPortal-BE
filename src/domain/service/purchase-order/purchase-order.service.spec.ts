@@ -11,6 +11,7 @@ import {
 import {
   PurchaseOrderCreationDto,
   SearchPurchaseOrderFiltersDto,
+  PurchaseOrderDetailsDto,
 } from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
@@ -243,6 +244,116 @@ describe('PurchaseOrderService', () => {
         ],
         txMock,
       );
+    });
+  });
+
+  describe('findPurchaseOrderByIdAsync', () => {
+    it('should throw NotFoundException if purchase order does not exist', async () => {
+      // Arrange
+      const id = 999;
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdWithSupplierAndStatusAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.findPurchaseOrderByIdAsync(id)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should return purchase order details with items', async () => {
+      // Arrange
+      const purchaseOrderItemsMock = [
+        {
+          id: 1,
+          purchaseOrderId: 1,
+          productId: 1,
+          product: {
+            id: 1,
+            name: 'Test Product',
+            supplierId: 1,
+            description: 'Test product description',
+            price: new Prisma.Decimal(10.0),
+            enabled: true,
+            weight: new Prisma.Decimal(1.0),
+            categoryId: 1,
+            deletedAt: null,
+          },
+          quantity: 10,
+          unitPrice: new Prisma.Decimal(10.0),
+          subtotalPrice: new Prisma.Decimal(100.0),
+        },
+      ];
+
+      const purchaseOrderMock = {
+        id: 1,
+        createdAt: new Date(),
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        effectiveDeliveryDate: null,
+        observation: 'Test observation',
+        totalAmount: new Prisma.Decimal(100.0),
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+        purchaseOrderStatus: {
+          id: PurchaseOrderStatusId.Ordered,
+          name: 'Ordered',
+        },
+        supplierId: 1,
+        supplier: {
+          id: 1,
+          businessName: 'Test Supplier',
+          documentType: 'CUIT',
+          documentNumber: '201234567890',
+          email: 'test@supplier.com',
+          phone: '1234567890',
+          addressId: 1,
+        },
+        purchaseOrderItems: purchaseOrderItemsMock.map((item) => ({
+          id: item.id,
+          productId: item.productId,
+          productName: item.product.name,
+          unitPrice: Number(item.unitPrice),
+          quantity: item.quantity,
+          subtotalPrice: Number(item.unitPrice) * item.quantity,
+        })),
+      };
+
+      const purchaseOrderDetailsDtoMock: PurchaseOrderDetailsDto = {
+        id: 1,
+        createdAt: purchaseOrderMock.createdAt,
+        estimatedDeliveryDate: purchaseOrderMock.estimatedDeliveryDate,
+        effectiveDeliveryDate: purchaseOrderMock.effectiveDeliveryDate,
+        observation: purchaseOrderMock.observation,
+        totalAmount: purchaseOrderMock.totalAmount.toNumber(),
+        status: {
+          id: PurchaseOrderStatusId.Ordered,
+          name: 'Ordered',
+        },
+        supplier: purchaseOrderMock.supplier.businessName,
+        purchaseOrderItems: purchaseOrderMock.purchaseOrderItems,
+      };
+
+      jest
+        .spyOn(purchaseOrderItemRepository, 'findByPurchaseOrderIdAsync')
+        .mockResolvedValueOnce(purchaseOrderItemsMock);
+
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdWithSupplierAndStatusAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+
+      const purchaseOrderDetailsDtoMockWithTranslations: PurchaseOrderDetailsDto =
+        {
+          ...purchaseOrderDetailsDtoMock,
+          status: {
+            id: PurchaseOrderStatusId.Ordered,
+            name: 'Ordenada',
+          },
+        };
+
+      // Act
+      const result = await service.findPurchaseOrderByIdAsync(1);
+
+      // Assert
+      expect(result).toEqual(purchaseOrderDetailsDtoMockWithTranslations);
     });
   });
   describe('searchWithFiltersAsync', () => {

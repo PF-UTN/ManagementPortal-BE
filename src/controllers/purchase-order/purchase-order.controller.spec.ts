@@ -2,11 +2,16 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
-import { PurchaseOrderCreationDto, SearchPurchaseOrderRequest } from '@mp/common/dtos';
+import { OrderDirection, PurchaseOrderField, PurchaseOrderStatusId } from '@mp/common/constants';
+import {
+  PurchaseOrderCreationDto,
+  PurchaseOrderDetailsDto,
+  SearchPurchaseOrderRequest
+} from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { PurchaseOrderController } from './purchase-order.controller';
+import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
 
 describe('PurchaseOrderController', () => {
@@ -19,6 +24,10 @@ describe('PurchaseOrderController', () => {
       controllers: [PurchaseOrderController],
       providers: [
         {
+          provide: QueryBus,
+          useValue: mockDeep(QueryBus),
+        },
+        {
           provide: CommandBus,
           useValue: mockDeep(CommandBus),
         },
@@ -29,6 +38,7 @@ describe('PurchaseOrderController', () => {
       ],
     }).compile();
 
+    queryBus = module.get<QueryBus>(QueryBus);
     commandBus = module.get<CommandBus>(CommandBus);
     queryBus = module.get<QueryBus>(QueryBus);
 
@@ -91,6 +101,47 @@ describe('PurchaseOrderController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('getPurchaseOrderByIdAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const purchaseOrderDetailsDtoMock: PurchaseOrderDetailsDto = {
+        id: 1,
+        createdAt: new Date(),
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        effectiveDeliveryDate: null,
+        observation: 'Test observation',
+        totalAmount: 100.0,
+        status: {
+          id: PurchaseOrderStatusId.Ordered,
+          name: 'Ordenada',
+        },
+        supplier: 'Test Supplier',
+        purchaseOrderItems: [
+          {
+            id: 1,
+            productId: 1,
+            productName: 'Test Product',
+            unitPrice: 10.0,
+            quantity: 10,
+            subtotalPrice: 100.0,
+          },
+        ],
+      };
+      const executeSpy = jest.spyOn(queryBus, 'execute');
+      const expectedQuery = new GetPurchaseOrderByIdQuery(
+        purchaseOrderDetailsDtoMock.id,
+      );
+
+      // Act
+      await controller.getPurchaseOrderByIdAsync(
+        purchaseOrderDetailsDtoMock.id,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
 });
