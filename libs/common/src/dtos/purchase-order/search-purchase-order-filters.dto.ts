@@ -4,6 +4,7 @@ import {
   IsDateString,
   IsNumber,
   IsOptional,
+  IsString,
 } from 'class-validator';
 
 export class SearchPurchaseOrderFiltersDto {
@@ -16,6 +17,16 @@ export class SearchPurchaseOrderFiltersDto {
   @IsArray()
   @IsNumber({}, { each: true }) 
   statusId?: number[];
+
+  @ApiProperty({
+    example: ['Supplier A', 'Supplier B'],
+    description: 'Filter by purchase order supplier business name',
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  supplierBusinessName?: string[];
 
   @ApiProperty({
     example: '2024-07-01',
@@ -42,7 +53,7 @@ export class SearchPurchaseOrderFiltersDto {
   })
   @IsOptional()
   @IsDateString()
-  fromDeliveryDate?: string;
+  fromEffectiveDeliveryDate?: string;
 
   @ApiProperty({
     example: '2024-07-20',
@@ -51,5 +62,5 @@ export class SearchPurchaseOrderFiltersDto {
   })
   @IsOptional()
   @IsDateString()
-  toDeliveryDate?: string;
+  toEffectiveDeliveryDate?: string;
 }

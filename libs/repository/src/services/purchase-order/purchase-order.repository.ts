@@ -8,46 +8,81 @@ import { PrismaService } from '../prisma.service';
 
 @Injectable()
 export class PurchaseOrderRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   async searchWithFiltersAsync(
     page: number,
     pageSize: number,
     searchText: string,
     filters: SearchPurchaseOrderFiltersDto,
+    orderBy: {
+      field: 'createdAt' | 'totalAmount';
+      direction: 'asc' | 'desc';
+    } = { field: 'createdAt', direction: 'desc' },
   ) {
+    const prismaOrderBy =
+      orderBy &&
+      ['createdAt', 'totalAmount'].includes(orderBy.field) &&
+      ['asc', 'desc'].includes(orderBy.direction)
+        ? { [orderBy.field]: orderBy.direction }
+        : { createdAt: 'desc' as const };
+
     const [data, total] = await Promise.all([
       this.prisma.purchaseOrder.findMany({
         where: {
+          NOT: {
+            purchaseOrderStatus: {
+              name: 'Rejected',
+            },
+          },
           AND: [
             filters.statusId?.length
               ? { purchaseOrderStatusId: { in: filters.statusId } }
+              : {},
+            filters.supplierBusinessName?.length
+              ? {
+                  supplier: {
+                    businessName: { in: filters.supplierBusinessName },
+                  },
+                }
               : {},
             filters.fromDate
               ? { createdAt: { gte: new Date(filters.fromDate) } }
               : {},
             filters.toDate
-              ? { createdAt: { lte: new Date(filters.toDate) } }
-              : {},
-            filters.fromDeliveryDate
               ? {
-                effectiveDeliveryDate: {
-                  gte: new Date(filters.fromDeliveryDate),
-                },
-              }
+                  createdAt: {
+                    lte: new Date(`${filters.toDate}T23:59:59.999Z`),
+                  },
+                }
               : {},
-            filters.toDeliveryDate
+            filters.fromEffectiveDeliveryDate
               ? {
-                effectiveDeliveryDate: {
-                  lte: new Date(filters.toDeliveryDate),
-                },
-              }
+                  effectiveDeliveryDate: {
+                    gte: new Date(filters.fromEffectiveDeliveryDate),
+                  },
+                }
+              : {},
+            filters.toEffectiveDeliveryDate
+              ? {
+                  effectiveDeliveryDate: {
+                    lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
+                  },
+                }
               : {},
             {
               OR: [
                 {
                   supplier: {
                     businessName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                {
+                  purchaseOrderStatus: {
+                    name: {
                       contains: searchText,
                       mode: 'insensitive',
                     },
@@ -73,32 +108,49 @@ export class PurchaseOrderRepository {
         },
         skip: (page - 1) * pageSize,
         take: pageSize,
+        orderBy: prismaOrderBy,
       }),
       this.prisma.purchaseOrder.count({
         where: {
+          NOT: {
+            purchaseOrderStatus: {
+              name: 'Rejected',
+            },
+          },
           AND: [
             filters.statusId?.length
               ? { purchaseOrderStatusId: { in: filters.statusId } }
+              : {},
+            filters.supplierBusinessName?.length
+              ? {
+                  supplier: {
+                    businessName: { in: filters.supplierBusinessName },
+                  },
+                }
               : {},
             filters.fromDate
               ? { createdAt: { gte: new Date(filters.fromDate) } }
               : {},
             filters.toDate
-              ? { createdAt: { lte: new Date(filters.toDate) } }
-              : {},
-            filters.fromDeliveryDate
               ? {
-                effectiveDeliveryDate: {
-                  gte: new Date(filters.fromDeliveryDate),
-                },
-              }
+                  createdAt: {
+                    lte: new Date(`${filters.toDate}T23:59:59.999Z`),
+                  },
+                }
               : {},
-            filters.toDeliveryDate
+            filters.fromEffectiveDeliveryDate
               ? {
-                effectiveDeliveryDate: {
-                  lte: new Date(filters.toDeliveryDate),
-                },
-              }
+                  effectiveDeliveryDate: {
+                    gte: new Date(filters.fromEffectiveDeliveryDate),
+                  },
+                }
+              : {},
+            filters.toEffectiveDeliveryDate
+              ? {
+                  effectiveDeliveryDate: {
+                    lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
+                  },
+                }
               : {},
             {
               OR: [
@@ -110,8 +162,16 @@ export class PurchaseOrderRepository {
                     },
                   },
                 },
+                {
+                  purchaseOrderStatus: {
+                    name: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
               ],
-            }
+            },
           ],
         },
       }),

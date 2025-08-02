@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { SearchPurchaseOrderQuery } from 'src/controllers/purchase-order/query/search-purchase-order.query';
 
 import { PurchaseOrderStatusId } from '@mp/common/constants';
 import { PurchaseOrderCreationDto } from '@mp/common/dtos';
@@ -70,5 +71,15 @@ export class PurchaseOrderService {
         tx,
       );
     });
+  }
+
+  async searchWithFiltersAsync(query: SearchPurchaseOrderQuery) {
+    return this.purchaseOrderRepository.searchWithFiltersAsync(
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
   }
 }

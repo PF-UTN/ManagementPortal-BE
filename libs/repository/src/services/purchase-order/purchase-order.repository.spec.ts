@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, PurchaseOrder } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
@@ -10,7 +10,26 @@ import { PurchaseOrderRepository } from './purchase-order.repository';
 describe('PurchaseOrderRepository', () => {
   let repository: PurchaseOrderRepository;
   let prismaService: PrismaService;
-  let purchaseOrder: ReturnType<typeof mockDeep<PurchaseOrder>>;
+  let purchaseOrder: ReturnType<
+    typeof mockDeep<
+      Prisma.PurchaseOrderGetPayload<{
+        include: {
+          supplier: {
+            select: {
+              id: true;
+              businessName: true;
+            };
+          };
+          purchaseOrderStatus: {
+            select: {
+              id: true;
+              name: true;
+            };
+          };
+        };
+      }>
+    >
+  >;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,7 +43,24 @@ describe('PurchaseOrderRepository', () => {
 
     repository = module.get<PurchaseOrderRepository>(PurchaseOrderRepository);
 
-    purchaseOrder = mockDeep<PurchaseOrder>();
+    purchaseOrder = mockDeep<
+      Prisma.PurchaseOrderGetPayload<{
+        include: {
+          supplier: {
+            select: {
+              id: true;
+              businessName: true;
+            };
+          };
+          purchaseOrderStatus: {
+            select: {
+              id: true;
+              name: true;
+            };
+          };
+        };
+      }>
+    >();
 
     purchaseOrder.id = 1;
     purchaseOrder.estimatedDeliveryDate = mockDeep<Date>(
@@ -86,55 +122,68 @@ describe('PurchaseOrderRepository', () => {
       });
     });
   });
-  describe('searchWithFiltersAsync', () => {
-    it('should return filtered purchase orders with pagination', async () => {
-      // Arrange
-      const filters = {
-        statusId: [1, 2],
-        fromDate: '2023-01-01',
-        toDate: '2023-12-31',
-        fromDeliveryDate: '2023-06-01',
-        toDeliveryDate: '2023-06-30',
-      };
+    describe('searchWithFiltersAsync', () => {
+    const filters = {
+      statusId: [1, 2],
+      supplierBusinessName: ['Supplier A', 'Supplier B'],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+      fromEffectiveDeliveryDate: '2023-06-01',
+      toEffectiveDeliveryDate: '2023-06-30',
+    };
 
-      const page = 1;
-      const pageSize = 10;
-      const searchText = 'Test Supplier';
+    const page = 1;
+    const pageSize = 10;
+    const searchText = 'Test Supplier';
 
-      const mockData = [purchaseOrder];
-      const mockTotal = 1;
+    const orderBy = {
+      field: 'createdAt' as const,
+      direction: 'desc' as const,
+    };
 
+    const mockData = [purchaseOrder];
+    const mockTotal = 1;
+
+    beforeEach(() => {
       jest
         .spyOn(prismaService.purchaseOrder, 'findMany')
-        .mockResolvedValueOnce(mockData);
+        .mockResolvedValue(mockData);
       jest
         .spyOn(prismaService.purchaseOrder, 'count')
-        .mockResolvedValueOnce(mockTotal);
+        .mockResolvedValue(mockTotal);
+    });
 
+    it('should call prisma.purchaseOrder.findMany with correct filters, pagination and order', async () => {
       // Act
-      const result = await repository.searchWithFiltersAsync(
+      await repository.searchWithFiltersAsync(
         page,
         pageSize,
         searchText,
         filters,
+        orderBy,
       );
 
       // Assert
       expect(prismaService.purchaseOrder.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
+            NOT: {
+              purchaseOrderStatus: {
+                name: 'Rejected',
+              },
+            },
             AND: expect.arrayContaining([
               { purchaseOrderStatusId: { in: filters.statusId } },
               { createdAt: { gte: new Date(filters.fromDate) } },
-              { createdAt: { lte: new Date(filters.toDate) } },
+              { createdAt: { lte: new Date(`${filters.toDate}T23:59:59.999Z`) } },
               {
                 effectiveDeliveryDate: {
-                  gte: new Date(filters.fromDeliveryDate),
+                  gte: new Date(filters.fromEffectiveDeliveryDate),
                 },
               },
               {
                 effectiveDeliveryDate: {
-                  lte: new Date(filters.toDeliveryDate),
+                  lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
                 },
               },
               {
@@ -147,25 +196,59 @@ describe('PurchaseOrderRepository', () => {
                       },
                     },
                   },
+                  {
+                    purchaseOrderStatus: {
+                      name: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
                 ]),
               },
             ]),
           }),
+          orderBy: { createdAt: 'desc' }, 
           skip: 0,
           take: 10,
         }),
       );
+    });
 
+    it('should call prisma.purchaseOrder.count with same filters', async () => {
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
       expect(prismaService.purchaseOrder.count).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.any(Object),
         }),
       );
+    });
 
+    it('should return data and total from prisma results', async () => {
+      // Act
+      const result = await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
       expect(result).toEqual({
         data: mockData,
         total: mockTotal,
       });
     });
   });
+
 });
