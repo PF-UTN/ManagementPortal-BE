@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { SearchPurchaseOrderFiltersDto } from 'libs/common/src/dtos/purchase-order/search-purchase-order-filters.dto';
 
+import { SearchPurchaseOrderFiltersDto } from '@mp/common/dtos';
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';

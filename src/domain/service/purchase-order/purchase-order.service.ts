@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SearchPurchaseOrderQuery } from 'src/controllers/purchase-order/query/search-purchase-order.query';
 
 import { PurchaseOrderStatusId } from '@mp/common/constants';
 import { PurchaseOrderCreationDto } from '@mp/common/dtos';
@@ -13,6 +12,8 @@ import {
   PurchaseOrderItemRepository,
   PurchaseOrderRepository,
 } from '@mp/repository';
+
+import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
 
 @Injectable()
 export class PurchaseOrderService {
