@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -17,9 +18,13 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { PurchaseOrderCreationDto, SearchPurchaseOrderRequest } from '@mp/common/dtos';
+import {
+  PurchaseOrderCreationDto,
+  SearchPurchaseOrderRequest,
+} from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
+import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
 @Controller('purchase-order')
@@ -66,7 +71,8 @@ export class PurchaseOrderController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Search purchase orders',
-    description: 'Search for purchase orders based on the provided filters and search text.',
+    description:
+      'Search for purchase orders based on the provided filters and search text.',
   })
   async searchPurchaseOrdersAsync(
     @Body() searchPurchaseOrderDto: SearchPurchaseOrderRequest,
@@ -74,5 +80,21 @@ export class PurchaseOrderController {
     return this.queryBus.execute(
       new SearchPurchaseOrderQuery(searchPurchaseOrderDto),
     );
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.PurchaseOrder.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a purchase order',
+    description: 'Delete the purchase order with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the purchase order to delete',
+  })
+  deletePurchaseOrderAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new DeletePurchaseOrderCommand(id));
   }
 }

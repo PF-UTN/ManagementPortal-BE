@@ -1,6 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from '@prisma/client';
+import { Prisma, PurchaseOrder } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import {
@@ -356,6 +356,7 @@ describe('PurchaseOrderService', () => {
       expect(result).toEqual(purchaseOrderDetailsDtoMockWithTranslations);
     });
   });
+  
   describe('searchWithFiltersAsync', () => {
     it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
       // Arrange
@@ -395,6 +396,106 @@ describe('PurchaseOrderService', () => {
         query.filters,
         query.orderBy,
       );
+    });
+  });
+
+  describe('deletePurchaseOrderAsync', () => {
+    it('should throw NotFoundException if purchase order does not exist', async () => {
+      // Arrange
+      const id = 999;
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.deletePurchaseOrderAsync(id)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException if purchase order is in Ordered status', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderMock: PurchaseOrder = {
+        id,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        totalAmount: new Prisma.Decimal(100.0),
+        createdAt: new Date(),
+        effectiveDeliveryDate: null,
+      };
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(purchaseOrderRepository, 'deletePurchaseOrderAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+      // Act & Assert
+      await expect(service.deletePurchaseOrderAsync(id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw BadRequestException if purchase order is in Received status', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderMock: PurchaseOrder = {
+        id,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Received,
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        totalAmount: new Prisma.Decimal(100.0),
+        createdAt: new Date(),
+        effectiveDeliveryDate: null,
+      };
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(purchaseOrderRepository, 'deletePurchaseOrderAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+      // Act & Assert
+      await expect(service.deletePurchaseOrderAsync(id)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should call purchaseOrderRepository.deletePurchaseOrderAsync with the correct id', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderMock: PurchaseOrder = {
+        id,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        totalAmount: new Prisma.Decimal(100.0),
+        createdAt: new Date(),
+        effectiveDeliveryDate: null,
+      };
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+      jest
+        .spyOn(purchaseOrderRepository, 'deletePurchaseOrderAsync')
+        .mockResolvedValueOnce({} as PurchaseOrder);
+
+      // Act
+      await service.deletePurchaseOrderAsync(id);
+
+      // Assert
+      expect(
+        purchaseOrderRepository.deletePurchaseOrderAsync,
+      ).toHaveBeenCalledWith(id);
     });
   });
 });

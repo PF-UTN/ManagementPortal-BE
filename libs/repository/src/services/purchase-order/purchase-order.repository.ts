@@ -2,9 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 
-import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
-import { SearchPurchaseOrderFiltersDto } from '@mp/common/dtos';
-import { PurchaseOrderDataDto } from '@mp/common/dtos';
+import {
+  OrderDirection,
+  PurchaseOrderField,
+  PurchaseOrderStatusId,
+} from '@mp/common/constants';
+import {
+  SearchPurchaseOrderFiltersDto,
+  PurchaseOrderDataDto,
+} from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 
@@ -20,11 +26,16 @@ export class PurchaseOrderRepository {
     orderBy: {
       field: PurchaseOrderField.CREATED_AT | PurchaseOrderField.TOTAL_AMOUNT;
       direction: OrderDirection.ASC | OrderDirection.DESC;
-    } = { field: PurchaseOrderField.CREATED_AT, direction: OrderDirection.DESC },
+    } = {
+      field: PurchaseOrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    },
   ) {
     const prismaOrderBy =
       orderBy &&
-      [PurchaseOrderField.CREATED_AT, PurchaseOrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
+      [PurchaseOrderField.CREATED_AT, PurchaseOrderField.TOTAL_AMOUNT].includes(
+        orderBy.field,
+      ) &&
       [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
@@ -191,8 +202,40 @@ export class PurchaseOrderRepository {
 
   async findByIdWithSupplierAndStatusAsync(id: number) {
     return this.prisma.purchaseOrder.findUnique({
-      where: { id },
+      where: {
+        id,
+        purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+      },
       include: { supplier: true, purchaseOrderStatus: true },
+    });
+  }
+
+  async findByIdAsync(id: number) {
+    return this.prisma.purchaseOrder.findUnique({
+      where: {
+        id,
+        purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+      },
+    });
+  }
+
+  async existsAsync(id: number): Promise<boolean> {
+    const purchaseOrder = await this.prisma.purchaseOrder.findFirst({
+      select: { id: true },
+      where: {
+        AND: [
+          { id: id },
+          { purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted } },
+        ],
+      },
+    });
+    return !!purchaseOrder;
+  }
+
+  async deletePurchaseOrderAsync(id: number) {
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { purchaseOrderStatusId: PurchaseOrderStatusId.Deleted },
     });
   }
 }

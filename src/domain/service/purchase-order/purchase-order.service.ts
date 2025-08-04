@@ -81,7 +81,9 @@ export class PurchaseOrderService {
     });
   }
 
-  async findPurchaseOrderByIdAsync(id: number): Promise<PurchaseOrderDetailsDto> {
+  async findPurchaseOrderByIdAsync(
+    id: number,
+  ): Promise<PurchaseOrderDetailsDto> {
     const purchaseOrder =
       await this.purchaseOrderRepository.findByIdWithSupplierAndStatusAsync(id);
     if (!purchaseOrder) {
@@ -134,5 +136,26 @@ export class PurchaseOrderService {
       query.filters,
       query.orderBy,
     );
+  }
+
+  async deletePurchaseOrderAsync(id: number) {
+    const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
+
+    if (!purchaseOrder) {
+      throw new NotFoundException(
+        `Purchase order with id ${id} does not exist.`,
+      );
+    }
+
+    if (
+      purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Ordered ||
+      purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Received
+    ) {
+      throw new BadRequestException(
+        `Purchase order with id ${id} cannot be deleted because it is in an active state.`,
+      );
+    }
+
+    return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
   }
 }

@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
+import {
+  OrderDirection,
+  PurchaseOrderField,
+  PurchaseOrderStatusId,
+} from '@mp/common/constants';
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -154,12 +158,15 @@ describe('PurchaseOrderRepository', () => {
 
       // Assert
       expect(prismaService.purchaseOrder.findUnique).toHaveBeenCalledWith({
-        where: { id: purchaseOrderId },
+        where: {
+          id: purchaseOrderId,
+          purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+        },
         include: { supplier: true, purchaseOrderStatus: true },
       });
     });
   });
-    describe('searchWithFiltersAsync', () => {
+  describe('searchWithFiltersAsync', () => {
     const filters = {
       statusId: [1, 2],
       supplierBusinessName: ['Supplier A', 'Supplier B'],
@@ -245,7 +252,7 @@ describe('PurchaseOrderRepository', () => {
               },
             ]),
           }),
-          orderBy: { createdAt: 'desc' }, 
+          orderBy: { createdAt: 'desc' },
           skip: 0,
           take: 10,
         }),
@@ -288,4 +295,87 @@ describe('PurchaseOrderRepository', () => {
     });
   });
 
+  describe('findByIdAsync', () => {
+    it('should return a purchase order by id', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findUnique')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      const result = await repository.findByIdAsync(purchaseOrderId);
+
+      // Assert
+      expect(result).toEqual(purchaseOrder);
+    });
+
+    it('should call prisma.purchaseOrder.findUnique with correct id', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findUnique')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      await repository.findByIdAsync(purchaseOrderId);
+
+      // Assert
+      expect(prismaService.purchaseOrder.findUnique).toHaveBeenCalledWith({
+        where: {
+          id: purchaseOrderId,
+          purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+        },
+      });
+    });
+  });
+
+  describe('existsAsync', () => {
+    it('should return true if purchase order exists', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findFirst')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      const exists = await repository.existsAsync(purchaseOrderId);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if purchase order does not exist', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findFirst')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const exists = await repository.existsAsync(purchaseOrderId);
+
+      // Assert
+      expect(exists).toBe(false);
+    });
+  });
+
+  describe('deletePurchaseOrderAsync', () => {
+    it('should update an existing purchase order status to deleted', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrder, 'update')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      const updatedPurchaseOrder =
+        await repository.deletePurchaseOrderAsync(purchaseOrderId);
+
+      // Assert
+      expect(updatedPurchaseOrder).toEqual(purchaseOrder);
+    });
+  });
 });
