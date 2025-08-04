@@ -1,7 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
+import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -172,8 +174,8 @@ describe('PurchaseOrderRepository', () => {
     const searchText = 'Test Supplier';
 
     const orderBy = {
-      field: 'createdAt' as const,
-      direction: 'desc' as const,
+      field: PurchaseOrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
     };
 
     const mockData = [purchaseOrder];
@@ -210,7 +212,7 @@ describe('PurchaseOrderRepository', () => {
             AND: expect.arrayContaining([
               { purchaseOrderStatusId: { in: filters.statusId } },
               { createdAt: { gte: new Date(filters.fromDate) } },
-              { createdAt: { lte: new Date(`${filters.toDate}T23:59:59.999Z`) } },
+              { createdAt: { lte: endOfDay(parseISO(filters.toDate)) } },
               {
                 effectiveDeliveryDate: {
                   gte: new Date(filters.fromEffectiveDeliveryDate),
@@ -218,7 +220,7 @@ describe('PurchaseOrderRepository', () => {
               },
               {
                 effectiveDeliveryDate: {
-                  lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
+                  lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
                 },
               },
               {

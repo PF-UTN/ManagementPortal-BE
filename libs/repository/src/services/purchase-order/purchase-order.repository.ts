@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 
+import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
 import { SearchPurchaseOrderFiltersDto } from '@mp/common/dtos';
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
 
@@ -16,14 +18,14 @@ export class PurchaseOrderRepository {
     searchText: string,
     filters: SearchPurchaseOrderFiltersDto,
     orderBy: {
-      field: 'createdAt' | 'totalAmount';
-      direction: 'asc' | 'desc';
-    } = { field: 'createdAt', direction: 'desc' },
+      field: PurchaseOrderField.CREATED_AT | PurchaseOrderField.TOTAL_AMOUNT;
+      direction: OrderDirection.ASC | OrderDirection.DESC;
+    } = { field: PurchaseOrderField.CREATED_AT, direction: OrderDirection.DESC },
   ) {
     const prismaOrderBy =
       orderBy &&
-      ['createdAt', 'totalAmount'].includes(orderBy.field) &&
-      ['asc', 'desc'].includes(orderBy.direction)
+      [PurchaseOrderField.CREATED_AT, PurchaseOrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
+      [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
 
@@ -52,7 +54,7 @@ export class PurchaseOrderRepository {
             filters.toDate
               ? {
                   createdAt: {
-                    lte: new Date(`${filters.toDate}T23:59:59.999Z`),
+                    lte: endOfDay(parseISO(filters.toDate)),
                   },
                 }
               : {},
@@ -66,7 +68,7 @@ export class PurchaseOrderRepository {
             filters.toEffectiveDeliveryDate
               ? {
                   effectiveDeliveryDate: {
-                    lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
+                    lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
                   },
                 }
               : {},
@@ -134,7 +136,7 @@ export class PurchaseOrderRepository {
             filters.toDate
               ? {
                   createdAt: {
-                    lte: new Date(`${filters.toDate}T23:59:59.999Z`),
+                    lte: endOfDay(parseISO(filters.toDate)),
                   },
                 }
               : {},
@@ -148,7 +150,7 @@ export class PurchaseOrderRepository {
             filters.toEffectiveDeliveryDate
               ? {
                   effectiveDeliveryDate: {
-                    lte: new Date(`${filters.toEffectiveDeliveryDate}T23:59:59.999Z`),
+                    lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
                   },
                 }
               : {},

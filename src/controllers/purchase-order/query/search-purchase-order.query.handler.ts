@@ -22,7 +22,7 @@ export class SearchPurchaseOrderQueryHandler
                 supplierBussinesName: purchaseOrder.supplier.businessName,
                 purchaseOrderStatusName: purchaseOrder.purchaseOrderStatus.name,
                 createdAt: purchaseOrder.createdAt,
-                effectiveDeliveryDate: purchaseOrder.effectiveDeliveryDate ?? new Date(0),
+                effectiveDeliveryDate: purchaseOrder.effectiveDeliveryDate ?? null,
                 totalAmount: purchaseOrder.totalAmount.toNumber(),
             };
         });

@@ -3,6 +3,6 @@ export class PurchaseOrderDto {
   supplierBussinesName: string;
   purchaseOrderStatusName: string;
   createdAt: Date;
-  effectiveDeliveryDate: Date;
+  effectiveDeliveryDate: Date | null;
   totalAmount: number;
 }
