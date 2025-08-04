@@ -17,10 +17,11 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { PurchaseOrderCreationDto } from '@mp/common/dtos';
+import { PurchaseOrderCreationDto, SearchPurchaseOrderRequest } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
+import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
 @Controller('purchase-order')
 export class PurchaseOrderController {
   constructor(
@@ -58,5 +59,20 @@ export class PurchaseOrderController {
   })
   getPurchaseOrderByIdAsync(@Param('id', ParseIntPipe) id: number) {
     return this.queryBus.execute(new GetPurchaseOrderByIdQuery(id));
+  }
+
+  @Post('search')
+  @RequiredPermissions(PermissionCodes.PurchaseOrder.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search purchase orders',
+    description: 'Search for purchase orders based on the provided filters and search text.',
+  })
+  async searchPurchaseOrdersAsync(
+    @Body() searchPurchaseOrderDto: SearchPurchaseOrderRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchPurchaseOrderQuery(searchPurchaseOrderDto),
+    );
   }
 }
