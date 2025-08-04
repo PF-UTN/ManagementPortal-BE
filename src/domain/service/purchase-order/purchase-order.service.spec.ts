@@ -3,9 +3,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, PurchaseOrder } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { PurchaseOrderStatusId } from '@mp/common/constants';
+import {
+  OrderDirection,
+  PurchaseOrderField,
+  PurchaseOrderStatusId,
+} from '@mp/common/constants';
 import {
   PurchaseOrderCreationDto,
+  SearchPurchaseOrderFiltersDto,
   PurchaseOrderDetailsDto,
 } from '@mp/common/dtos';
 import {
@@ -15,6 +20,7 @@ import {
   PurchaseOrderRepository,
 } from '@mp/repository';
 
+import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
 import { PurchaseOrderService } from './purchase-order.service';
 
 describe('PurchaseOrderService', () => {
@@ -348,6 +354,48 @@ describe('PurchaseOrderService', () => {
 
       // Assert
       expect(result).toEqual(purchaseOrderDetailsDtoMockWithTranslations);
+    });
+  });
+  
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchPurchaseOrderFiltersDto = {
+        statusId: [1, 2],
+        supplierBusinessName: ['Supplier A'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+        fromEffectiveDeliveryDate: '2025-01-15',
+        toEffectiveDeliveryDate: '2025-01-20',
+      };
+      const orderBy = {
+        field: PurchaseOrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      };
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchPurchaseOrderQuery({
+        searchText,
+        filters,
+        page,
+        pageSize,
+        orderBy,
+      });
+
+      // Act
+      await service.searchWithFiltersAsync(query);
+
+      // Assert
+      expect(
+        purchaseOrderRepository.searchWithFiltersAsync,
+      ).toHaveBeenCalledWith(
+        query.page,
+        query.pageSize,
+        query.searchText,
+        query.filters,
+        query.orderBy,
+      );
     });
   });
 

@@ -1,8 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, PurchaseOrder } from '@prisma/client';
+import { Prisma } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
-import { PurchaseOrderStatusId } from '@mp/common/constants';
+import {
+  OrderDirection,
+  PurchaseOrderField,
+  PurchaseOrderStatusId,
+} from '@mp/common/constants';
 import { PurchaseOrderDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -11,7 +16,26 @@ import { PurchaseOrderRepository } from './purchase-order.repository';
 describe('PurchaseOrderRepository', () => {
   let repository: PurchaseOrderRepository;
   let prismaService: PrismaService;
-  let purchaseOrder: ReturnType<typeof mockDeep<PurchaseOrder>>;
+  let purchaseOrder: ReturnType<
+    typeof mockDeep<
+      Prisma.PurchaseOrderGetPayload<{
+        include: {
+          supplier: {
+            select: {
+              id: true;
+              businessName: true;
+            };
+          };
+          purchaseOrderStatus: {
+            select: {
+              id: true;
+              name: true;
+            };
+          };
+        };
+      }>
+    >
+  >;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,7 +49,24 @@ describe('PurchaseOrderRepository', () => {
 
     repository = module.get<PurchaseOrderRepository>(PurchaseOrderRepository);
 
-    purchaseOrder = mockDeep<PurchaseOrder>();
+    purchaseOrder = mockDeep<
+      Prisma.PurchaseOrderGetPayload<{
+        include: {
+          supplier: {
+            select: {
+              id: true;
+              businessName: true;
+            };
+          };
+          purchaseOrderStatus: {
+            select: {
+              id: true;
+              name: true;
+            };
+          };
+        };
+      }>
+    >();
 
     purchaseOrder.id = 1;
     purchaseOrder.estimatedDeliveryDate = mockDeep<Date>(
@@ -122,6 +163,134 @@ describe('PurchaseOrderRepository', () => {
           purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
         },
         include: { supplier: true, purchaseOrderStatus: true },
+      });
+    });
+  });
+  describe('searchWithFiltersAsync', () => {
+    const filters = {
+      statusId: [1, 2],
+      supplierBusinessName: ['Supplier A', 'Supplier B'],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+      fromEffectiveDeliveryDate: '2023-06-01',
+      toEffectiveDeliveryDate: '2023-06-30',
+    };
+
+    const page = 1;
+    const pageSize = 10;
+    const searchText = 'Test Supplier';
+
+    const orderBy = {
+      field: PurchaseOrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    };
+
+    const mockData = [purchaseOrder];
+    const mockTotal = 1;
+
+    beforeEach(() => {
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findMany')
+        .mockResolvedValue(mockData);
+      jest
+        .spyOn(prismaService.purchaseOrder, 'count')
+        .mockResolvedValue(mockTotal);
+    });
+
+    it('should call prisma.purchaseOrder.findMany with correct filters, pagination and order', async () => {
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(prismaService.purchaseOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            NOT: {
+              purchaseOrderStatus: {
+                name: 'Rejected',
+              },
+            },
+            AND: expect.arrayContaining([
+              { purchaseOrderStatusId: { in: filters.statusId } },
+              { createdAt: { gte: new Date(filters.fromDate) } },
+              { createdAt: { lte: endOfDay(parseISO(filters.toDate)) } },
+              {
+                effectiveDeliveryDate: {
+                  gte: new Date(filters.fromEffectiveDeliveryDate),
+                },
+              },
+              {
+                effectiveDeliveryDate: {
+                  lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
+                },
+              },
+              {
+                OR: expect.arrayContaining([
+                  {
+                    supplier: {
+                      businessName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    purchaseOrderStatus: {
+                      name: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ]),
+              },
+            ]),
+          }),
+          orderBy: { createdAt: 'desc' },
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('should call prisma.purchaseOrder.count with same filters', async () => {
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(prismaService.purchaseOrder.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.any(Object),
+        }),
+      );
+    });
+
+    it('should return data and total from prisma results', async () => {
+      // Act
+      const result = await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(result).toEqual({
+        data: mockData,
+        total: mockTotal,
       });
     });
   });

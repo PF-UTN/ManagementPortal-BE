@@ -20,6 +20,8 @@ import {
   PurchaseOrderRepository,
 } from '@mp/repository';
 
+import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
+
 @Injectable()
 export class PurchaseOrderService {
   constructor(
@@ -124,6 +126,16 @@ export class PurchaseOrderService {
     };
 
     return orderDto;
+  }
+
+  async searchWithFiltersAsync(query: SearchPurchaseOrderQuery) {
+    return this.purchaseOrderRepository.searchWithFiltersAsync(
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
   }
 
   async deletePurchaseOrderAsync(id: number) {
