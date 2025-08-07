@@ -2,21 +2,20 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   IsArray,
   IsDateString,
-  IsNumber,
   IsOptional,
   IsString,
 } from 'class-validator';
 
 export class SearchPurchaseOrderFiltersDto {
   @ApiProperty({
-    example: [1, 2, 3],
-    description: 'Filter by purchase order status ID',
+    example: ['Cancelled','Pending'],
+    description: 'Filter by purchase order status name',
     required: false,
   })
   @IsOptional()
   @IsArray()
-  @IsNumber({}, { each: true }) 
-  statusId?: number[];
+  @IsString({ each: true })
+  statusName?: string[];
 
   @ApiProperty({
     example: ['Supplier A', 'Supplier B'],
@@ -48,19 +47,19 @@ export class SearchPurchaseOrderFiltersDto {
 
   @ApiProperty({
     example: '2024-07-05',
-    description: 'Start date for delivery date filter (inclusive)',
+    description: 'Start date for estimated delivery date filter (inclusive)',
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  fromEffectiveDeliveryDate?: string;
+  fromEstimatedDeliveryDate?: string;
 
   @ApiProperty({
     example: '2024-07-20',
-    description: 'End date for delivery date filter (inclusive)',
+    description: 'End date for estimated delivery date filter (inclusive)',
     required: false,
   })
   @IsOptional()
   @IsDateString()
-  toEffectiveDeliveryDate?: string;
+  toEstimatedDeliveryDate?: string;
 }

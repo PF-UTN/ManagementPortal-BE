@@ -161,12 +161,12 @@ describe('PurchaseOrderRepository', () => {
   });
     describe('searchWithFiltersAsync', () => {
     const filters = {
-      statusId: [1, 2],
+      statusName: ['Ordered'],
       supplierBusinessName: ['Supplier A', 'Supplier B'],
       fromDate: '2023-01-01',
       toDate: '2023-12-31',
-      fromEffectiveDeliveryDate: '2023-06-01',
-      toEffectiveDeliveryDate: '2023-06-30',
+      fromEstimatedDeliveryDate: '2023-06-01',
+      toEstimatedDeliveryDate: '2023-06-30',
     };
 
     const page = 1;
@@ -206,21 +206,21 @@ describe('PurchaseOrderRepository', () => {
           where: expect.objectContaining({
             NOT: {
               purchaseOrderStatus: {
-                name: 'Rejected',
+                name: 'Deleted',
               },
             },
             AND: expect.arrayContaining([
-              { purchaseOrderStatusId: { in: filters.statusId } },
+              { purchaseOrderStatus: { name: { in: filters.statusName } } },
               { createdAt: { gte: new Date(filters.fromDate) } },
               { createdAt: { lte: endOfDay(parseISO(filters.toDate)) } },
               {
-                effectiveDeliveryDate: {
-                  gte: new Date(filters.fromEffectiveDeliveryDate),
+                estimatedDeliveryDate: {
+                  gte: new Date(filters.fromEstimatedDeliveryDate),
                 },
               },
               {
-                effectiveDeliveryDate: {
-                  lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
+                estimatedDeliveryDate: {
+                  lte: endOfDay(parseISO(filters.toEstimatedDeliveryDate)),
                 },
               },
               {
