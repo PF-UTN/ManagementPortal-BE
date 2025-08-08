@@ -57,12 +57,12 @@ describe('PurchaseOrderController', () => {
         page: 1,
         pageSize: 10,
         filters: {
-          statusId: [1],
+          statusName: ['Ordered'],
           supplierBusinessName: ['Supplier A'],
           fromDate: '2025-01-01',
           toDate: '2025-12-31',
-          fromEffectiveDeliveryDate: '2025-01-15',
-          toEffectiveDeliveryDate: '2025-01-20',
+          fromEstimatedDeliveryDate: '2025-01-15',
+          toEstimatedDeliveryDate: '2025-01-20',
         },
         orderBy: {
           field: PurchaseOrderField.CREATED_AT,

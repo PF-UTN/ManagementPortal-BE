@@ -45,12 +45,12 @@ export class PurchaseOrderRepository {
         where: {
           NOT: {
             purchaseOrderStatus: {
-              name: 'Rejected',
+              name: 'Deleted',
             },
           },
           AND: [
-            filters.statusId?.length
-              ? { purchaseOrderStatusId: { in: filters.statusId } }
+            filters.statusName?.length
+              ? { purchaseOrderStatus: { name: { in: filters.statusName } } }
               : {},
             filters.supplierBusinessName?.length
               ? {
@@ -69,17 +69,17 @@ export class PurchaseOrderRepository {
                   },
                 }
               : {},
-            filters.fromEffectiveDeliveryDate
+            filters.fromEstimatedDeliveryDate
               ? {
-                  effectiveDeliveryDate: {
-                    gte: new Date(filters.fromEffectiveDeliveryDate),
+                  estimatedDeliveryDate: {
+                    gte: new Date(filters.fromEstimatedDeliveryDate),
                   },
                 }
               : {},
-            filters.toEffectiveDeliveryDate
+            filters.toEstimatedDeliveryDate
               ? {
-                  effectiveDeliveryDate: {
-                    lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
+                  estimatedDeliveryDate: {
+                    lte: endOfDay(parseISO(filters.toEstimatedDeliveryDate)),
                   },
                 }
               : {},
@@ -131,8 +131,8 @@ export class PurchaseOrderRepository {
             },
           },
           AND: [
-            filters.statusId?.length
-              ? { purchaseOrderStatusId: { in: filters.statusId } }
+            filters.statusName?.length
+              ? { purchaseOrderStatus: { name: { in: filters.statusName } } }
               : {},
             filters.supplierBusinessName?.length
               ? {
@@ -151,17 +151,17 @@ export class PurchaseOrderRepository {
                   },
                 }
               : {},
-            filters.fromEffectiveDeliveryDate
+            filters.fromEstimatedDeliveryDate
               ? {
-                  effectiveDeliveryDate: {
-                    gte: new Date(filters.fromEffectiveDeliveryDate),
+                  estimatedDeliveryDate: {
+                    gte: new Date(filters.fromEstimatedDeliveryDate),
                   },
                 }
               : {},
-            filters.toEffectiveDeliveryDate
+            filters.toEstimatedDeliveryDate
               ? {
-                  effectiveDeliveryDate: {
-                    lte: endOfDay(parseISO(filters.toEffectiveDeliveryDate)),
+                  estimatedDeliveryDate: {
+                    lte: endOfDay(parseISO(filters.toEstimatedDeliveryDate)),
                   },
                 }
               : {},
