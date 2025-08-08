@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderDirection, PurchaseOrderField } from '@mp/common/constants';
+import { OrderDirection, PurchaseOrderField, purchaseOrderStatusTranslations } from '@mp/common/constants';
 import {
   SearchPurchaseOrderResponse,
 } from '@mp/common/dtos';
@@ -75,7 +75,7 @@ describe('SearchPurchaseOrderQueryHandler', () => {
       page: 1,
       pageSize: 10,
       filters: {
-        statusName: ['Ordered'],
+        statusName: ['received'],
         supplierBusinessName: ['Supplier A'],
         fromDate: '2025-01-01',
         toDate: '2025-12-31',
@@ -119,7 +119,7 @@ describe('SearchPurchaseOrderQueryHandler', () => {
         },
         purchaseOrderStatus: {
           id: 4,
-          name: 'Delivered',
+          name: 'Received',
         },
       },
     ];
@@ -131,7 +131,7 @@ describe('SearchPurchaseOrderQueryHandler', () => {
       results: result.map((purchaseOrder) => ({
         id: purchaseOrder.id,
         supplierBussinesName: purchaseOrder.supplier.businessName,
-        purchaseOrderStatusName: purchaseOrder.purchaseOrderStatus.name,
+        purchaseOrderStatusName: purchaseOrderStatusTranslations[purchaseOrder.purchaseOrderStatus.name],
         createdAt: purchaseOrder.createdAt,
         estimatedDeliveryDate:
           purchaseOrder.estimatedDeliveryDate,

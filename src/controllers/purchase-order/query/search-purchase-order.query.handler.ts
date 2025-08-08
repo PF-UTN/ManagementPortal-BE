@@ -1,5 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
+import { purchaseOrderStatusTranslations } from '@mp/common/constants';
 import { PurchaseOrderDto, SearchPurchaseOrderResponse } from '@mp/common/dtos';
 
 import { SearchPurchaseOrderQuery } from './search-purchase-order.query';
@@ -20,7 +21,7 @@ export class SearchPurchaseOrderQueryHandler
             return {
                 id: purchaseOrder.id,
                 supplierBussinesName: purchaseOrder.supplier.businessName,
-                purchaseOrderStatusName: purchaseOrder.purchaseOrderStatus.name,
+                purchaseOrderStatusName: purchaseOrderStatusTranslations[purchaseOrder.purchaseOrderStatus.name],
                 createdAt: purchaseOrder.createdAt,
                 estimatedDeliveryDate: purchaseOrder.estimatedDeliveryDate ?? null,
                 effectiveDeliveryDate: purchaseOrder.effectiveDeliveryDate ?? null,
