@@ -24,4 +24,10 @@ export class StockRepository {
       },
     });
   }
+
+  async findByProductIdAsync(productId: number): Promise<Stock | null> {
+    return this.prisma.stock.findUnique({
+      where: { productId },
+    });
+  }
 }

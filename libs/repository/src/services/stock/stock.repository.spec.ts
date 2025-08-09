@@ -56,4 +56,19 @@ describe('StockRepository', () => {
       expect(result).toEqual(stock);
     });
   });
+
+  describe('findByProductIdAsync', () => {
+    it('should return a stock record by product ID', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.stock, 'findUnique')
+        .mockResolvedValueOnce(stock);
+
+      // Act
+      const result = await repository.findByProductIdAsync(stock.productId);
+
+      // Assert
+      expect(result).toEqual(stock);
+    });
+  });
 });
