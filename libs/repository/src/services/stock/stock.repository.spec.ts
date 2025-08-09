@@ -71,4 +71,22 @@ describe('StockRepository', () => {
       expect(result).toEqual(stock);
     });
   });
+
+  describe('updateStockAsync', () => {
+    it('should update a stock record by product ID', async () => {
+      // Arrange
+      const updatedStock = { ...stock, quantityAvailable: 150 };
+      jest
+        .spyOn(prismaService.stock, 'update')
+        .mockResolvedValueOnce(updatedStock);
+
+      // Act
+      const result = await repository.updateStockAsync(stock.productId, {
+        quantityAvailable: 150,
+      });
+
+      // Assert
+      expect(result).toEqual(updatedStock);
+    });
+  });
 });

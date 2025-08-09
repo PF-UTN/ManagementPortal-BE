@@ -30,4 +30,16 @@ export class StockRepository {
       where: { productId },
     });
   }
+
+  async updateStockAsync(
+    productId: number,
+    data: Partial<Stock>,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Stock> {
+    const client = tx ?? this.prisma;
+    return client.stock.update({
+      where: { productId },
+      data,
+    });
+  }
 }
