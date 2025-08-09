@@ -16,6 +16,7 @@ import {
   VehicleRepository,
   RepairRepository,
   ServiceSupplierRepository,
+  StockChangeRepository,
 } from './services';
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
@@ -40,6 +41,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     ServiceSupplierRepository,
     PurchaseOrderRepository,
     PurchaseOrderItemRepository,
+    StockChangeRepository,
   ],
   exports: [
     UserRepository,
@@ -60,6 +62,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     ServiceSupplierRepository,
     PurchaseOrderRepository,
     PurchaseOrderItemRepository,
+    StockChangeRepository,
   ],
 })
 export class RepositoryModule {}

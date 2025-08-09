@@ -15,3 +15,4 @@ export * from './repair/repair.repository';
 export * from './service-supplier/service-supplier.repository';
 export * from './purchase-order/purchase-order.repository';
 export * from './purchase-order-item/purchase-order-item.repository';
+export * from './stock-change/stock-change.repository';
