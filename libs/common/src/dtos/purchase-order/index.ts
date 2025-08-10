@@ -6,4 +6,4 @@ export * from './search-purchase-order-request.dto';
 export * from './search-purchase-order-response.dto';
 export * from './purchase-order-order.dto';
 export * from './purchase-order.dto';
-
+export * from './purchase-order-update.dto';
