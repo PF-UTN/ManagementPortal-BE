@@ -345,7 +345,7 @@ describe('PurchaseOrderService', () => {
           ...purchaseOrderDetailsDtoMock,
           status: {
             id: PurchaseOrderStatusId.Ordered,
-            name: 'Ordenada',
+            name: 'Pedida',
           },
         };
 

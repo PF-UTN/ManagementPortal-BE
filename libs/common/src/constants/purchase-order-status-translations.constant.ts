@@ -1,7 +1,7 @@
 export const purchaseOrderStatusTranslations: Record<string, string> = {
   Draft: 'Borrador',
-  Pending: 'Pendiente',
-  Rejected: 'Rechazada',
-  Ordered: 'Ordenada',
+  Cancelled: 'Cancelada',
+  Ordered: 'Pedida',
   Received: 'Recibida',
+  Deleted: 'Eliminada',
 };
