@@ -32,13 +32,13 @@ export class StockRepository {
   }
 
   async updateStockAsync(
-    productId: number,
+    id: number,
     data: Partial<Stock>,
     tx?: Prisma.TransactionClient,
   ): Promise<Stock> {
     const client = tx ?? this.prisma;
     return client.stock.update({
-      where: { productId },
+      where: { id },
       data,
     });
   }

@@ -81,7 +81,7 @@ describe('StockRepository', () => {
         .mockResolvedValueOnce(updatedStock);
 
       // Act
-      const result = await repository.updateStockAsync(stock.productId, {
+      const result = await repository.updateStockAsync(stock.id, {
         quantityAvailable: 150,
       });
 
