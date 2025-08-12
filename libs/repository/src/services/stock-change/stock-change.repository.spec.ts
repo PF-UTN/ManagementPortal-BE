@@ -3,6 +3,7 @@ import { StockChange } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { StockChangedField, StockChangeTypeIds } from '@mp/common/constants';
+import { StockChangeCreationDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 import { StockChangeRepository } from './stock-change.repository';
@@ -43,15 +44,14 @@ describe('StockChangeRepository', () => {
   describe('createManyStockChangeAsync', () => {
     it('should create multiple stock change records', async () => {
       // Arrange
-      const changes: Omit<StockChange, 'id'>[] = [
+      const changes: StockChangeCreationDataDto[] = [
         {
           productId: stockChange.productId,
           changeTypeId: stockChange.changeTypeId,
-          changedField: stockChange.changedField,
+          changedField: StockChangedField.QuantityAvailable,
           previousValue: stockChange.previousValue,
           newValue: stockChange.newValue,
-          reason: stockChange.reason,
-          changedAt: stockChange.changedAt,
+          reason: stockChange.reason ?? '',
         },
       ];
 
