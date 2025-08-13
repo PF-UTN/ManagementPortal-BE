@@ -2,15 +2,21 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderDirection, PurchaseOrderField, PurchaseOrderStatusId } from '@mp/common/constants';
+import {
+  OrderDirection,
+  PurchaseOrderField,
+  PurchaseOrderStatusId,
+} from '@mp/common/constants';
 import {
   PurchaseOrderCreationDto,
   PurchaseOrderDetailsDto,
-  SearchPurchaseOrderRequest
+  PurchaseOrderUpdateDto,
+  SearchPurchaseOrderRequest,
 } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
+import { UpdatePurchaseOrderCommand } from './command/update-purchase-order.command';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
@@ -154,6 +160,38 @@ describe('PurchaseOrderController', () => {
 
       // Act
       await controller.deletePurchaseOrderAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updatePurchaseOrderAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderUpdateDtoMock: PurchaseOrderUpdateDto = {
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        effectiveDeliveryDate: new Date('1990-01-20'),
+        observation: 'Purchase order for office supplies',
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+        purchaseOrderItems: [
+          {
+            productId: 1,
+            quantity: 10,
+            unitPrice: 100,
+          },
+        ],
+      };
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdatePurchaseOrderCommand(
+        id,
+        purchaseOrderUpdateDtoMock,
+      );
+
+      // Act
+      await controller.updatePurchaseOrderAsync(id, purchaseOrderUpdateDtoMock);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
