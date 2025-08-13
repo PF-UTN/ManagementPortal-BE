@@ -14,11 +14,6 @@ import {
 import { PurchaseOrderItemDto } from '../purchase-order-item';
 
 export class PurchaseOrderUpdateDto {
-  @ApiProperty({ example: 1, required: true })
-  @IsNotEmpty()
-  @IsNumber()
-  supplierId: number;
-
   @ApiProperty({ example: '1990-01-15', type: String, format: 'date' })
   @IsNotEmpty()
   @Type(() => Date)
