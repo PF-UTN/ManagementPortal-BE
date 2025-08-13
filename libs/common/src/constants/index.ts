@@ -11,3 +11,4 @@ export * from './purchase-order-status-translations.constant';
 export * from './purchase-order-field.constants';
 export * from './stock-change-type.constant';
 export * from './stock-changed-field.constant';
+export * from './purchase-order-valid-transitions.constant';
