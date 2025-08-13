@@ -23,4 +23,14 @@ export class PurchaseOrderItemRepository {
       include: { product: true },
     });
   }
+
+  async deleteByPurchaseOrderIdAsync(
+    orderId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.purchaseOrderItem.deleteMany({
+      where: { purchaseOrderId: orderId },
+    });
+  }
 }

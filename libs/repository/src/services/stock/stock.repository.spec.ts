@@ -56,4 +56,37 @@ describe('StockRepository', () => {
       expect(result).toEqual(stock);
     });
   });
+
+  describe('findByProductIdAsync', () => {
+    it('should return a stock record by product ID', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.stock, 'findUnique')
+        .mockResolvedValueOnce(stock);
+
+      // Act
+      const result = await repository.findByProductIdAsync(stock.productId);
+
+      // Assert
+      expect(result).toEqual(stock);
+    });
+  });
+
+  describe('updateStockAsync', () => {
+    it('should update a stock record by product ID', async () => {
+      // Arrange
+      const updatedStock = { ...stock, quantityAvailable: 150 };
+      jest
+        .spyOn(prismaService.stock, 'update')
+        .mockResolvedValueOnce(updatedStock);
+
+      // Act
+      const result = await repository.updateStockAsync(stock.id, {
+        quantityAvailable: 150,
+      });
+
+      // Assert
+      expect(result).toEqual(updatedStock);
+    });
+  });
 });

@@ -120,4 +120,37 @@ describe('PurchaseOrderItemRepository', () => {
       });
     });
   });
+
+  describe('deleteByPurchaseOrderIdAsync', () => {
+    it('should delete purchase order items for the given purchase order ID', async () => {
+      // Arrange
+      const orderId = 1;
+      jest
+        .spyOn(prismaService.purchaseOrderItem, 'deleteMany')
+        .mockResolvedValueOnce({ count: 1 });
+
+      // Act
+      const result = await repository.deleteByPurchaseOrderIdAsync(orderId);
+
+      // Assert
+      expect(result).toEqual({ count: 1 });
+    });
+
+    it('should call prisma.purchaseOrderItem.deleteMany with correct order ID', async () => {
+      // Arrange
+      const orderId = 1;
+
+      jest
+        .spyOn(prismaService.purchaseOrderItem, 'deleteMany')
+        .mockResolvedValueOnce({ count: 1 });
+
+      // Act
+      await repository.deleteByPurchaseOrderIdAsync(orderId);
+
+      // Assert
+      expect(prismaService.purchaseOrderItem.deleteMany).toHaveBeenCalledWith({
+        where: { purchaseOrderId: orderId },
+      });
+    });
+  });
 });

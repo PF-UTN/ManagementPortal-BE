@@ -3,23 +3,34 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma, PurchaseOrder } from '@prisma/client';
 
 import {
+  canTransition,
   PurchaseOrderStatusId,
   purchaseOrderStatusTranslations,
+  StockChangedField,
+  StockChangeTypeIds,
 } from '@mp/common/constants';
 import {
   PurchaseOrderCreationDto,
   PurchaseOrderDetailsDto,
   PurchaseOrderItemDetailsDto,
+  PurchaseOrderItemDto,
+  PurchaseOrderUpdateDto,
+  StockChangeCreationDataDto,
+  StockDto,
 } from '@mp/common/dtos';
+import { calculateTotalAmount } from '@mp/common/helpers';
 import {
   PrismaUnitOfWork,
   ProductRepository,
   PurchaseOrderItemRepository,
   PurchaseOrderRepository,
+  StockChangeRepository,
 } from '@mp/repository';
 
+import { StockService } from '../stock/stock.service';
 import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
 
 @Injectable()
@@ -28,6 +39,8 @@ export class PurchaseOrderService {
     private readonly purchaseOrderRepository: PurchaseOrderRepository,
     private readonly purchaseOrderItemRepository: PurchaseOrderItemRepository,
     private readonly productRepository: ProductRepository,
+    private readonly stockService: StockService,
+    private readonly stockChangeRepository: StockChangeRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
   ) {}
 
@@ -157,5 +170,251 @@ export class PurchaseOrderService {
     }
 
     return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
+  }
+
+  async updatePurchaseOrderAsync(
+    id: number,
+    purchaseOrderUpdateDto: PurchaseOrderUpdateDto,
+  ) {
+    const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
+    if (!purchaseOrder) {
+      throw new NotFoundException(
+        `Purchase order with id ${id} does not exist.`,
+      );
+    }
+
+    if (purchaseOrderUpdateDto.purchaseOrderItems.length === 0) {
+      throw new BadRequestException('At least one item must be provided.');
+    }
+
+    const currentPurchaseOrderStatus = purchaseOrder.purchaseOrderStatusId;
+    const newPurchaseOrderStatus = purchaseOrderUpdateDto.purchaseOrderStatusId;
+
+    if (currentPurchaseOrderStatus !== newPurchaseOrderStatus) {
+      const validTransition = canTransition(
+        currentPurchaseOrderStatus,
+        newPurchaseOrderStatus,
+      );
+      if (!validTransition) {
+        throw new BadRequestException(
+          `Invalid status transition from ${PurchaseOrderStatusId[currentPurchaseOrderStatus]} to ${PurchaseOrderStatusId[newPurchaseOrderStatus]}`,
+        );
+      }
+    }
+
+    if (
+      newPurchaseOrderStatus === PurchaseOrderStatusId.Cancelled &&
+      !purchaseOrderUpdateDto.observation
+    ) {
+      throw new BadRequestException(
+        'Observation is required when cancelling a purchase order.',
+      );
+    }
+
+    if (
+      newPurchaseOrderStatus === PurchaseOrderStatusId.Received &&
+      !purchaseOrderUpdateDto.effectiveDeliveryDate
+    ) {
+      throw new BadRequestException(
+        'Effective delivery date is required when receiving a purchase order.',
+      );
+    }
+
+    const { purchaseOrderItems, ...purchaseOrderUpdateData } =
+      purchaseOrderUpdateDto;
+
+    const currentPurchaseOrderItems =
+      this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
+        purchaseOrder.id,
+      );
+
+    const transformedItems: PurchaseOrderItemDto[] = (
+      await currentPurchaseOrderItems
+    ).map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+    }));
+
+    const newPurchaseOrderItemsToCreate = purchaseOrderItems.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      unitPrice: Number(item.unitPrice),
+      purchaseOrderId: purchaseOrder.id,
+      subtotalPrice: Number(item.unitPrice) * item.quantity,
+    }));
+
+    const totalAmount = calculateTotalAmount(newPurchaseOrderItemsToCreate);
+
+    this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      if (purchaseOrderItems !== transformedItems) {
+        await this.purchaseOrderItemRepository.deleteByPurchaseOrderIdAsync(
+          purchaseOrder.id,
+          tx,
+        );
+        await this.purchaseOrderItemRepository.createManyPurchaseOrderItemAsync(
+          newPurchaseOrderItemsToCreate,
+          tx,
+        );
+        await this.manageStockChanges(
+          purchaseOrder,
+          newPurchaseOrderItemsToCreate,
+          purchaseOrderUpdateDto.purchaseOrderStatusId,
+          tx,
+        );
+      }
+
+      await this.purchaseOrderRepository.updatePurchaseOrderAsync(
+        purchaseOrder.id,
+        { ...purchaseOrderUpdateData, totalAmount },
+        tx,
+      );
+    });
+  }
+
+  private async manageStockChanges(
+    purchaseOrder: PurchaseOrder,
+    purchaseOrderItems: PurchaseOrderItemDto[],
+    newStatus: PurchaseOrderStatusId,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const stockUpdates: StockChangeCreationDataDto[] = [];
+
+    switch (newStatus) {
+      case PurchaseOrderStatusId.Received:
+        for (const item of purchaseOrderItems) {
+          const stock = await this.stockService.findByProductIdAsync(
+            item.productId,
+          );
+          if (!stock) {
+            throw new NotFoundException(
+              `Stock for product ${item.productId} not found.`,
+            );
+          }
+
+          const newStock: StockDto = {
+            quantityAvailable: stock.quantityAvailable + item.quantity,
+            quantityOrdered: stock.quantityOrdered - item.quantity,
+            quantityReserved: stock.quantityReserved,
+          };
+
+          await this.stockService.updateStockByProductIdAsync(
+            stock.productId,
+            newStock,
+            tx,
+          );
+
+          stockUpdates.push({
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Income,
+            changedField: StockChangedField.QuantityAvailable,
+            previousValue: stock.quantityAvailable,
+            newValue: newStock.quantityAvailable,
+            reason: `Purchase order ${purchaseOrder.id} received`,
+          });
+
+          stockUpdates.push({
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Outcome,
+            changedField: StockChangedField.QuantityOrdered,
+            previousValue: stock.quantityOrdered,
+            newValue: newStock.quantityOrdered,
+            reason: `Purchase order ${purchaseOrder.id} received`,
+          });
+        }
+
+        await this.stockChangeRepository.createManyStockChangeAsync(
+          stockUpdates,
+          tx,
+        );
+        break;
+
+      case PurchaseOrderStatusId.Cancelled:
+        if (purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Draft)
+          break;
+
+        for (const item of purchaseOrderItems) {
+          const stock = await this.stockService.findByProductIdAsync(
+            item.productId,
+          );
+          if (!stock) {
+            throw new NotFoundException(
+              `Stock for product ${item.productId} not found.`,
+            );
+          }
+
+          const newStock: StockDto = {
+            quantityAvailable: stock.quantityAvailable,
+            quantityOrdered: stock.quantityOrdered - item.quantity,
+            quantityReserved: stock.quantityReserved,
+          };
+
+          await this.stockService.updateStockByProductIdAsync(
+            stock.productId,
+            newStock,
+            tx,
+          );
+
+          stockUpdates.push({
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Outcome,
+            changedField: StockChangedField.QuantityOrdered,
+            previousValue: stock.quantityOrdered,
+            newValue: newStock.quantityOrdered,
+            reason: `Purchase order ${purchaseOrder.id} cancelled`,
+          });
+        }
+
+        await this.stockChangeRepository.createManyStockChangeAsync(
+          stockUpdates,
+          tx,
+        );
+        break;
+
+      case PurchaseOrderStatusId.Deleted:
+        break;
+
+      case PurchaseOrderStatusId.Ordered:
+        for (const item of purchaseOrderItems) {
+          const stock = await this.stockService.findByProductIdAsync(
+            item.productId,
+          );
+          if (!stock) {
+            throw new NotFoundException(
+              `Stock for product ${item.productId} not found.`,
+            );
+          }
+
+          const newStock: StockDto = {
+            quantityAvailable: stock.quantityAvailable,
+            quantityOrdered: stock.quantityOrdered + item.quantity,
+            quantityReserved: stock.quantityReserved,
+          };
+
+          await this.stockService.updateStockByProductIdAsync(
+            stock.productId,
+            newStock,
+            tx,
+          );
+
+          stockUpdates.push({
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Income,
+            changedField: StockChangedField.QuantityOrdered,
+            previousValue: stock.quantityOrdered,
+            newValue: newStock.quantityOrdered,
+            reason: `Purchase order ${purchaseOrder.id} ordered`,
+          });
+        }
+
+        await this.stockChangeRepository.createManyStockChangeAsync(
+          stockUpdates,
+          tx,
+        );
+        break;
+
+      default:
+        break;
+    }
   }
 }
