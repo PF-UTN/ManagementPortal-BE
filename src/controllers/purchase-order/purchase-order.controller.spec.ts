@@ -171,7 +171,6 @@ describe('PurchaseOrderController', () => {
       // Arrange
       const id = 1;
       const purchaseOrderUpdateDtoMock: PurchaseOrderUpdateDto = {
-        supplierId: 1,
         estimatedDeliveryDate: new Date('1990-01-15'),
         effectiveDeliveryDate: new Date('1990-01-20'),
         observation: 'Purchase order for office supplies',
