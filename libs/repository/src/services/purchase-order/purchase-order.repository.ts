@@ -238,4 +238,16 @@ export class PurchaseOrderRepository {
       data: { purchaseOrderStatusId: PurchaseOrderStatusId.Deleted },
     });
   }
+
+  async updatePurchaseOrderAsync(
+    id: number,
+    data: Prisma.PurchaseOrderUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.purchaseOrder.update({
+      where: { id },
+      data,
+    });
+  }
 }

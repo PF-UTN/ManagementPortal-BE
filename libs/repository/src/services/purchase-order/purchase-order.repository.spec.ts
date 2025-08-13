@@ -378,4 +378,27 @@ describe('PurchaseOrderRepository', () => {
       expect(updatedPurchaseOrder).toEqual(purchaseOrder);
     });
   });
+
+  describe('updatePurchaseOrderAsync', () => {
+    it('should update an existing purchase order with the provided data', async () => {
+      // Arrange
+      const purchaseOrderId = 1;
+      const updateData: Prisma.PurchaseOrderUpdateInput = {
+        observation: 'Updated observation',
+      };
+
+      jest
+        .spyOn(prismaService.purchaseOrder, 'update')
+        .mockResolvedValueOnce(purchaseOrder);
+
+      // Act
+      const updatedPurchaseOrder = await repository.updatePurchaseOrderAsync(
+        purchaseOrderId,
+        updateData,
+      );
+
+      // Assert
+      expect(updatedPurchaseOrder).toEqual(purchaseOrder);
+    });
+  });
 });
