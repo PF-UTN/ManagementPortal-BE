@@ -47,4 +47,10 @@ export const PermissionCodes = {
     UPDATE: 'cart:update',
     DELETE: 'cart:delete',
   },
+  MaintenancePlanItem: {
+    READ: 'maintenance-plan-item:read',
+    CREATE: 'maintenance-plan-item:create',
+    UPDATE: 'maintenance-plan-item:update',
+    DELETE: 'maintenance-plan-item:delete',
+  },
 };
