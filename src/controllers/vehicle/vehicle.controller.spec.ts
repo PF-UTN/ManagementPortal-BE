@@ -3,11 +3,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import {
+  MaintenancePlanItemCreationDto,
   RepairCreationDto,
   SearchVehicleRequest,
   UpdateVehicleDto,
 } from '@mp/common/dtos';
 
+import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
@@ -155,6 +157,32 @@ describe('VehicleController', () => {
       await controller.createVehicleRepairAsync(
         vehicleId,
         repairCreationDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('createVehicleMaintenancePlanAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const maintenancePlanItemCreationDtoMock: MaintenancePlanItemCreationDto =
+        {
+          maintenanceItemId: 1,
+          vehicleId: 1,
+          kmInterval: 10000,
+          timeInterval: 6,
+        };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateVehicleMaintenancePlanItemCommand(
+        maintenancePlanItemCreationDtoMock,
+      );
+
+      // Act
+      await controller.createVehicleMaintenancePlanItemAsync(
+        maintenancePlanItemCreationDtoMock,
       );
 
       // Assert

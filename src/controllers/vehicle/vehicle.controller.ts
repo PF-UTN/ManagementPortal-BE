@@ -14,12 +14,14 @@ import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
+  MaintenancePlanItemCreationDto,
   RepairCreationDto,
   SearchVehicleRequest,
   UpdateVehicleDto,
   VehicleCreationDto,
 } from '@mp/common/dtos';
 
+import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
@@ -131,6 +133,25 @@ export class VehicleController {
   ) {
     return this.commandBus.execute(
       new CreateVehicleRepairCommand(vehicleId, repairCreationDto),
+    );
+  }
+
+  @Post('maintenance-plan')
+  @HttpCode(201)
+  @RequiredPermissions(PermissionCodes.MaintenancePlanItem.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a vehicle maintenance plan',
+    description:
+      'Creates a new maintenance plan for the vehicle with the provided ID.',
+  })
+  async createVehicleMaintenancePlanItemAsync(
+    @Body() maintenancePlanItemCreationDto: MaintenancePlanItemCreationDto,
+  ) {
+    return this.commandBus.execute(
+      new CreateVehicleMaintenancePlanItemCommand(
+        maintenancePlanItemCreationDto,
+      ),
     );
   }
 }
