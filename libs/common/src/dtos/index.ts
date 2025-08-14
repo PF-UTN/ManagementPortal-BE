@@ -13,3 +13,4 @@ export * from './purchase-order';
 export * from './purchase-order-item';
 export * from './cart';
 export * from './stock-change';
+export * from './maintenance-plan-item';

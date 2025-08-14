@@ -1,0 +1,140 @@
+import { NotFoundException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { MaintenancePlanItem } from '@prisma/client';
+import { mockDeep } from 'jest-mock-extended';
+
+import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
+import {
+  MaintenanceItemRepository,
+  MaintenancePlanItemRepository,
+  VehicleRepository,
+} from '@mp/repository';
+
+import { MaintenancePlanItemService } from './maintenance-plan-item.service';
+
+describe('MaintenancePlanItemService', () => {
+  let service: MaintenancePlanItemService;
+  let repository: MaintenancePlanItemRepository;
+  let vehicleRepository: VehicleRepository;
+  let maintenanceItemRepository: MaintenanceItemRepository;
+  let maintenancePlanItem: ReturnType<typeof mockDeep<MaintenancePlanItem>>;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        MaintenancePlanItemService,
+        {
+          provide: MaintenancePlanItemRepository,
+          useValue: mockDeep(MaintenancePlanItemRepository),
+        },
+        {
+          provide: VehicleRepository,
+          useValue: mockDeep(VehicleRepository),
+        },
+        {
+          provide: MaintenanceItemRepository,
+          useValue: mockDeep(MaintenanceItemRepository),
+        },
+      ],
+    }).compile();
+
+    repository = module.get<MaintenancePlanItemRepository>(
+      MaintenancePlanItemRepository,
+    );
+    vehicleRepository = module.get<VehicleRepository>(VehicleRepository);
+    maintenanceItemRepository = module.get<MaintenanceItemRepository>(
+      MaintenanceItemRepository,
+    );
+
+    service = module.get<MaintenancePlanItemService>(
+      MaintenancePlanItemService,
+    );
+
+    maintenancePlanItem = mockDeep<MaintenancePlanItem>();
+
+    maintenancePlanItem.id = 1;
+    maintenancePlanItem.maintenanceItemId = 1;
+    maintenancePlanItem.vehicleId = 1;
+    maintenancePlanItem.kmInterval = 10000;
+    maintenancePlanItem.timeInterval = 6;
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('createMaintenancePlanItemAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const maintenancePlanItemCreationDtoMock: MaintenancePlanItemCreationDto =
+        {
+          vehicleId: maintenancePlanItem.vehicleId,
+          maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+          kmInterval: maintenancePlanItem.kmInterval,
+          timeInterval: maintenancePlanItem.timeInterval,
+        };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        service.createMaintenancePlanItemAsync(
+          maintenancePlanItemCreationDtoMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if maintenance item does not exist', async () => {
+      // Arrange
+      const maintenancePlanItemCreationDtoMock: MaintenancePlanItemCreationDto =
+        {
+          vehicleId: maintenancePlanItem.vehicleId,
+          maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+          kmInterval: maintenancePlanItem.kmInterval,
+          timeInterval: maintenancePlanItem.timeInterval,
+        };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(true);
+
+      jest
+        .spyOn(maintenanceItemRepository, 'existsAsync')
+        .mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        service.createMaintenancePlanItemAsync(
+          maintenancePlanItemCreationDtoMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.createMaintenancePlanItemAsync with the correct data', async () => {
+      // Arrange
+      const maintenancePlanItemCreationDtoMock: MaintenancePlanItemCreationDto =
+        {
+          vehicleId: maintenancePlanItem.vehicleId,
+          maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+          kmInterval: maintenancePlanItem.kmInterval,
+          timeInterval: maintenancePlanItem.timeInterval,
+        };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(true);
+      jest
+        .spyOn(maintenanceItemRepository, 'existsAsync')
+        .mockResolvedValue(true);
+      jest
+        .spyOn(repository, 'createMaintenancePlanItemAsync')
+        .mockResolvedValue(maintenancePlanItem);
+
+      // Act
+      await service.createMaintenancePlanItemAsync(
+        maintenancePlanItemCreationDtoMock,
+      );
+
+      // Assert
+      expect(repository.createMaintenancePlanItemAsync).toHaveBeenCalledWith(
+        maintenancePlanItemCreationDtoMock,
+      );
+    });
+  });
+});
