@@ -38,7 +38,7 @@ export class CartController {
     );
   }
 
-  @Get('product/:productId')
+  @Get('product/:id')
   @HttpCode(200)
   @ApiBearerAuth()
   @RequiredPermissions(PermissionCodes.Cart.READ)
