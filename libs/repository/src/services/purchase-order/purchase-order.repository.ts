@@ -101,6 +101,11 @@ export class PurchaseOrderRepository {
                     },
                   },
                 },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
               ],
             },
           ],
@@ -127,7 +132,7 @@ export class PurchaseOrderRepository {
         where: {
           NOT: {
             purchaseOrderStatus: {
-              name: 'Rejected',
+              name: 'Deleted',
             },
           },
           AND: [
@@ -183,6 +188,11 @@ export class PurchaseOrderRepository {
                     },
                   },
                 },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
               ],
             },
           ],

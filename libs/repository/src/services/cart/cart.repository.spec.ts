@@ -35,12 +35,7 @@ describe('ProductRedisRepository', () => {
       expect(spy).toHaveBeenCalledWith(
         'products',
         String(product.id),
-        JSON.stringify({
-          name: product.name,
-          enabled: product.enabled,
-          stock: product.stock.quantityAvailable,
-          price: product.price,
-        }),
+        JSON.stringify(product),
       );
     });
     it('should set expiration on products hash', async () => {
@@ -49,6 +44,29 @@ describe('ProductRedisRepository', () => {
       const spy = jest.spyOn(redisService, 'setKeyExpiration');
       // Act
       await cartRepository.saveProductToRedisAsync(product);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', 5400);
+    });
+  });
+  describe('getProductByIdFromRedisAsync', () => {
+    it('should call getFieldValue with correct key and field', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'getFieldValue');
+
+      // Act
+      await cartRepository.getProductByIdFromRedisAsync(product.id);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', String(product.id));
+    });
+    it('should set expiration on products hash', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await cartRepository.getProductByIdFromRedisAsync(product.id);
 
       // Assert
       expect(spy).toHaveBeenCalledWith('products', 5400);
