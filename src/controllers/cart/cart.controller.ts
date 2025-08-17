@@ -1,4 +1,11 @@
-import { Controller, Get, HttpCode, Param, ParseIntPipe, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
@@ -13,7 +20,7 @@ import { GetProductByIdRedisQuery } from './query/get-product-by-id-redis.query'
 export class CartController {
   constructor(
     private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post('product/save/:productId')
@@ -24,24 +31,26 @@ export class CartController {
     description: 'Save a product that has added to the cart in Redis.',
   })
   async saveProductToRedis(
-    @Param('productId', ParseIntPipe) productId: number
+    @Param('productId', ParseIntPipe) productId: number,
   ): Promise<ProductDetailsDto> {
-    return await this.commandBus.execute(new SaveProductRedisCommand(productId));
+    return await this.commandBus.execute(
+      new SaveProductRedisCommand(productId),
+    );
   }
 
-    @Get('product/:productId')
-    @HttpCode(200)
-    @ApiBearerAuth()
-    @RequiredPermissions(PermissionCodes.Cart.READ)
-    @ApiOperation({
-      summary: 'Get product by ID',
-      description: 'Retrieve a product with the provided ID from Redis.',
-    })
-    @ApiParam({
-      name: 'id',
-      description: 'ID of the product to retrieve',
-    })
-    getProductByIdAsync(@Param('id', ParseIntPipe) id: number) {
-      return this.queryBus.execute(new GetProductByIdRedisQuery(id));
-    }
+  @Get('product/:productId')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Cart.READ)
+  @ApiOperation({
+    summary: 'Get product by ID',
+    description: 'Retrieve a product with the provided ID from Redis.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the product to retrieve',
+  })
+  getProductByIdAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.queryBus.execute(new GetProductByIdRedisQuery(id));
+  }
 }
