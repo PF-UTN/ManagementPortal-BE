@@ -1,27 +1,16 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
-import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import { ProductDetailsDto } from '@mp/common/dtos';
 
 import { SaveProductRedisCommand } from './command/save-product-redis.command';
-import { GetProductByIdRedisQuery } from './query/get-product-by-id-redis.query';
 
 @Controller('cart')
 export class CartController {
-  constructor(
-    private readonly commandBus: CommandBus,
-    private readonly queryBus: QueryBus,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   @Post('product/save/:productId')
   @RequiredPermissions(PermissionCodes.Cart.CREATE)
@@ -36,21 +25,5 @@ export class CartController {
     return await this.commandBus.execute(
       new SaveProductRedisCommand(productId),
     );
-  }
-
-  @Get('product/:id')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @RequiredPermissions(PermissionCodes.Cart.READ)
-  @ApiOperation({
-    summary: 'Get product by ID',
-    description: 'Retrieve a product with the provided ID from Redis.',
-  })
-  @ApiParam({
-    name: 'id',
-    description: 'ID of the product to retrieve',
-  })
-  getProductByIdAsync(@Param('id', ParseIntPipe) id: number) {
-    return this.queryBus.execute(new GetProductByIdRedisQuery(id));
   }
 }
