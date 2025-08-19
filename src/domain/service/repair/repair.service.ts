@@ -7,6 +7,8 @@ import {
   VehicleRepository,
 } from '@mp/repository';
 
+import { SearchRepairQuery } from '../../../controllers/vehicle/query/search-repair-query';
+
 @Injectable()
 export class RepairService {
   constructor(
@@ -54,5 +56,24 @@ export class RepairService {
     };
 
     return await this.repairRepository.createRepairAsync(repairCreationDataDto);
+  }
+
+  async searchByTextAndVehicleIdAsync(query: SearchRepairQuery) {
+    const existsVehicle = await this.vehicleRepository.existsAsync(
+      query.vehicleId,
+    );
+
+    if (!existsVehicle) {
+      throw new NotFoundException(
+        `Vehicle with id ${query.vehicleId} does not exist.`,
+      );
+    }
+
+    return await this.repairRepository.searchByTextAndVehicleIdAsync(
+      query.searchText,
+      query.page,
+      query.pageSize,
+      query.vehicleId,
+    );
   }
 }
