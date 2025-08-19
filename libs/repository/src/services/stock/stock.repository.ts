@@ -25,8 +25,9 @@ export class StockRepository {
     });
   }
 
-  async findByProductIdAsync(productId: number): Promise<Stock | null> {
-    return this.prisma.stock.findUnique({
+  async findByProductIdAsync(productId: number, tx?: Prisma.TransactionClient): Promise<Stock | null> {
+    const client = tx ?? this.prisma;
+    return client.stock.findUnique({
       where: { productId },
     });
   }

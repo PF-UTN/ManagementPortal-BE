@@ -11,6 +11,8 @@ export class PrismaUnitOfWork implements IUnitOfWork {
   async execute<T>(
     work: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
-    return this.prismaService.$transaction((tx) => work(tx));
+    return this.prismaService.$transaction((tx) => work(tx), {
+      timeout: 20000,
+    });
   }
 }
