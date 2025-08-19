@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { CartServiceModule } from 'src/domain/service/cart/cart.service.module';
 
+import { CartServiceModule } from './../../domain/service/cart/cart.service.module';
 import { CreateProductCommandHandler } from './command/create-product.command.handler';
 import { DeleteProductCommandHandler } from './command/delete-product.command.handler';
 import { SearchProductQueryHandler } from './command/search-product-query.handler';
