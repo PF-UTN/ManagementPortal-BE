@@ -16,6 +16,7 @@ import { RequiredPermissions } from '@mp/common/decorators';
 import {
   MaintenancePlanItemCreationDto,
   RepairCreationDto,
+  SearchRepairRequest,
   SearchVehicleRequest,
   UpdateVehicleDto,
   VehicleCreationDto,
@@ -27,6 +28,7 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 
 @Controller('vehicle')
@@ -152,6 +154,23 @@ export class VehicleController {
       new CreateVehicleMaintenancePlanItemCommand(
         maintenancePlanItemCreationDto,
       ),
+    );
+  }
+
+  @Post(':id/repair/search')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Repair.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search vehicle repairs',
+    description: 'Search for repairs of the vehicle with the provided ID.',
+  })
+  async searchVehicleRepairsAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() searchRepairRequest: SearchRepairRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchRepairQuery(id, searchRepairRequest),
     );
   }
 }

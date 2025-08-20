@@ -5,6 +5,7 @@ import { mockDeep } from 'jest-mock-extended';
 import {
   MaintenancePlanItemCreationDto,
   RepairCreationDto,
+  SearchRepairRequest,
   SearchVehicleRequest,
   UpdateVehicleDto,
 } from '@mp/common/dtos';
@@ -15,6 +16,7 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
 
@@ -187,6 +189,23 @@ describe('VehicleController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('searchVehicleRepairsAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      const vehicleId = 1;
+      const request: SearchRepairRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+      };
+
+      await controller.searchVehicleRepairsAsync(vehicleId, request);
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchRepairQuery(vehicleId, request),
+      );
     });
   });
 });
