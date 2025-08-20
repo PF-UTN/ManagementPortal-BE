@@ -31,4 +31,36 @@ export class RepairRepository {
       },
     });
   }
+
+  async searchByTextAndVehicleIdAsync(
+    searchText: string,
+    page: number,
+    pageSize: number,
+    vehicleId: number,
+  ) {
+    const [data, total] = await Promise.all([
+      this.prisma.repair.findMany({
+        where: {
+          AND: [
+            { vehicleId: vehicleId },
+            { deleted: false },
+            { description: { contains: searchText, mode: 'insensitive' } },
+          ],
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      this.prisma.repair.count({
+        where: {
+          AND: [
+            { vehicleId: vehicleId },
+            { deleted: false },
+            { description: { contains: searchText, mode: 'insensitive' } },
+          ],
+        },
+      }),
+    ]);
+
+    return { data, total };
+  }
 }

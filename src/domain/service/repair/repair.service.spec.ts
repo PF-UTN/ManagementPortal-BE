@@ -11,6 +11,7 @@ import {
 } from '@mp/repository';
 
 import { RepairService } from './repair.service';
+import { SearchRepairQuery } from '../../../controllers/vehicle/query/search-repair-query';
 
 describe('RepairService', () => {
   let service: RepairService;
@@ -54,6 +55,10 @@ describe('RepairService', () => {
     repair.kmPerformed = 5000;
     repair.deleted = false;
     repair.serviceSupplierId = 1;
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
   });
 
   describe('deleteRepairAsync', () => {
@@ -149,6 +154,56 @@ describe('RepairService', () => {
       // Assert
       expect(repository.createRepairAsync).toHaveBeenCalledWith(
         repairCreationDataDtoMock,
+      );
+    });
+  });
+
+  describe('searchByTextAndVehicleIdAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const vehicleId = 1;
+
+      const query = new SearchRepairQuery(vehicleId, {
+        searchText,
+        page,
+        pageSize,
+      });
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        service.searchByTextAndVehicleIdAsync(query),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call searchByTextAndVehicleIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const vehicleId = 1;
+
+      const query = new SearchRepairQuery(vehicleId, {
+        searchText,
+        page,
+        pageSize,
+      });
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(true);
+
+      // Act
+      await service.searchByTextAndVehicleIdAsync(query);
+
+      // Assert
+      expect(repository.searchByTextAndVehicleIdAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.page,
+        query.pageSize,
+        query.vehicleId,
       );
     });
   });

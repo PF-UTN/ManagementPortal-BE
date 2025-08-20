@@ -6,6 +6,7 @@ import { CreateVehicleCommandHandler } from './command/create-vehicle.command.ha
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
+import { SearchRepairQueryHandler } from './query/search-repair-query.handler';
 import { SearchMaintenanceQueryHandler } from './query/search-maintenance-query.handler';
 import { SearchVehicleQueryHandler } from './query/search-vehicle-query.handler';
 import { VehicleController } from './vehicle.controller';
@@ -16,6 +17,7 @@ import { VehicleServiceModule } from '../../domain/service/vehicle/vehicle.servi
 
 const queryHandlers = [
   SearchVehicleQueryHandler,
+  SearchRepairQueryHandler,
   SearchMaintenanceQueryHandler,
 ];
 const commandHandlers = [

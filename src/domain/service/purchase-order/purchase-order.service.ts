@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, PurchaseOrder } from '@prisma/client';
+import { isEqual } from 'lodash';
 
 import {
   canTransition,
@@ -247,7 +248,7 @@ export class PurchaseOrderService {
     const totalAmount = calculateTotalAmount(newPurchaseOrderItemsToCreate);
 
     this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      if (purchaseOrderItems !== transformedItems) {
+      if (!isEqual(purchaseOrderItems, transformedItems)) {
         await this.purchaseOrderItemRepository.deleteByPurchaseOrderIdAsync(
           purchaseOrder.id,
           tx,
@@ -276,16 +277,20 @@ export class PurchaseOrderService {
     purchaseOrder: PurchaseOrder,
     purchaseOrderItems: PurchaseOrderItemDto[],
     newStatus: PurchaseOrderStatusId,
-    tx?: Prisma.TransactionClient,
+    tx: Prisma.TransactionClient,
   ) {
     const stockUpdates: StockChangeCreationDataDto[] = [];
 
     switch (newStatus) {
-      case PurchaseOrderStatusId.Received:
-        for (const item of purchaseOrderItems) {
-          const stock = await this.stockService.findByProductIdAsync(
-            item.productId,
-          );
+      case PurchaseOrderStatusId.Received: {
+        const stocks = await Promise.all(
+          purchaseOrderItems.map((item) =>
+            this.stockService.findByProductIdAsync(item.productId, tx),
+          ),
+        );
+
+        const updatePromises = purchaseOrderItems.map((item, index) => {
+          const stock = stocks[index];
           if (!stock) {
             throw new NotFoundException(
               `Stock for product ${item.productId} not found.`,
@@ -298,45 +303,52 @@ export class PurchaseOrderService {
             quantityReserved: stock.quantityReserved,
           };
 
-          await this.stockService.updateStockByProductIdAsync(
+          stockUpdates.push(
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Income,
+              changedField: StockChangedField.QuantityAvailable,
+              previousValue: stock.quantityAvailable,
+              newValue: newStock.quantityAvailable,
+              reason: `Purchase order ${purchaseOrder.id} received`,
+            },
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Outcome,
+              changedField: StockChangedField.QuantityOrdered,
+              previousValue: stock.quantityOrdered,
+              newValue: newStock.quantityOrdered,
+              reason: `Purchase order ${purchaseOrder.id} received`,
+            },
+          );
+
+          return this.stockService.updateStockByProductIdAsync(
             stock.productId,
             newStock,
             tx,
           );
+        });
 
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Income,
-            changedField: StockChangedField.QuantityAvailable,
-            previousValue: stock.quantityAvailable,
-            newValue: newStock.quantityAvailable,
-            reason: `Purchase order ${purchaseOrder.id} received`,
-          });
-
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Outcome,
-            changedField: StockChangedField.QuantityOrdered,
-            previousValue: stock.quantityOrdered,
-            newValue: newStock.quantityOrdered,
-            reason: `Purchase order ${purchaseOrder.id} received`,
-          });
-        }
-
+        await Promise.all(updatePromises);
         await this.stockChangeRepository.createManyStockChangeAsync(
           stockUpdates,
           tx,
         );
         break;
+      }
 
-      case PurchaseOrderStatusId.Cancelled:
+      case PurchaseOrderStatusId.Cancelled: {
         if (purchaseOrder.purchaseOrderStatusId === PurchaseOrderStatusId.Draft)
           break;
 
-        for (const item of purchaseOrderItems) {
-          const stock = await this.stockService.findByProductIdAsync(
-            item.productId,
-          );
+        const stocks = await Promise.all(
+          purchaseOrderItems.map((item) =>
+            this.stockService.findByProductIdAsync(item.productId, tx),
+          ),
+        );
+
+        const updatePromises = purchaseOrderItems.map((item, index) => {
+          const stock = stocks[index];
           if (!stock) {
             throw new NotFoundException(
               `Stock for product ${item.productId} not found.`,
@@ -349,12 +361,6 @@ export class PurchaseOrderService {
             quantityReserved: stock.quantityReserved,
           };
 
-          await this.stockService.updateStockByProductIdAsync(
-            stock.productId,
-            newStock,
-            tx,
-          );
-
           stockUpdates.push({
             productId: item.productId,
             changeTypeId: StockChangeTypeIds.Outcome,
@@ -363,22 +369,31 @@ export class PurchaseOrderService {
             newValue: newStock.quantityOrdered,
             reason: `Purchase order ${purchaseOrder.id} cancelled`,
           });
-        }
 
+          return this.stockService.updateStockByProductIdAsync(
+            stock.productId,
+            newStock,
+            tx,
+          );
+        });
+
+        await Promise.all(updatePromises);
         await this.stockChangeRepository.createManyStockChangeAsync(
           stockUpdates,
           tx,
         );
         break;
+      }
 
-      case PurchaseOrderStatusId.Deleted:
-        break;
+      case PurchaseOrderStatusId.Ordered: {
+        const stocks = await Promise.all(
+          purchaseOrderItems.map((item) =>
+            this.stockService.findByProductIdAsync(item.productId, tx),
+          ),
+        );
 
-      case PurchaseOrderStatusId.Ordered:
-        for (const item of purchaseOrderItems) {
-          const stock = await this.stockService.findByProductIdAsync(
-            item.productId,
-          );
+        const updatePromises = purchaseOrderItems.map((item, index) => {
+          const stock = stocks[index];
           if (!stock) {
             throw new NotFoundException(
               `Stock for product ${item.productId} not found.`,
@@ -391,12 +406,6 @@ export class PurchaseOrderService {
             quantityReserved: stock.quantityReserved,
           };
 
-          await this.stockService.updateStockByProductIdAsync(
-            stock.productId,
-            newStock,
-            tx,
-          );
-
           stockUpdates.push({
             productId: item.productId,
             changeTypeId: StockChangeTypeIds.Income,
@@ -405,14 +414,23 @@ export class PurchaseOrderService {
             newValue: newStock.quantityOrdered,
             reason: `Purchase order ${purchaseOrder.id} ordered`,
           });
-        }
 
+          return this.stockService.updateStockByProductIdAsync(
+            stock.productId,
+            newStock,
+            tx,
+          );
+        });
+
+        await Promise.all(updatePromises);
         await this.stockChangeRepository.createManyStockChangeAsync(
           stockUpdates,
           tx,
         );
         break;
+      }
 
+      case PurchaseOrderStatusId.Deleted:
       default:
         break;
     }

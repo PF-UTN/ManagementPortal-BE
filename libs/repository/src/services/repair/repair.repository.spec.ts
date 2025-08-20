@@ -35,6 +35,10 @@ describe('RepairRepository', () => {
     repair.serviceSupplierId = 1;
   });
 
+  it('should be defined', () => {
+    expect(repository).toBeDefined();
+  });
+
   describe('existsAsync', () => {
     it('should return true if repair exists', async () => {
       // Arrange
@@ -85,18 +89,95 @@ describe('RepairRepository', () => {
         kmPerformed: repair.kmPerformed,
         vehicleId: repair.vehicleId,
         serviceSupplierId: repair.serviceSupplierId,
-      }
+      };
 
-      jest
-        .spyOn(prismaService.repair, 'create')
-        .mockResolvedValueOnce(repair);
+      jest.spyOn(prismaService.repair, 'create').mockResolvedValueOnce(repair);
 
       // Act
-      const createdRepair =
-        await repository.createRepairAsync(repairCreationDataMock);
+      const createdRepair = await repository.createRepairAsync(
+        repairCreationDataMock,
+      );
 
       // Assert
       expect(createdRepair).toEqual(repair);
+    });
+  });
+
+  describe('searchByTextAndVehicleIdAsync', () => {
+    let searchText: string;
+    let page: number;
+    let pageSize: number;
+    let vehicleId: number;
+
+    beforeEach(() => {
+      searchText = 'test';
+      page = 1;
+      pageSize = 10;
+      vehicleId = 1;
+    });
+
+    it('should construct the correct query with search text filter', async () => {
+      // Act
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      // Assert
+      expect(prismaService.repair.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { vehicleId: vehicleId },
+              { deleted: false },
+              { description: { contains: searchText, mode: 'insensitive' } },
+            ],
+          },
+        }),
+      );
+    });
+
+    it('should construct the correct query with skip and take', async () => {
+      // Act
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      // Assert
+      expect(prismaService.repair.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+      );
+    });
+
+    it('should construct the correct query with count of total items matched', async () => {
+      // Act
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      // Assert
+      expect(prismaService.repair.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { vehicleId: vehicleId },
+              { deleted: false },
+              { description: { contains: searchText, mode: 'insensitive' } },
+            ],
+          },
+        }),
+      );
     });
   });
 });
