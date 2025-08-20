@@ -17,8 +17,8 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
-import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
+import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
 
