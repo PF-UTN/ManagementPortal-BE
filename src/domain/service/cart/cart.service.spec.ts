@@ -36,4 +36,16 @@ describe('CartService', () => {
       expect(spy).toHaveBeenCalledWith(mockProduct);
     });
   });
+  describe('getProductByIdFromRedisAsync', () => {
+    it('should call cartRepository.getProductByIdFromRedisAsync', async () => {
+      // Arrange
+      const mockProduct = productDetailsDtoMock;
+      const spy = jest.spyOn(cartRepository, 'getProductByIdFromRedisAsync');
+      // Act
+      await service.getProductByIdFromRedisAsync(mockProduct.id);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(mockProduct.id);
+    })
+  })
 });

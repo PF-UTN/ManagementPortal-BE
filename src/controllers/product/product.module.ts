@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { CartServiceModule } from './../../domain/service/cart/cart.service.module';
 import { CreateProductCommandHandler } from './command/create-product.command.handler';
 import { DeleteProductCommandHandler } from './command/delete-product.command.handler';
 import { SearchProductQueryHandler } from './command/search-product-query.handler';
@@ -18,7 +19,7 @@ const commandHandlers = [
 ];
 
 @Module({
-  imports: [ProductServiceModule],
+  imports: [ProductServiceModule, CartServiceModule],
   exports: [ProductServiceModule],
   controllers: [ProductController],
   providers: [...queryHandlers, ...commandHandlers],

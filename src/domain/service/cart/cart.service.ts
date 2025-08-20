@@ -11,4 +11,8 @@ export class CartService {
   async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
     await this.cartRepository.saveProductToRedisAsync(product);
   }
+
+  async getProductByIdFromRedisAsync(productId: number) {
+    return this.cartRepository.getProductByIdFromRedisAsync(productId);
+  }
 }

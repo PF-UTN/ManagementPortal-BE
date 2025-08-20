@@ -20,8 +20,10 @@ export class CartController {
     description: 'Save a product that has added to the cart in Redis.',
   })
   async saveProductToRedis(
-    @Param('productId', ParseIntPipe) productId: number
+    @Param('productId', ParseIntPipe) productId: number,
   ): Promise<ProductDetailsDto> {
-    return await this.commandBus.execute(new SaveProductRedisCommand(productId));
+    return await this.commandBus.execute(
+      new SaveProductRedisCommand(productId),
+    );
   }
 }

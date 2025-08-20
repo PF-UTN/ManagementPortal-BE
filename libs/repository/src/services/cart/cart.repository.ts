@@ -8,18 +8,23 @@ export class CartRepository {
   constructor(private readonly redisService: RedisService) {}
 
   async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
-    const productData = {
-      name: product.name,
-      enabled: product.enabled,
-      stock: product.stock.quantityAvailable,
-      price: product.price,
-    };
-
     await this.redisService.setFieldInHash(
-      'products', 
+      'products',
       product.id.toString(),
-      JSON.stringify(productData), 
+      JSON.stringify(product),
     );
-    await this.redisService.setKeyExpiration('products', 5400); 
+    await this.redisService.setKeyExpiration('products', 5400);
+  }
+
+  async getProductByIdFromRedisAsync(
+    productId: number,
+  ): Promise<ProductDetailsDto | null> {
+    const productJson = await this.redisService.getFieldValue(
+      'products',
+      productId.toString(),
+    );
+    if (!productJson) return null;
+    await this.redisService.setKeyExpiration('products', 5400);
+    return JSON.parse(productJson) as ProductDetailsDto;
   }
 }

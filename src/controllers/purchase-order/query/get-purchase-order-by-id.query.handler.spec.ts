@@ -49,7 +49,7 @@ describe('GetPurchaseOrderByIdQueryHandler', () => {
         totalAmount: 100.0,
         status: {
           id: PurchaseOrderStatusId.Ordered,
-          name: 'Ordenada',
+          name: 'Pedida',
         },
         supplier: 'Test Supplier',
         purchaseOrderItems: [
