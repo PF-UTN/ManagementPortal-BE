@@ -53,4 +53,10 @@ export const PermissionCodes = {
     UPDATE: 'maintenance-plan-item:update',
     DELETE: 'maintenance-plan-item:delete',
   },
+  Maintenance: {
+    READ: 'maintenance:read',
+    CREATE: 'maintenance:create',
+    UPDATE: 'maintenance:update',
+    DELETE: 'maintenance:delete',
+  },
 };

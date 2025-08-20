@@ -6,6 +6,7 @@ import {
   MaintenancePlanItemCreationDto,
   RepairCreationDto,
   SearchRepairRequest,
+  SearchMaintenanceRequest,
   SearchVehicleRequest,
   UpdateVehicleDto,
 } from '@mp/common/dtos';
@@ -16,6 +17,7 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
@@ -205,6 +207,23 @@ describe('VehicleController', () => {
 
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchRepairQuery(vehicleId, request),
+      );
+    });
+  });
+
+  describe('searchVehicleMaintenanceAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      const vehicleId = 1;
+      const request: SearchMaintenanceRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+      };
+
+      await controller.searchVehicleMaintenanceAsync(vehicleId, request);
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchMaintenanceQuery(vehicleId, request),
       );
     });
   });
