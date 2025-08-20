@@ -8,8 +8,8 @@ import { StockRepository } from '@mp/repository';
 export class StockService {
   constructor(private readonly stockRepository: StockRepository) {}
 
-  async findByProductIdAsync(productId: number): Promise<Stock | null> {
-    return this.stockRepository.findByProductIdAsync(productId);
+  async findByProductIdAsync(productId: number, tx?: Prisma.TransactionClient): Promise<Stock | null> {
+    return this.stockRepository.findByProductIdAsync(productId, tx);
   }
 
   async updateStockByProductIdAsync(
