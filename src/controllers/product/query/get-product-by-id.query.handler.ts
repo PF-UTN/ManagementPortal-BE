@@ -18,42 +18,40 @@ export class GetProductByIdQueryHandler {
       query.id,
     );
 
-    if (!foundProduct) {
-      const dbProduct = await this.productService.findProductByIdAsync(
-        query.id,
-      );
-
-      if (!dbProduct) {
-        throw new NotFoundException(`Product with ID ${query.id} not found.`);
-      }
-
-      const product: ProductDetailsDto = {
-        id: dbProduct.id,
-        name: dbProduct.name,
-        description: dbProduct.description,
-        price: dbProduct.price.toNumber(),
-        weight: dbProduct.weight.toNumber(),
-        stock: {
-          quantityAvailable: dbProduct.stock?.quantityAvailable ?? 0,
-          quantityReserved: dbProduct.stock?.quantityReserved ?? 0,
-          quantityOrdered: dbProduct.stock?.quantityOrdered ?? 0,
-        },
-        category: {
-          name: dbProduct.category.name,
-        },
-        supplier: {
-          businessName: dbProduct.supplier.businessName,
-          email: dbProduct.supplier.email,
-          phone: dbProduct.supplier.phone,
-        },
-        enabled: dbProduct.enabled,
-      };
-
-      await this.cartService.saveProductToRedisAsync(product);
-
-      return product;
+    if (foundProduct) {
+      return foundProduct;
     }
 
-    return foundProduct;
+    const dbProduct = await this.productService.findProductByIdAsync(query.id);
+
+    if (!dbProduct) {
+      throw new NotFoundException(`Product with ID ${query.id} not found.`);
+    }
+
+    const product: ProductDetailsDto = {
+      id: dbProduct.id,
+      name: dbProduct.name,
+      description: dbProduct.description,
+      price: dbProduct.price.toNumber(),
+      weight: dbProduct.weight.toNumber(),
+      stock: {
+        quantityAvailable: dbProduct.stock?.quantityAvailable ?? 0,
+        quantityReserved: dbProduct.stock?.quantityReserved ?? 0,
+        quantityOrdered: dbProduct.stock?.quantityOrdered ?? 0,
+      },
+      category: {
+        name: dbProduct.category.name,
+      },
+      supplier: {
+        businessName: dbProduct.supplier.businessName,
+        email: dbProduct.supplier.email,
+        phone: dbProduct.supplier.phone,
+      },
+      enabled: dbProduct.enabled,
+    };
+
+    await this.cartService.saveProductToRedisAsync(product);
+
+    return product;
   }
 }
