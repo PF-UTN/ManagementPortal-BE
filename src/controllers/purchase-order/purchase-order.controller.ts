@@ -6,6 +6,7 @@ import {
   HttpCode,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import {
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
+  UpdatePurchaseOrderStatusRequestDto,
   PurchaseOrderCreationDto,
   PurchaseOrderUpdateDto,
   SearchPurchaseOrderRequest,
@@ -27,9 +29,11 @@ import {
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
+import { UpdatePurchaseOrderStatusCommand } from './command/update-purchase-order-status.command';
 import { UpdatePurchaseOrderCommand } from './command/update-purchase-order.command';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
+
 @Controller('purchase-order')
 export class PurchaseOrderController {
   constructor(
@@ -119,6 +123,27 @@ export class PurchaseOrderController {
   ) {
     return this.commandBus.execute(
       new UpdatePurchaseOrderCommand(id, purchaseOrderUpdateDto),
+    );
+  }
+
+  @Patch(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.PurchaseOrder.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update status of a purchase order',
+    description: 'Update the status of a purchase order with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the purchase order to update',
+  })
+  updatePurchaseOrderStatusAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() purchaseOrderStatusUpdateDto: UpdatePurchaseOrderStatusRequestDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdatePurchaseOrderStatusCommand(id, purchaseOrderStatusUpdateDto),
     );
   }
 }
