@@ -52,23 +52,26 @@ export class PurchaseOrderService {
     const { purchaseOrderItems, ...purchaseOrderData } =
       purchaseOrderCreationDto;
 
-    if (!purchaseOrderItems || purchaseOrderItems.length === 0) {
+    if (
+      purchaseOrderData.purchaseOrderStatusId !==
+        PurchaseOrderStatusId.Ordered &&
+      purchaseOrderData.purchaseOrderStatusId !== PurchaseOrderStatusId.Draft
+    ) {
       throw new BadRequestException(
-        'Purchase order must have at least one item',
+        'Purchase order status must be Ordered or Draft',
       );
     }
 
     const productIds = purchaseOrderItems.map((item) => item.productId);
 
-    const productsExist =
-      await this.productRepository.existsManyAsync(productIds);
-    if (!productsExist) {
-      throw new NotFoundException(`One or more products do not exist.`);
-    }
+    await this.validatePurchaseOrderItemsAsync(productIds);
 
-    const totalAmount = purchaseOrderItems.reduce((sum, item) => {
-      return sum + item.quantity * Number(item.unitPrice);
-    }, 0);
+    await this.validateItemsBelongToSupplierAsync(
+      productIds,
+      purchaseOrderData.supplierId,
+    );
+
+    const totalAmount = calculateTotalAmount(purchaseOrderItems);
 
     return this.unitOfWork.execute(async (tx) => {
       const purchaseOrder =
@@ -76,7 +79,6 @@ export class PurchaseOrderService {
           {
             ...purchaseOrderData,
             totalAmount,
-            purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
           },
           tx,
         );
@@ -91,6 +93,13 @@ export class PurchaseOrderService {
 
       await this.purchaseOrderItemRepository.createManyPurchaseOrderItemAsync(
         purchaseOrderItemsToCreate,
+        tx,
+      );
+
+      await this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrderItemsToCreate,
+        purchaseOrderData.purchaseOrderStatusId,
         tx,
       );
     });
@@ -358,6 +367,9 @@ export class PurchaseOrderService {
     const stockUpdates: StockChangeCreationDataDto[] = [];
 
     switch (newStatus) {
+      case PurchaseOrderStatusId.Draft:
+        break;
+        
       case PurchaseOrderStatusId.Received: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
