@@ -61,10 +61,6 @@ describe('PurchaseOrderService', () => {
           useValue: mockDeep(StockChangeRepository),
         },
         {
-          provide: ProductRepository,
-          useValue: mockDeep(ProductRepository),
-        },
-        {
           provide: PrismaUnitOfWork,
           useValue: mockDeep(PrismaUnitOfWork),
         },
@@ -103,13 +99,24 @@ describe('PurchaseOrderService', () => {
   });
 
   describe('createPurchaseOrderAsync', () => {
-    it('should throw BadRequestException if purchaseOrderItems is empty', async () => {
+    beforeEach(() => {
+      jest
+        .spyOn(service, 'validatePurchaseOrderItemsAsync')
+        .mockResolvedValueOnce();
+      jest
+        .spyOn(service, 'validateItemsBelongToSupplierAsync')
+        .mockResolvedValueOnce();
+    });
+
+    it('should throw BadRequestException if purchase order status is invalid for creation', async () => {
+      // Arrange
       // Arrange
       const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
         supplierId: 1,
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
-        purchaseOrderItems: [],
+        purchaseOrderStatusId: PurchaseOrderStatusId.Received,
+        purchaseOrderItems: [{ productId: 999, quantity: 2, unitPrice: 10.0 }],
       };
 
       // Act & Assert
@@ -118,31 +125,13 @@ describe('PurchaseOrderService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw NotFoundException if one or more products do not exist', async () => {
-      // Arrange
-      const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
-        supplierId: 1,
-        estimatedDeliveryDate: new Date('1990-01-15'),
-        observation: 'Test observation',
-        purchaseOrderItems: [{ productId: 999, quantity: 2, unitPrice: 10.0 }],
-      };
-
-      jest
-        .spyOn(productRepository, 'existsManyAsync')
-        .mockResolvedValueOnce(false);
-
-      // Act & Assert
-      await expect(
-        service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock),
-      ).rejects.toThrow(NotFoundException);
-    });
-
     it('should call unitOfWork.execute with the correct transaction client', async () => {
       // Arrange
       const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
         supplierId: 1,
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
         purchaseOrderItems: [{ productId: 999, quantity: 2, unitPrice: 10.0 }],
       };
 
@@ -155,6 +144,10 @@ describe('PurchaseOrderService', () => {
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
       });
+
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(mockDeep<Stock>());
 
       const purchaseOrderMock = {
         id: 1,
@@ -185,6 +178,7 @@ describe('PurchaseOrderService', () => {
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         purchaseOrderItems: [{ productId: 1, quantity: 2, unitPrice: 10.0 }],
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
       };
       jest
         .spyOn(productRepository, 'existsManyAsync')
@@ -193,6 +187,10 @@ describe('PurchaseOrderService', () => {
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
       });
+
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(mockDeep<Stock>());
 
       const purchaseOrderMock = {
         id: 1,
@@ -234,6 +232,7 @@ describe('PurchaseOrderService', () => {
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         purchaseOrderItems: [{ productId: 1, quantity: 2, unitPrice: 10.0 }],
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
       };
 
       jest
@@ -245,6 +244,10 @@ describe('PurchaseOrderService', () => {
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
       });
+
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(mockDeep<Stock>());
 
       jest
         .spyOn(purchaseOrderRepository, 'createPurchaseOrderAsync')
@@ -574,7 +577,7 @@ describe('PurchaseOrderService', () => {
     });
   });
 
-  describe('validatePurchaseOrderUpdateAsync', () => {
+  describe('validatePurchaseOrderItemsAsync', () => {
     it('should throw BadRequestException if there are not products', async () => {
       // Arrange
       const productIds: number[] = [];
@@ -636,8 +639,12 @@ describe('PurchaseOrderService', () => {
 
   describe('updatePurchaseOrderAsync', () => {
     beforeEach(() => {
-      jest.spyOn(service, 'validatePurchaseOrderItemsAsync').mockResolvedValueOnce();
-      jest.spyOn(service, 'validateItemsBelongToSupplierAsync').mockResolvedValueOnce();
+      jest
+        .spyOn(service, 'validatePurchaseOrderItemsAsync')
+        .mockResolvedValueOnce();
+      jest
+        .spyOn(service, 'validateItemsBelongToSupplierAsync')
+        .mockResolvedValueOnce();
     });
 
     it('should throw BadRequestException if purchase order is in a final state', async () => {
@@ -812,5 +819,11 @@ describe('PurchaseOrderService', () => {
       // Assert
       expect(unitOfWork.execute).toHaveBeenCalled();
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 });
