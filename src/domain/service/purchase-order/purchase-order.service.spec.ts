@@ -532,12 +532,119 @@ describe('PurchaseOrderService', () => {
     });
   });
 
-  describe('updatePurchaseOrderAsync', () => {
-    it('should throw NotFoundException if purchase order does not exists', async () => {
+  describe('validatePurchaseOrderExistsAsync', () => {
+    it('should throw NotFoundException if purchase order does not exist', async () => {
       // Arrange
       const id = 999;
-      const purchaseOrderUpdateDto: PurchaseOrderUpdateDto = {
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.validatePurchaseOrderExistsAsync(id),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should return the purchase order if it exists', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderMock: PurchaseOrder = {
+        id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        totalAmount: new Prisma.Decimal(100.0),
+        createdAt: new Date(),
+        effectiveDeliveryDate: null,
+      };
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(purchaseOrderMock);
+
+      // Act
+      const result = await service.validatePurchaseOrderExistsAsync(id);
+
+      // Assert
+      expect(result).toEqual(purchaseOrderMock);
+    });
+  });
+
+  describe('validatePurchaseOrderUpdateAsync', () => {
+    it('should throw BadRequestException if there are not products', async () => {
+      // Arrange
+      const productIds: number[] = [];
+
+      // Act & Assert
+      await expect(
+        service.validatePurchaseOrderItemsAsync(productIds),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if one or more products do not exist', async () => {
+      // Arrange
+      const productIds: number[] = [999];
+      jest
+        .spyOn(productRepository, 'existsManyAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.validatePurchaseOrderItemsAsync(productIds),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('validateItemsBelongToSupplierAsync', () => {
+    it('should throw BadRequestException if there are not products', async () => {
+      // Arrange
+      const productIds: number[] = [];
+      const supplierId = 1;
+
+      // Act & Assert
+      await expect(
+        service.validateItemsBelongToSupplierAsync(productIds, supplierId),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if any product does not belong to supplier', async () => {
+      // Arrange
+      const productIds: number[] = [1];
+      const supplierId = 999;
+
+      const items = [
+        {
+          id: 1,
+          supplierId: 1,
+        },
+      ];
+
+      jest
+        .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
+        .mockResolvedValueOnce(items);
+
+      // Act & Assert
+      await expect(
+        service.validateItemsBelongToSupplierAsync(productIds, supplierId),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('updatePurchaseOrderAsync', () => {
+    beforeEach(() => {
+      jest.spyOn(service, 'validatePurchaseOrderItemsAsync').mockResolvedValueOnce();
+      jest.spyOn(service, 'validateItemsBelongToSupplierAsync').mockResolvedValueOnce();
+    });
+
+    it('should throw BadRequestException if purchase order is in a final state', async () => {
+      // Arrange
+      const id = 1;
+      const purchaseOrderUpdateDto: PurchaseOrderUpdateDto = {
+        purchaseOrderStatusId: PurchaseOrderStatusId.Deleted,
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         effectiveDeliveryDate: null,
@@ -550,30 +657,13 @@ describe('PurchaseOrderService', () => {
         ],
       };
       jest
-        .spyOn(purchaseOrderRepository, 'findByIdAsync')
-        .mockResolvedValueOnce(null);
+        .spyOn(service, 'validatePurchaseOrderExistsAsync')
+        .mockResolvedValueOnce({
+          ...purchaseOrder,
+          purchaseOrderStatusId: PurchaseOrderStatusId.Received,
+        });
 
-      // Act
-      await expect(
-        service.updatePurchaseOrderAsync(id, purchaseOrderUpdateDto),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw BadRequestException if purchase order does not have items', async () => {
-      // Arrange
-      const id = 1;
-      const purchaseOrderUpdateDto: PurchaseOrderUpdateDto = {
-        purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
-        estimatedDeliveryDate: new Date('1990-01-15'),
-        observation: 'Test observation',
-        effectiveDeliveryDate: null,
-        purchaseOrderItems: [],
-      };
-      jest
-        .spyOn(purchaseOrderRepository, 'findByIdAsync')
-        .mockResolvedValueOnce(purchaseOrder);
-
-      // Act
+      // Act & Assert
       await expect(
         service.updatePurchaseOrderAsync(id, purchaseOrderUpdateDto),
       ).rejects.toThrow(BadRequestException);

@@ -16,6 +16,7 @@ import {
 import {
   PurchaseOrderCreationDto,
   PurchaseOrderDetailsDto,
+  PurchaseOrderItemCreationDto,
   PurchaseOrderItemDetailsDto,
   PurchaseOrderItemDto,
   PurchaseOrderUpdateDto,
@@ -173,23 +174,80 @@ export class PurchaseOrderService {
     return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
   }
 
-  async updatePurchaseOrderAsync(
-    id: number,
-    purchaseOrderUpdateDto: PurchaseOrderUpdateDto,
-  ) {
+  async validatePurchaseOrderExistsAsync(id: number): Promise<PurchaseOrder> {
     const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
     if (!purchaseOrder) {
       throw new NotFoundException(
         `Purchase order with id ${id} does not exist.`,
       );
     }
+    return purchaseOrder;
+  }
 
-    if (purchaseOrderUpdateDto.purchaseOrderItems.length === 0) {
+  async validatePurchaseOrderItemsAsync(productIds: number[]) {
+    if (!productIds || productIds.length === 0) {
+      throw new BadRequestException('At least one item must be provided.');
+    }
+    const productsExist =
+      await this.productRepository.existsManyAsync(productIds);
+    if (!productsExist) {
+      throw new NotFoundException(`One or more products do not exist.`);
+    }
+  }
+
+  async validateItemsBelongToSupplierAsync(
+    productIds: number[],
+    supplierId: number,
+  ) {
+    if (!productIds || productIds.length === 0) {
       throw new BadRequestException('At least one item must be provided.');
     }
 
+    const items =
+      await this.productRepository.findManyProductsWithSupplierIdAsync(
+        productIds,
+      );
+    const allBelongToSupplier = items.every(
+      (item) => item.supplierId === supplierId,
+    );
+
+    if (!allBelongToSupplier) {
+      throw new BadRequestException(
+        'All items must belong to the same supplier.',
+      );
+    }
+  }
+
+  async updatePurchaseOrderAsync(
+    id: number,
+    purchaseOrderUpdateDto: PurchaseOrderUpdateDto,
+  ) {
+    const purchaseOrder = await this.validatePurchaseOrderExistsAsync(id);
+
+    const productIds = purchaseOrderUpdateDto.purchaseOrderItems.map(
+      (item) => item.productId,
+    );
+
+    await this.validatePurchaseOrderItemsAsync(productIds);
+
+    await this.validateItemsBelongToSupplierAsync(
+      productIds,
+      purchaseOrder.supplierId,
+    );
+
     const currentPurchaseOrderStatus = purchaseOrder.purchaseOrderStatusId;
     const newPurchaseOrderStatus = purchaseOrderUpdateDto.purchaseOrderStatusId;
+
+    if (
+      currentPurchaseOrderStatus === newPurchaseOrderStatus &&
+      (newPurchaseOrderStatus === PurchaseOrderStatusId.Cancelled ||
+        newPurchaseOrderStatus === PurchaseOrderStatusId.Received ||
+        newPurchaseOrderStatus === PurchaseOrderStatusId.Deleted)
+    ) {
+      throw new BadRequestException(
+        `Purchase order ${id} cannot be updated because it is in a final state.`,
+      );
+    }
 
     if (currentPurchaseOrderStatus !== newPurchaseOrderStatus) {
       const validTransition = canTransition(
@@ -225,45 +283,63 @@ export class PurchaseOrderService {
       purchaseOrderUpdateDto;
 
     const currentPurchaseOrderItems =
-      this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
+      await this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
         purchaseOrder.id,
       );
 
-    const transformedItems: PurchaseOrderItemDto[] = (
-      await currentPurchaseOrderItems
-    ).map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: Number(item.unitPrice),
-    }));
+    const transformedItems: PurchaseOrderItemDto[] =
+      currentPurchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+      }));
 
-    const newPurchaseOrderItemsToCreate = purchaseOrderItems.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: Number(item.unitPrice),
-      purchaseOrderId: purchaseOrder.id,
-      subtotalPrice: Number(item.unitPrice) * item.quantity,
-    }));
+    const arePurchaseOrderItemsEqual = isEqual(
+      purchaseOrderItems,
+      transformedItems,
+    );
 
-    const totalAmount = calculateTotalAmount(newPurchaseOrderItemsToCreate);
+    let totalAmount: number = Number(purchaseOrder.totalAmount);
+    let purchaseOrderItemsToCreate: PurchaseOrderItemCreationDto[];
+
+    if (!arePurchaseOrderItemsEqual) {
+      purchaseOrderItemsToCreate = purchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        purchaseOrderId: purchaseOrder.id,
+        subtotalPrice: Number(item.unitPrice) * item.quantity,
+      }));
+
+      totalAmount = calculateTotalAmount(purchaseOrderItemsToCreate);
+    } else {
+      purchaseOrderItemsToCreate = currentPurchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        purchaseOrderId: purchaseOrder.id,
+        subtotalPrice: Number(item.unitPrice) * item.quantity,
+      }));
+    }
 
     this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      if (!isEqual(purchaseOrderItems, transformedItems)) {
+      if (!arePurchaseOrderItemsEqual) {
         await this.purchaseOrderItemRepository.deleteByPurchaseOrderIdAsync(
           purchaseOrder.id,
           tx,
         );
         await this.purchaseOrderItemRepository.createManyPurchaseOrderItemAsync(
-          newPurchaseOrderItemsToCreate,
-          tx,
-        );
-        await this.manageStockChanges(
-          purchaseOrder,
-          newPurchaseOrderItemsToCreate,
-          purchaseOrderUpdateDto.purchaseOrderStatusId,
+          purchaseOrderItemsToCreate,
           tx,
         );
       }
+
+      await this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrderItemsToCreate,
+        purchaseOrderUpdateDto.purchaseOrderStatusId,
+        tx,
+      );
 
       await this.purchaseOrderRepository.updatePurchaseOrderAsync(
         purchaseOrder.id,
@@ -285,7 +361,7 @@ export class PurchaseOrderService {
       case PurchaseOrderStatusId.Received: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
+            this.stockService.findByProductIdAsync(item.productId),
           ),
         );
 
@@ -343,7 +419,7 @@ export class PurchaseOrderService {
 
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
+            this.stockService.findByProductIdAsync(item.productId),
           ),
         );
 
@@ -388,7 +464,7 @@ export class PurchaseOrderService {
       case PurchaseOrderStatusId.Ordered: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
+            this.stockService.findByProductIdAsync(item.productId),
           ),
         );
 
