@@ -27,4 +27,29 @@ export class CartRepository {
     await this.redisService.setKeyExpiration('products', 5400);
     return JSON.parse(productJson) as ProductDetailsDto;
   }
+
+  async updateProductQuantityInCartAsync(
+    userId: string,
+    productId: number,
+    quantity: number,
+  ): Promise<void> {
+    const cartKey = `cart:${userId}`;
+    await this.redisService.setFieldInHash(
+      cartKey,
+      productId.toString(),
+      quantity.toString(),
+    );
+  }
+
+  async getProductQuantityFromCartAsync(
+    userId: string,
+    productId: number,
+  ): Promise<number | null> {
+    const cartKey = `cart:${userId}`;
+    const value = await this.redisService.getFieldValue(
+      cartKey,
+      productId.toString(),
+    );
+    return value ? parseInt(value, 10) : null;
+  }
 }

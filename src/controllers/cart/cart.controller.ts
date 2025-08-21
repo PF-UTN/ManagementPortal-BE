@@ -26,4 +26,19 @@ export class CartController {
       new SaveProductRedisCommand(productId),
     );
   }
+
+  // @Post('update/product/:productId')
+  // @RequiredPermissions(PermissionCodes.Cart.CREATE)
+  // @ApiBearerAuth()
+  // @ApiOperation({
+  //   summary: 'Update product quantity in Cart',
+  //   description: 'Update product quantity in cart in Redis.',
+  // })
+  // async UpdateCartProductQuantity(
+  //   @Param('productId', ParseIntPipe) productId: number,
+  // ): Promise<number> {
+  //   return await this.commandBus.execute(
+  //     new UpdateCartProductQuantityCommand(productId),
+  //   );
+  // }
 }

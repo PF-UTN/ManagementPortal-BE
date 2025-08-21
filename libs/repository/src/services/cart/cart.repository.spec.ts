@@ -72,4 +72,75 @@ describe('ProductRedisRepository', () => {
       expect(spy).toHaveBeenCalledWith('products', 5400);
     });
   });
+
+  describe('updateProductQuantityInCartAsync', () => {
+    it('should call setFieldInHash with cart key, productId, and quantity', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      const quantity = 5;
+      const spy = jest.spyOn(redisService, 'setFieldInHash');
+
+      // Act
+      await cartRepository.updateProductQuantityInCartAsync(
+        userId,
+        productId,
+        quantity,
+      );
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(
+        `cart:${userId}`,
+        String(productId),
+        String(quantity),
+      );
+    });
+  });
+
+  describe('getProductQuantityFromCartAsync', () => {
+    it('should call getFieldValue with cart key and productId', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      const spy = jest.spyOn(redisService, 'getFieldValue');
+
+      // Act
+      await cartRepository.getProductQuantityFromCartAsync(userId, productId);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(`cart:${userId}`, String(productId));
+    });
+
+    it('should return parsed number when value exists', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      jest.spyOn(redisService, 'getFieldValue').mockResolvedValueOnce('7');
+
+      // Act
+      const result = await cartRepository.getProductQuantityFromCartAsync(
+        userId,
+        productId,
+      );
+
+      // Assert
+      expect(result).toBe(7);
+    });
+
+    it('should return null when value does not exist', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      jest.spyOn(redisService, 'getFieldValue').mockResolvedValueOnce(null);
+
+      // Act
+      const result = await cartRepository.getProductQuantityFromCartAsync(
+        userId,
+        productId,
+      );
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
 });

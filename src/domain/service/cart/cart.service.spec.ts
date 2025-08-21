@@ -46,6 +46,44 @@ describe('CartService', () => {
 
       // Assert
       expect(spy).toHaveBeenCalledWith(mockProduct.id);
-    })
-  })
+    });
+  });
+
+  describe('updateProductQuantityInCartAsync', () => {
+    it('should call cartRepository.updateProductQuantityInCartAsync with correct parameters', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      const quantity = 5;
+      const spy = jest.spyOn(
+        cartRepository,
+        'updateProductQuantityInCartAsync',
+      );
+
+      // Act
+      await service.updateProductQuantityInCartAsync(
+        userId,
+        productId,
+        quantity,
+      );
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(userId, productId, quantity);
+    });
+  });
+
+  describe('getProductQuantityFromCartAsync', () => {
+    it('should call cartRepository.getProductQuantityFromCartAsync with correct parameters', async () => {
+      // Arrange
+      const userId = '123';
+      const productId = 10;
+      const spy = jest.spyOn(cartRepository, 'getProductQuantityFromCartAsync');
+
+      // Act
+      await service.getProductQuantityFromCartAsync(userId, productId);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(userId, productId);
+    });
+  });
 });

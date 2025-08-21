@@ -15,4 +15,26 @@ export class CartService {
   async getProductByIdFromRedisAsync(productId: number) {
     return this.cartRepository.getProductByIdFromRedisAsync(productId);
   }
+
+  async updateProductQuantityInCartAsync(
+    userId: string,
+    productId: number,
+    quantity: number,
+  ): Promise<void> {
+    await this.cartRepository.updateProductQuantityInCartAsync(
+      userId,
+      productId,
+      quantity,
+    );
+  }
+
+  async getProductQuantityFromCartAsync(
+    userId: string,
+    productId: number,
+  ): Promise<number | null> {
+    return this.cartRepository.getProductQuantityFromCartAsync(
+      userId,
+      productId,
+    );
+  }
 }
