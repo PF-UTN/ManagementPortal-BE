@@ -428,4 +428,36 @@ describe('ProductRepository', () => {
             expect(result).toEqual(productMockData);
         });
     });
+
+  describe('findManyProductsWithSupplierIdAsync', () => {
+    it('should return products with supplier IDs', async () => {
+      // Arrange
+      const productIds = [product.id];
+      jest
+        .spyOn(prismaService.product, 'findMany')
+        .mockResolvedValueOnce([product]);
+
+      // Act
+      const result =
+        await repository.findManyProductsWithSupplierIdAsync(productIds);
+
+      // Assert
+      expect(result).toEqual([product]);
+    });
+
+    it('should return empty array if no products found', async () => {
+      // Arrange
+      const productIds = [product.id];
+      jest
+        .spyOn(prismaService.product, 'findMany')
+        .mockResolvedValueOnce([]);
+
+      // Act
+      const result =
+        await repository.findManyProductsWithSupplierIdAsync(productIds);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+  });
 });
