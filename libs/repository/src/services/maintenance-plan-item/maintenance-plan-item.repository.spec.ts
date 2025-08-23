@@ -55,4 +55,80 @@ describe('MaintenancePlanItemRepository', () => {
       expect(result).toEqual(maintenancePlanItem);
     });
   });
+
+  describe('searchByTextAndVehicleIdAsync', () => {
+    let searchText: string;
+    let page: number;
+    let pageSize: number;
+    let vehicleId: number;
+
+    beforeEach(() => {
+      searchText = 'test';
+      page = 1;
+      pageSize = 10;
+      vehicleId = 1;
+    });
+
+    it('should construct the correct query with search text filter and vehicleId', async () => {
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      expect(prismaService.maintenancePlanItem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            vehicleId: vehicleId,
+            maintenanceItem: {
+              description: {
+                contains: searchText,
+                mode: 'insensitive',
+              },
+            },
+          },
+        }),
+      );
+    });
+
+    it('should construct the correct query with skip and take', async () => {
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      expect(prismaService.maintenancePlanItem.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+      );
+    });
+
+    it('should construct the correct query with count of total items matched', async () => {
+      await repository.searchByTextAndVehicleIdAsync(
+        searchText,
+        page,
+        pageSize,
+        vehicleId,
+      );
+
+      expect(prismaService.maintenancePlanItem.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            vehicleId: vehicleId,
+            maintenanceItem: {
+              description: {
+                contains: searchText,
+                mode: 'insensitive',
+              },
+            },
+          },
+        }),
+      );
+    });
+  });
 });
