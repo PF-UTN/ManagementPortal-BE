@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
 import {
@@ -9,6 +6,8 @@ import {
   MaintenancePlanItemRepository,
   VehicleRepository,
 } from '@mp/repository';
+
+import { SearchMaintenancePlanItemQuery } from '../../../controllers/vehicle/query/search-maintenance-plan-item-query';
 
 @Injectable()
 export class MaintenancePlanItemService {
@@ -44,6 +43,25 @@ export class MaintenancePlanItemService {
 
     return await this.maintenancePlanItemRepository.createMaintenancePlanItemAsync(
       maintenancePlanItemCreationDto,
+    );
+  }
+
+  async searchByTextAndVehicleIdAsync(query: SearchMaintenancePlanItemQuery) {
+    const existsVehicle = await this.vehicleRepository.existsAsync(
+      query.vehicleId,
+    );
+
+    if (!existsVehicle) {
+      throw new NotFoundException(
+        `Vehicle with id ${query.vehicleId} does not exist.`,
+      );
+    }
+
+    return await this.maintenancePlanItemRepository.searchByTextAndVehicleIdAsync(
+      query.searchText,
+      query.page,
+      query.pageSize,
+      query.vehicleId,
     );
   }
 }
