@@ -21,6 +21,7 @@ import {
   SearchVehicleRequest,
   UpdateVehicleDto,
   VehicleCreationDto,
+  SearchMaintenancePlanItemRequest,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -29,6 +30,7 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
@@ -190,6 +192,24 @@ export class VehicleController {
   ) {
     return this.queryBus.execute(
       new SearchMaintenanceQuery(id, searchMaintenanceRequest),
+    );
+  }
+
+  @Post(':id/maintenance-plan-item/search')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Maintenance.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search vehicle maintenance plan items',
+    description:
+      'Search for maintenance plan items of the vehicle with the provided ID.',
+  })
+  async searchVehicleMaintenancePlanItemsAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() searchMaintenancePlanItemRequest: SearchMaintenancePlanItemRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchMaintenancePlanItemQuery(id, searchMaintenancePlanItemRequest),
     );
   }
 }
