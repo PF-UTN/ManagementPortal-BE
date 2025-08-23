@@ -1,5 +1,5 @@
 export class MaintenancePlanItemDetailDto {
   description: string;
-  kmPerformed: number;
-  timeInterval: number;
+  kmInterval: number | null;
+  timeInterval: number | null;
 }
