@@ -142,14 +142,14 @@ export class VehicleController {
     );
   }
 
-  @Post('maintenance-plan')
+  @Post('maintenance-plan-item')
   @HttpCode(201)
   @RequiredPermissions(PermissionCodes.MaintenancePlanItem.CREATE)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Create a vehicle maintenance plan',
+    summary: 'Create a vehicle maintenance plan item',
     description:
-      'Creates a new maintenance plan for the vehicle with the provided ID.',
+      'Creates a new maintenance plan item for the vehicle with the provided ID.',
   })
   async createVehicleMaintenancePlanItemAsync(
     @Body() maintenancePlanItemCreationDto: MaintenancePlanItemCreationDto,
