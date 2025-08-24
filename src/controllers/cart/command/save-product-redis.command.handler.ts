@@ -17,37 +17,15 @@ export class SaveProductRedisCommandHandler
   ) {}
 
   async execute(command: SaveProductRedisCommand): Promise<ProductDetailsDto> {
-    const foundProduct =
-      await this.productService.findProductByIdAsync(
-        command.productId,
-      );
+    const foundProduct = await this.productService.findProductByIdAsync(
+      command.productId,
+    );
 
     if (!foundProduct) {
       throw new NotFoundException('Product not found');
     }
-    const product: ProductDetailsDto = {
-      id: foundProduct.id,
-      name: foundProduct.name,
-      description: foundProduct.description,
-      price: foundProduct.price.toNumber(),
-      weight: foundProduct.weight.toNumber(),
-      stock: {
-        quantityAvailable: foundProduct.stock?.quantityAvailable ?? 0,
-        quantityReserved: foundProduct.stock?.quantityReserved ?? 0,
-        quantityOrdered: foundProduct.stock?.quantityOrdered ?? 0,
-      },
-      category: {
-        name: foundProduct.category.name,
-      },
-      supplier: {
-        businessName: foundProduct.supplier.businessName,
-        email: foundProduct.supplier.email,
-        phone: foundProduct.supplier.phone,
-      },
-      enabled: foundProduct.enabled,
-    };
+    await this.cartService.saveProductToRedisAsync(foundProduct);
 
-    await this.cartService.saveProductToRedisAsync(product);
-    return product;
+    return foundProduct;
   }
 }

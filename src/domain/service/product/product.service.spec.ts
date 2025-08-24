@@ -4,9 +4,11 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { OrderDirection, ProductOrderField } from '@mp/common/constants';
-import { SearchProductFiltersDto  } from '@mp/common/dtos';
+import { SearchProductFiltersDto } from '@mp/common/dtos';
 import {
   productCreationDtoMock,
+  productDetailsDtoMock,
+  productMockData,
   productUpdateDtoMock,
 } from '@mp/common/testing';
 import {
@@ -17,6 +19,7 @@ import {
 
 import { SearchProductQuery } from './../../../controllers/product/command/search-product-query';
 import { ProductService } from './product.service';
+import { CartService } from '../cart/cart.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -27,6 +30,7 @@ describe('ProductService', () => {
   let supplierService: SupplierService;
   let stockRepository: StockRepository;
   let unitOfWork: PrismaUnitOfWork;
+  let cartService: CartService;
   let product: ReturnType<
     typeof mockDeep<
       Prisma.ProductGetPayload<{
@@ -54,9 +58,11 @@ describe('ProductService', () => {
         { provide: SupplierService, useValue: mockDeep<SupplierService>() },
         { provide: StockRepository, useValue: mockDeep<StockRepository>() },
         { provide: PrismaUnitOfWork, useValue: mockDeep<PrismaUnitOfWork>() },
+        { provide: CartService, useValue: mockDeep<CartService>() },
       ],
     }).compile();
 
+    cartService = module.get<CartService>(CartService);
     productCategoryService = module.get<ProductCategoryService>(
       ProductCategoryService,
     );
@@ -285,7 +291,10 @@ describe('ProductService', () => {
       await service.updateProductAsync(product.id, productUpdateDtoMock);
 
       // Assert
-      expect(updateProductAsyncSpy).toHaveBeenCalledWith(product.id, productUpdateDtoMock);
+      expect(updateProductAsyncSpy).toHaveBeenCalledWith(
+        product.id,
+        productUpdateDtoMock,
+      );
     });
 
     it('should throw NotFoundException if product does not exist', async () => {
@@ -332,13 +341,18 @@ describe('ProductService', () => {
       const productId = 1;
 
       jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
-      jest.spyOn(repository, 'deleteProductAsync').mockResolvedValueOnce(product);
+      jest
+        .spyOn(repository, 'deleteProductAsync')
+        .mockResolvedValueOnce(product);
 
       // Act
       await service.deleteProductAsync(productId);
 
       // Assert
-      expect(repository.deleteProductAsync).toHaveBeenCalledWith(productId, expect.any(Date));
+      expect(repository.deleteProductAsync).toHaveBeenCalledWith(
+        productId,
+        expect.any(Date),
+      );
     });
 
     it('should throw NotFoundException if product does not exist', async () => {
@@ -361,7 +375,9 @@ describe('ProductService', () => {
       const enabled = true;
 
       jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
-      jest.spyOn(repository, 'updateEnabledProductAsync').mockResolvedValueOnce(product);
+      jest
+        .spyOn(repository, 'updateEnabledProductAsync')
+        .mockResolvedValueOnce(product);
 
       // Act
       await service.updateEnabledProductAsync(productId, enabled);
@@ -387,18 +403,65 @@ describe('ProductService', () => {
     });
   });
 
+  // describe('findProductByIdAsync', () => {
+  //   it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
+  //     // Arrange
+  //     const productId = 1;
+
+  //     // Act
+  //     await service.findProductByIdAsync(productId);
+
+  //     // Assert
+  //     expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(
+  //       productId,
+  //     );
+  //   });
+  // });
   describe('findProductByIdAsync', () => {
-    it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
+    it('should return product from Redis if found', async () => {
       // Arrange
-      const productId = 1;
+      const redisProductMock = productDetailsDtoMock;
+      jest
+        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(redisProductMock);
 
       // Act
-      await service.findProductByIdAsync(productId);
+      const result = await service.findProductByIdAsync(redisProductMock.id);
 
       // Assert
-      expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(
-        productId,
-      );
+      expect(result).toEqual(redisProductMock);
+    });
+    it('should call repository and save to Redis if product not in Redis but found in DB', async () => {
+      // Arrange
+      jest
+        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValue(productMockData);
+      const saveSpy = jest
+        .spyOn(cartService, 'saveProductToRedisAsync')
+        .mockResolvedValue(undefined);
+
+      // Act
+      const result = await service.findProductByIdAsync(productMockData.id);
+
+      // Assert
+      expect(saveSpy).toHaveBeenCalledWith(result);
+    });
+    it('should throw NotFoundException if product not found in Redis or DB', async () => {
+      // Arrange
+      jest
+        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.findProductByIdAsync(productMockData.id),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });

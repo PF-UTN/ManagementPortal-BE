@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { ProductDetailsDto } from '@mp/common/dtos';
+import {
+  GetCartProductQuantityDto,
+  ProductDetailsDto,
+  UpdateCartProductQuantityDto,
+} from '@mp/common/dtos';
 import { RedisService } from '@mp/common/services';
 
 @Injectable()
@@ -29,10 +33,10 @@ export class CartRepository {
   }
 
   async updateProductQuantityInCartAsync(
-    userId: string,
-    productId: number,
-    quantity: number,
+    userId: number,
+    updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ): Promise<void> {
+    const { productId, quantity } = updateCartProductQuantityDto;
     const cartKey = `cart:${userId}`;
     await this.redisService.setFieldInHash(
       cartKey,
@@ -42,9 +46,10 @@ export class CartRepository {
   }
 
   async getProductQuantityFromCartAsync(
-    userId: string,
-    productId: number,
+    userId: number,
+    getCartProductQuantityDto: GetCartProductQuantityDto,
   ): Promise<number | null> {
+    const { productId } = getCartProductQuantityDto;
     const cartKey = `cart:${userId}`;
     const value = await this.redisService.getFieldValue(
       cartKey,

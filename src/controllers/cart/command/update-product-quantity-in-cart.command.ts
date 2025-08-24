@@ -1,7 +1,8 @@
+import { UpdateCartProductQuantityDto } from '@mp/common/dtos';
+
 export class UpdateCartProductQuantityCommand {
   constructor(
-    public readonly userId: string,
-    public readonly productId: number,
-    public readonly quantity: number,
+    public readonly userId: number,
+    public readonly updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ) {}
 }

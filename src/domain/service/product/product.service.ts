@@ -1,11 +1,17 @@
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { ProductCreationDto, ProductUpdateDto } from '@mp/common/dtos';
+import {
+  ProductCreationDto,
+  ProductDetailsDto,
+  ProductUpdateDto,
+} from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
   ProductRepository,
@@ -13,6 +19,7 @@ import {
 } from '@mp/repository';
 
 import { SearchProductQuery } from '../../../controllers/product/command/search-product-query';
+import { CartService } from '../cart/cart.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -24,6 +31,8 @@ export class ProductService {
     private readonly supplierService: SupplierService,
     private readonly stockRepository: StockRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
+    @Inject(forwardRef(() => CartService))
+    private readonly cartService: CartService,
   ) {}
 
   async searchWithFiltersAsync(query: SearchProductQuery) {
@@ -133,6 +142,44 @@ export class ProductService {
   }
 
   async findProductByIdAsync(productId: number) {
-    return this.productRepository.findProductWithDetailsByIdAsync(productId);
+    const foundProduct =
+      await this.cartService.getProductByIdFromRedisAsync(productId);
+
+    if (foundProduct) {
+      return foundProduct;
+    }
+
+    const dbProduct =
+      await this.productRepository.findProductWithDetailsByIdAsync(productId);
+
+    if (!dbProduct) {
+      throw new NotFoundException(`Product with ID ${productId} not found.`);
+    }
+
+    const product: ProductDetailsDto = {
+      id: dbProduct.id,
+      name: dbProduct.name,
+      description: dbProduct.description,
+      price: dbProduct.price.toNumber(),
+      weight: dbProduct.weight.toNumber(),
+      stock: {
+        quantityAvailable: dbProduct.stock?.quantityAvailable ?? 0,
+        quantityReserved: dbProduct.stock?.quantityReserved ?? 0,
+        quantityOrdered: dbProduct.stock?.quantityOrdered ?? 0,
+      },
+      category: {
+        name: dbProduct.category.name,
+      },
+      supplier: {
+        businessName: dbProduct.supplier.businessName,
+        email: dbProduct.supplier.email,
+        phone: dbProduct.supplier.phone,
+      },
+      enabled: dbProduct.enabled,
+    };
+
+    await this.cartService.saveProductToRedisAsync(product);
+
+    return product;
   }
 }

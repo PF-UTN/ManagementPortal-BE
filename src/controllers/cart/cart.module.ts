@@ -4,8 +4,12 @@ import { CartServiceModule } from './../../domain/service/cart/cart.service.modu
 import { ProductServiceModule } from './../../domain/service/product/product.service.module';
 import { CartController } from './cart.controller';
 import { SaveProductRedisCommandHandler } from './command/save-product-redis.command.handler';
+import { UpdateCartProductQuantityCommandHandler } from './command/update-product-quantity-in-cart.command.handler';
 
-const commandHandlers = [SaveProductRedisCommandHandler];
+const commandHandlers = [
+  SaveProductRedisCommandHandler,
+  UpdateCartProductQuantityCommandHandler,
+];
 
 @Module({
   imports: [CartServiceModule, ProductServiceModule],

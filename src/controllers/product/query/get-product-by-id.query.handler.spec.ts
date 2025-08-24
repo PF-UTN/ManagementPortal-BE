@@ -1,21 +1,15 @@
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import {
-  getProductByIdQueryMock,
-  productDetailsDtoMock,
-  productMockData,
-} from '@mp/common/testing';
+import { productDetailsDtoMock } from '@mp/common/testing';
 
-import { CartService } from './../../../domain/service/cart/cart.service';
+import { GetProductByIdQuery } from './get-product-by-id.query';
 import { GetProductByIdQueryHandler } from './get-product-by-id.query.handler';
 import { ProductService } from '../../../domain/service/product/product.service';
 
 describe('GetProductByIdQueryHandler', () => {
   let handler: GetProductByIdQueryHandler;
   let productService: ProductService;
-  let cartService: CartService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,10 +19,6 @@ describe('GetProductByIdQueryHandler', () => {
           provide: ProductService,
           useValue: mockDeep<ProductService>(),
         },
-        {
-          provide: CartService,
-          useValue: mockDeep<CartService>(),
-        },
       ],
     }).compile();
 
@@ -36,7 +26,6 @@ describe('GetProductByIdQueryHandler', () => {
       GetProductByIdQueryHandler,
     );
     productService = module.get(ProductService);
-    cartService = module.get(CartService);
   });
 
   it('should be defined', () => {
@@ -44,70 +33,32 @@ describe('GetProductByIdQueryHandler', () => {
   });
 
   describe('execute', () => {
-    it('should return ProductDetailsDto from Redis when product is found', async () => {
+    it('should call productService.findProductByIdAsync with the query id', async () => {
       // Arrange
-      jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+      const query = new GetProductByIdQuery(productDetailsDtoMock.id);
+      const spy = jest
+        .spyOn(productService, 'findProductByIdAsync')
         .mockResolvedValue(productDetailsDtoMock);
 
       // Act
-      const result = await handler.execute(getProductByIdQueryMock);
+      await handler.execute(query);
 
       // Assert
-      expect(result).toEqual(productDetailsDtoMock);
+      expect(spy).toHaveBeenCalledWith(productDetailsDtoMock.id);
     });
 
-    it('should return ProductDetailsDto from Prisma when product is not found in Redis and save it in Redis', async () => {
+    it('should return the product from productService', async () => {
       // Arrange
-      jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
-        .mockResolvedValue(null);
+      const query = new GetProductByIdQuery(productDetailsDtoMock.id);
       jest
         .spyOn(productService, 'findProductByIdAsync')
-        .mockResolvedValue(productMockData);
-      jest
-        .spyOn(cartService, 'saveProductToRedisAsync')
-        .mockResolvedValue(undefined);
+        .mockResolvedValue(productDetailsDtoMock);
 
       // Act
-      const result = await handler.execute(getProductByIdQueryMock);
+      const result = await handler.execute(query);
 
       // Assert
-      expect(result).toEqual(productDetailsDtoMock);
-    });
-
-    it('should call saveProductToRedisAsync when product is found in Prisma', async () => {
-      // Arrange
-      jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
-        .mockResolvedValue(null);
-      jest
-        .spyOn(productService, 'findProductByIdAsync')
-        .mockResolvedValue(productMockData);
-      const saveSpy = jest
-        .spyOn(cartService, 'saveProductToRedisAsync')
-        .mockResolvedValue(undefined);
-
-      // Act
-      await handler.execute(getProductByIdQueryMock);
-
-      // Assert
-      expect(saveSpy).toHaveBeenCalledWith(productDetailsDtoMock);
-    });
-
-    it('should throw NotFoundException when product is not found in Prisma', async () => {
-      // Arrange
-      jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
-        .mockResolvedValue(null);
-      jest
-        .spyOn(productService, 'findProductByIdAsync')
-        .mockResolvedValue(null);
-
-      // Act & Assert
-      await expect(handler.execute(getProductByIdQueryMock)).rejects.toThrow(
-        NotFoundException,
-      );
+      expect(result).toBe(productDetailsDtoMock);
     });
   });
 });
