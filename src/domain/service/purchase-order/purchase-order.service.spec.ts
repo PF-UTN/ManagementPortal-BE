@@ -34,7 +34,13 @@ describe('PurchaseOrderService', () => {
   let stockService: StockService;
   let stockChangeRepository: StockChangeRepository;
   let unitOfWork: PrismaUnitOfWork;
-  let purchaseOrder: ReturnType<typeof mockDeep<PurchaseOrder>>;
+  let purchaseOrder: ReturnType<
+    typeof mockDeep<
+      PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
+      }
+    >
+  >;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -82,7 +88,11 @@ describe('PurchaseOrderService', () => {
 
     service = module.get<PurchaseOrderService>(PurchaseOrderService);
 
-    purchaseOrder = mockDeep<PurchaseOrder>();
+    purchaseOrder = mockDeep<
+      PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
+      }
+    >();
 
     purchaseOrder.id = 1;
     purchaseOrder.supplierId = 1;
@@ -99,17 +109,7 @@ describe('PurchaseOrderService', () => {
   });
 
   describe('createPurchaseOrderAsync', () => {
-    beforeEach(() => {
-      jest
-        .spyOn(service, 'validatePurchaseOrderItemsAsync')
-        .mockResolvedValueOnce();
-      jest
-        .spyOn(service, 'validateItemsBelongToSupplierAsync')
-        .mockResolvedValueOnce();
-    });
-
-    it('should throw BadRequestException if purchase order status is invalid for creation', async () => {
-      // Arrange
+    it('should throw BadRequestException if purchaseOrderItems is empty', async () => {
       // Arrange
       const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
         supplierId: 1,
@@ -123,6 +123,26 @@ describe('PurchaseOrderService', () => {
       await expect(
         service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if one or more products do not exist', async () => {
+      // Arrange
+      const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
+        supplierId: 1,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        purchaseOrderItems: [{ productId: 999, quantity: 2, unitPrice: 10.0 }],
+      };
+
+      jest
+        .spyOn(productRepository, 'existsManyAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should call unitOfWork.execute with the correct transaction client', async () => {
@@ -163,6 +183,10 @@ describe('PurchaseOrderService', () => {
       jest
         .spyOn(purchaseOrderRepository, 'createPurchaseOrderAsync')
         .mockResolvedValueOnce(purchaseOrderMock);
+
+      jest
+        .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
+        .mockResolvedValue([]);
 
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
@@ -206,6 +230,10 @@ describe('PurchaseOrderService', () => {
       jest
         .spyOn(purchaseOrderRepository, 'createPurchaseOrderAsync')
         .mockResolvedValueOnce(purchaseOrderMock);
+
+      jest
+        .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
+        .mockResolvedValue([]);
 
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
@@ -261,6 +289,10 @@ describe('PurchaseOrderService', () => {
           createdAt: new Date(),
           effectiveDeliveryDate: null,
         });
+
+      jest
+        .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
+        .mockResolvedValue([]);
 
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
@@ -452,7 +484,9 @@ describe('PurchaseOrderService', () => {
     it('should throw BadRequestException if purchase order is in Ordered status', async () => {
       // Arrange
       const id = 1;
-      const purchaseOrderMock: PurchaseOrder = {
+      const purchaseOrderMock: PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
+      } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
         supplierId: 1,
@@ -461,6 +495,7 @@ describe('PurchaseOrderService', () => {
         totalAmount: new Prisma.Decimal(100.0),
         createdAt: new Date(),
         effectiveDeliveryDate: null,
+        purchaseOrderItems: [],
       };
       jest
         .spyOn(purchaseOrderRepository, 'findByIdAsync')
@@ -480,7 +515,9 @@ describe('PurchaseOrderService', () => {
     it('should throw BadRequestException if purchase order is in Received status', async () => {
       // Arrange
       const id = 1;
-      const purchaseOrderMock: PurchaseOrder = {
+      const purchaseOrderMock: PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
+      } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Received,
         supplierId: 1,
@@ -489,6 +526,7 @@ describe('PurchaseOrderService', () => {
         totalAmount: new Prisma.Decimal(100.0),
         createdAt: new Date(),
         effectiveDeliveryDate: null,
+        purchaseOrderItems: [],
       };
       jest
         .spyOn(purchaseOrderRepository, 'findByIdAsync')
@@ -508,7 +546,9 @@ describe('PurchaseOrderService', () => {
     it('should call purchaseOrderRepository.deletePurchaseOrderAsync with the correct id', async () => {
       // Arrange
       const id = 1;
-      const purchaseOrderMock: PurchaseOrder = {
+      const purchaseOrderMock: PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
+      } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
         supplierId: 1,
@@ -517,6 +557,7 @@ describe('PurchaseOrderService', () => {
         totalAmount: new Prisma.Decimal(100.0),
         createdAt: new Date(),
         effectiveDeliveryDate: null,
+        purchaseOrderItems: [],
       };
       jest
         .spyOn(purchaseOrderRepository, 'findByIdAsync')
@@ -532,6 +573,168 @@ describe('PurchaseOrderService', () => {
       expect(
         purchaseOrderRepository.deletePurchaseOrderAsync,
       ).toHaveBeenCalledWith(id);
+    });
+  });
+
+  describe('updatePurchaseOrderStatusAsync', () => {
+    const mockPurchaseOrder: PurchaseOrder & {
+      purchaseOrderItems: { quantity: number; productId: number }[];
+    } = {
+      id: 1,
+      purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+      purchaseOrderItems: [{ productId: 101, quantity: 5 }],
+      observation: 'Initial observation',
+      effectiveDeliveryDate: null,
+      supplierId: 1,
+      estimatedDeliveryDate: new Date('2023-10-01'),
+      createdAt: new Date('2023-09-01'),
+      totalAmount: new Prisma.Decimal(100.0),
+    };
+
+    beforeEach(() => {
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockImplementation(async (productId: number) => ({
+          id: 1,
+          productId,
+          quantityAvailable: 10,
+          quantityOrdered: 100,
+          quantityReserved: 1000,
+        }));
+    });
+
+    it('should throw NotFoundException if purchase order does not exist', async () => {
+      // Arrange
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValue(null);
+
+      // Act
+      const act = service.updatePurchaseOrderStatusAsync(
+        999,
+        PurchaseOrderStatusId.Cancelled,
+        'Cancelled reason',
+      );
+
+      // Assert
+      await expect(act).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException for invalid status transition', async () => {
+      // Arrange
+      jest.spyOn(purchaseOrderRepository, 'findByIdAsync').mockResolvedValue({
+        ...mockPurchaseOrder,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Received,
+      });
+
+      // Act
+      const act = service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Draft,
+      );
+
+      // Assert
+      await expect(act).rejects.toThrow(BadRequestException);
+    });
+
+    it('should require observation when cancelling', async () => {
+      // Arrange
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValue(mockPurchaseOrder);
+
+      // Act
+      const act = service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Cancelled,
+      );
+
+      // Assert
+      await expect(act).rejects.toThrow(
+        'Observation is required when cancelling a purchase order.',
+      );
+    });
+
+    it('should require effectiveDeliveryDate when receiving', async () => {
+      // Arrange
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValue(mockPurchaseOrder);
+
+      // Act
+      const act = service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Received,
+      );
+
+      // Assert
+      await expect(act).rejects.toThrow(
+        'Effective delivery date is required when receiving a purchase order.',
+      );
+    });
+
+    it('should successfully cancel a purchase order with observation', async () => {
+      // Arrange
+      const txMock = {} as Prisma.TransactionClient;
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValue(mockPurchaseOrder);
+      const updatePurchaseOrderAsyncSpy = jest
+        .spyOn(purchaseOrderRepository, 'updatePurchaseOrderAsync')
+        .mockResolvedValue({
+          ...mockPurchaseOrder,
+          purchaseOrderStatusId: PurchaseOrderStatusId.Cancelled,
+          observation: 'Cancelled reason',
+        });
+
+      // Act
+      await service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Cancelled,
+        'Cancelled reason',
+      );
+
+      // Assert
+      expect(updatePurchaseOrderAsyncSpy).toHaveBeenCalled();
+    });
+
+    it('should successfully mark a purchase order as received', async () => {
+      // Arrange
+      const txMock = {} as Prisma.TransactionClient;
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValue(mockPurchaseOrder);
+      const deliveryDate = new Date();
+      const updatePurchaseOrderAsyncSpy = jest
+        .spyOn(purchaseOrderRepository, 'updatePurchaseOrderAsync')
+        .mockResolvedValue({
+          ...mockPurchaseOrder,
+          purchaseOrderStatusId: PurchaseOrderStatusId.Received,
+          effectiveDeliveryDate: deliveryDate,
+        });
+
+      // Act
+      await service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Received,
+        'Received successfully',
+        deliveryDate,
+      );
+
+      // Assert
+      expect(updatePurchaseOrderAsyncSpy).toHaveBeenCalled();
     });
   });
 
@@ -552,7 +755,7 @@ describe('PurchaseOrderService', () => {
     it('should return the purchase order if it exists', async () => {
       // Arrange
       const id = 1;
-      const purchaseOrderMock: PurchaseOrder = {
+      const purchaseOrderMock = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
         supplierId: 1,
@@ -561,6 +764,8 @@ describe('PurchaseOrderService', () => {
         totalAmount: new Prisma.Decimal(100.0),
         createdAt: new Date(),
         effectiveDeliveryDate: null,
+      } as PurchaseOrder & {
+        purchaseOrderItems: { quantity: number; productId: number }[];
       };
       jest
         .spyOn(purchaseOrderRepository, 'existsAsync')

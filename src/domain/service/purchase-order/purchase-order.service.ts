@@ -183,6 +183,64 @@ export class PurchaseOrderService {
     return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
   }
 
+  async updatePurchaseOrderStatusAsync(
+    id: number,
+    newStatus: PurchaseOrderStatusId,
+    observation?: string,
+    effectiveDeliveryDate?: Date,
+  ) {
+    const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
+    if (!purchaseOrder) {
+      throw new NotFoundException(
+        `Purchase order with id ${id} does not exist.`,
+      );
+    }
+
+    const currentStatus = purchaseOrder.purchaseOrderStatusId;
+
+    const validTransition = canTransition(currentStatus, newStatus);
+    if (!validTransition) {
+      throw new BadRequestException(
+        `Invalid status transition from ${PurchaseOrderStatusId[currentStatus]} to ${PurchaseOrderStatusId[newStatus]}`,
+      );
+    }
+
+    if (newStatus === PurchaseOrderStatusId.Cancelled && !observation) {
+      throw new BadRequestException(
+        'Observation is required when cancelling a purchase order.',
+      );
+    }
+
+    if (
+      newStatus === PurchaseOrderStatusId.Received &&
+      !effectiveDeliveryDate
+    ) {
+      throw new BadRequestException(
+        'Effective delivery date is required when receiving a purchase order.',
+      );
+    }
+
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrder.purchaseOrderItems,
+        newStatus,
+        tx,
+      );
+
+      this.purchaseOrderRepository.updatePurchaseOrderAsync(
+        purchaseOrder.id,
+        {
+          purchaseOrderStatus: { connect: { id: newStatus } },
+          observation: observation ?? purchaseOrder.observation,
+          effectiveDeliveryDate:
+            effectiveDeliveryDate ?? purchaseOrder.effectiveDeliveryDate,
+        },
+        tx,
+      );
+    });
+  }
+
   async validatePurchaseOrderExistsAsync(id: number): Promise<PurchaseOrder> {
     const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
     if (!purchaseOrder) {
@@ -197,8 +255,10 @@ export class PurchaseOrderService {
     if (!productIds || productIds.length === 0) {
       throw new BadRequestException('At least one item must be provided.');
     }
+
     const productsExist =
       await this.productRepository.existsManyAsync(productIds);
+
     if (!productsExist) {
       throw new NotFoundException(`One or more products do not exist.`);
     }
@@ -331,7 +391,7 @@ export class PurchaseOrderService {
       }));
     }
 
-    this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
       if (!arePurchaseOrderItemsEqual) {
         await this.purchaseOrderItemRepository.deleteByPurchaseOrderIdAsync(
           purchaseOrder.id,
@@ -343,14 +403,14 @@ export class PurchaseOrderService {
         );
       }
 
-      await this.manageStockChanges(
+      this.manageStockChanges(
         purchaseOrder,
         purchaseOrderItemsToCreate,
         purchaseOrderUpdateDto.purchaseOrderStatusId,
         tx,
       );
 
-      await this.purchaseOrderRepository.updatePurchaseOrderAsync(
+      this.purchaseOrderRepository.updatePurchaseOrderAsync(
         purchaseOrder.id,
         { ...purchaseOrderUpdateData, totalAmount },
         tx,
@@ -360,7 +420,7 @@ export class PurchaseOrderService {
 
   private async manageStockChanges(
     purchaseOrder: PurchaseOrder,
-    purchaseOrderItems: PurchaseOrderItemDto[],
+    purchaseOrderItems: { productId: number; quantity: number }[],
     newStatus: PurchaseOrderStatusId,
     tx: Prisma.TransactionClient,
   ) {
@@ -369,7 +429,7 @@ export class PurchaseOrderService {
     switch (newStatus) {
       case PurchaseOrderStatusId.Draft:
         break;
-        
+
       case PurchaseOrderStatusId.Received: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
