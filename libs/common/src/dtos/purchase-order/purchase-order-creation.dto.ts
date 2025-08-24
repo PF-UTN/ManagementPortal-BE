@@ -2,12 +2,15 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
+  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
+
+import { PurchaseOrderStatusId } from '@mp/common/constants';
 
 import { PurchaseOrderItemDto } from '../purchase-order-item';
 
@@ -35,4 +38,10 @@ export class PurchaseOrderCreationDto {
   @ValidateNested({ each: true })
   @Type(() => PurchaseOrderItemDto)
   purchaseOrderItems: PurchaseOrderItemDto[];
+
+  @ApiProperty({ example: 1, required: true })
+  @IsNotEmpty()
+  @IsNumber()
+  @IsEnum(PurchaseOrderStatusId)
+  purchaseOrderStatusId: PurchaseOrderStatusId;
 }

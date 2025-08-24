@@ -2,20 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
+  IsEnum,
   IsNotEmpty,
-  IsNumber,
   IsOptional,
   IsString,
-  Max,
-  Min,
 } from 'class-validator';
+
+import { PurchaseOrderStatusId } from '../../constants';
 
 export class UpdatePurchaseOrderStatusRequestDto {
   @ApiProperty({ example: 1, required: true })
   @IsNotEmpty()
-  @IsNumber()
-  @Min(1)
-  @Max(5)
+  @IsEnum(PurchaseOrderStatusId)
   purchaseOrderStatusId: number;
 
   @ApiProperty({
