@@ -12,6 +12,7 @@ export class PrismaUnitOfWork implements IUnitOfWork {
     work: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
     return this.prismaService.$transaction((tx) => work(tx), {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
       timeout: 20000,
     });
   }

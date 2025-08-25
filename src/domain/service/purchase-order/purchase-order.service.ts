@@ -221,23 +221,26 @@ export class PurchaseOrderService {
     }
 
     await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      this.manageStockChanges(
+      const manageStockTask = this.manageStockChanges(
         purchaseOrder,
         purchaseOrder.purchaseOrderItems,
         newStatus,
         tx,
       );
 
-      this.purchaseOrderRepository.updatePurchaseOrderAsync(
-        purchaseOrder.id,
-        {
-          purchaseOrderStatus: { connect: { id: newStatus } },
-          observation: observation ?? purchaseOrder.observation,
-          effectiveDeliveryDate:
-            effectiveDeliveryDate ?? purchaseOrder.effectiveDeliveryDate,
-        },
-        tx,
-      );
+      const updatePurchaseOrderTask =
+        this.purchaseOrderRepository.updatePurchaseOrderAsync(
+          purchaseOrder.id,
+          {
+            purchaseOrderStatus: { connect: { id: newStatus } },
+            observation: observation ?? purchaseOrder.observation,
+            effectiveDeliveryDate:
+              effectiveDeliveryDate ?? purchaseOrder.effectiveDeliveryDate,
+          },
+          tx,
+        );
+
+      await Promise.all([manageStockTask, updatePurchaseOrderTask]);
     });
   }
 
@@ -403,18 +406,21 @@ export class PurchaseOrderService {
         );
       }
 
-      this.manageStockChanges(
+      const manageStockTask = this.manageStockChanges(
         purchaseOrder,
         purchaseOrderItemsToCreate,
         purchaseOrderUpdateDto.purchaseOrderStatusId,
         tx,
       );
 
-      this.purchaseOrderRepository.updatePurchaseOrderAsync(
-        purchaseOrder.id,
-        { ...purchaseOrderUpdateData, totalAmount },
-        tx,
-      );
+      const updatePurchaseOrderTask =
+        this.purchaseOrderRepository.updatePurchaseOrderAsync(
+          purchaseOrder.id,
+          { ...purchaseOrderUpdateData, totalAmount },
+          tx,
+        );
+
+      await Promise.all([manageStockTask, updatePurchaseOrderTask]);
     });
   }
 
@@ -433,7 +439,7 @@ export class PurchaseOrderService {
       case PurchaseOrderStatusId.Received: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId),
+            this.stockService.findByProductIdAsync(item.productId, tx),
           ),
         );
 
@@ -491,7 +497,7 @@ export class PurchaseOrderService {
 
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId),
+            this.stockService.findByProductIdAsync(item.productId, tx),
           ),
         );
 
@@ -536,7 +542,7 @@ export class PurchaseOrderService {
       case PurchaseOrderStatusId.Ordered: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId),
+            this.stockService.findByProductIdAsync(item.productId, tx),
           ),
         );
 
