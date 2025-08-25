@@ -29,7 +29,7 @@ export class CartService {
   }
 
   async updateProductQuantityInCartAsync(
-    userId: number,
+    cartId: number,
     updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ): Promise<void> {
     const { productId, quantity } = updateCartProductQuantityDto;
@@ -47,7 +47,7 @@ export class CartService {
     }
 
     const currentQuantityInCart =
-      (await this.cartRepository.getProductQuantityFromCartAsync(userId, {
+      (await this.cartRepository.getProductQuantityFromCartAsync(cartId, {
         productId,
       })) ?? 0;
 
@@ -70,17 +70,17 @@ export class CartService {
     };
 
     await this.cartRepository.updateProductQuantityInCartAsync(
-      userId,
+      cartId,
       updatedDto,
     );
   }
 
   async getProductQuantityFromCartAsync(
-    userId: number,
+    cartId: number,
     getCartProductQuantityDto: GetCartProductQuantityDto,
   ): Promise<number | null> {
     return this.cartRepository.getProductQuantityFromCartAsync(
-      userId,
+      cartId,
       getCartProductQuantityDto,
     );
   }
