@@ -58,6 +58,6 @@ describe('UpdateCartProductCommandHandler', () => {
     await handler.execute(command);
 
     // Assert
-    expect(spy).toHaveBeenCalledWith(command.userId, dto);
+    expect(spy).toHaveBeenCalledWith(command.cartId, dto);
   });
 });

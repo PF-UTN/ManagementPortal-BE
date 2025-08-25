@@ -20,7 +20,7 @@ export class UpdateCartProductQuantityCommandHandler
     }
 
     await this.cartService.updateProductQuantityInCartAsync(
-      command.userId,
+      command.cartId,
       command.updateCartProductQuantityDto,
     );
   }

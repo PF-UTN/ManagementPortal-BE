@@ -1,5 +1,6 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
 
 import {
   mockUpdateCartProductQuantityDto,
@@ -21,18 +22,11 @@ describe('CartService', () => {
         CartService,
         {
           provide: CartRepository,
-          useValue: {
-            getProductQuantityFromCartAsync: jest.fn(),
-            updateProductQuantityInCartAsync: jest.fn(),
-            saveProductToRedisAsync: jest.fn(),
-            getProductByIdFromRedisAsync: jest.fn(),
-          },
+          useValue: mockDeep<CartRepository>(),
         },
         {
           provide: ProductService,
-          useValue: {
-            findProductByIdAsync: jest.fn(),
-          },
+          useValue: mockDeep<ProductService>(),
         },
       ],
     }).compile();
@@ -44,10 +38,12 @@ describe('CartService', () => {
 
   describe('updateProductQuantityInCartAsync', () => {
     it('should throw NotFoundException if product does not exist', async () => {
+      //Arrange
       jest
         .spyOn(productService, 'findProductByIdAsync')
         .mockRejectedValueOnce(new NotFoundException());
 
+      //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
           1,
@@ -57,11 +53,13 @@ describe('CartService', () => {
     });
 
     it('should throw BadRequestException if product is disabled', async () => {
+      //Arrange
       const disabledProduct = { ...productDetailsDtoMock, enabled: false };
       jest
         .spyOn(productService, 'findProductByIdAsync')
         .mockResolvedValueOnce(disabledProduct);
 
+      //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
           1,
@@ -71,6 +69,7 @@ describe('CartService', () => {
     });
 
     it('should throw BadRequestException if no stock available', async () => {
+      //Arrange
       const noStockProduct = {
         ...productDetailsDtoMock,
         stock: {
@@ -87,6 +86,7 @@ describe('CartService', () => {
         .spyOn(cartRepository, 'getProductQuantityFromCartAsync')
         .mockResolvedValueOnce(0);
 
+      //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
           1,
@@ -96,6 +96,7 @@ describe('CartService', () => {
     });
 
     it('should adjust quantity to stock limit if requested > available', async () => {
+      //Arrange
       const productWithStock = {
         ...productDetailsDtoMock,
         stock: {
@@ -116,15 +117,18 @@ describe('CartService', () => {
         'updateProductQuantityInCartAsync',
       );
 
+      //Act
       await service.updateProductQuantityInCartAsync(1, {
         productId: 1,
         quantity: 5,
       });
 
+      //Assert
       expect(spyUpdate).toHaveBeenCalledWith(1, { productId: 1, quantity: 5 });
     });
 
     it('should update quantity correctly if stock is sufficient', async () => {
+      //Arrange
       const productWithStock = {
         ...productDetailsDtoMock,
         stock: {
@@ -145,15 +149,18 @@ describe('CartService', () => {
         'updateProductQuantityInCartAsync',
       );
 
+      //Act
       await service.updateProductQuantityInCartAsync(1, {
         productId: 1,
         quantity: 3,
       });
 
+      //Assert
       expect(spyUpdate).toHaveBeenCalledWith(1, { productId: 1, quantity: 5 });
     });
 
     it('should allow updating when final quantity equals stock available', async () => {
+      //Arrange
       const product = {
         ...productDetailsDtoMock,
         stock: {
@@ -171,40 +178,53 @@ describe('CartService', () => {
         'updateProductQuantityInCartAsync',
       );
 
+      //Act
       await service.updateProductQuantityInCartAsync(1, {
         productId: 1,
         quantity: 5,
       });
 
+      //Assert
       expect(spyUpdate).toHaveBeenCalledWith(1, { productId: 1, quantity: 5 });
     });
   });
 
   describe('getProductQuantityFromCartAsync', () => {
     it('should return the product quantity from cart if found', async () => {
+      //Arrange
       jest
         .spyOn(cartRepository, 'getProductQuantityFromCartAsync')
         .mockResolvedValueOnce(3);
+      //Act
       const result = await service.getProductQuantityFromCartAsync(1, {
         productId: 10,
       });
+      //Assert
       expect(result).toBe(3);
     });
 
     it('should return null if product is not in the cart', async () => {
+      //Arrange
       jest
         .spyOn(cartRepository, 'getProductQuantityFromCartAsync')
         .mockResolvedValueOnce(null);
+
+      //Act
       const result = await service.getProductQuantityFromCartAsync(1, {
         productId: 99,
       });
+
+      //Assert
       expect(result).toBeNull();
     });
 
     it('should propagate error if repository fails', async () => {
+      //Arrange
       jest
         .spyOn(cartRepository, 'getProductQuantityFromCartAsync')
         .mockRejectedValueOnce(new Error('Redis connection failed'));
+
+      // Act + Assert
       await expect(
         service.getProductQuantityFromCartAsync(1, { productId: 1 }),
       ).rejects.toThrow('Redis connection failed');

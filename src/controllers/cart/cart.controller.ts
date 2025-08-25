@@ -1,11 +1,4 @@
-import {
-  Body,
-  Controller,
-  Param,
-  ParseIntPipe,
-  Post,
-  ValidationPipe,
-} from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
@@ -38,24 +31,26 @@ export class CartController {
     );
   }
 
-  @Post('update/:id')
-  @RequiredPermissions(PermissionCodes.Cart.CREATE)
+  @Post('update/:cartId')
+  @RequiredPermissions(PermissionCodes.Cart.UPDATE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update product quantity in Cart',
     description: 'Update product quantity in cart in Redis.',
   })
   @ApiParam({
-    name: 'id',
+    name: 'cartId',
     description: 'ID of the cart to update',
   })
   async updateCartProductQuantityAsync(
-    @Param('id', ParseIntPipe) id: number,
-    @Body(new ValidationPipe({ whitelist: true, transform: true }))
-    updateCartProductQuantityDto: UpdateCartProductQuantityDto,
+    @Param('cartId', ParseIntPipe) cartId: number,
+    @Body() updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ) {
     return await this.commandBus.execute(
-      new UpdateCartProductQuantityCommand(id, updateCartProductQuantityDto),
+      new UpdateCartProductQuantityCommand(
+        cartId,
+        updateCartProductQuantityDto,
+      ),
     );
   }
 }

@@ -80,7 +80,7 @@ describe('ProductRedisRepository', () => {
   describe('updateProductQuantityInCartAsync', () => {
     it('should call setFieldInHash with cart key, productId, and quantity', async () => {
       // Arrange
-      const userId = 123;
+      const cartId = 123;
       const dto: UpdateCartProductQuantityDto = {
         productId: 10,
         quantity: 5,
@@ -88,11 +88,11 @@ describe('ProductRedisRepository', () => {
       const spy = jest.spyOn(redisService, 'setFieldInHash');
 
       // Act
-      await cartRepository.updateProductQuantityInCartAsync(userId, dto);
+      await cartRepository.updateProductQuantityInCartAsync(cartId, dto);
 
       // Assert
       expect(spy).toHaveBeenCalledWith(
-        `cart:${userId}`,
+        `cart:${cartId}`,
         String(dto.productId),
         String(dto.quantity),
       );
@@ -102,26 +102,26 @@ describe('ProductRedisRepository', () => {
   describe('getProductQuantityFromCartAsync', () => {
     it('should call getFieldValue with cart key and productId', async () => {
       // Arrange
-      const userId = 123;
+      const cartId = 123;
       const dto: GetCartProductQuantityDto = { productId: 10 };
       const spy = jest.spyOn(redisService, 'getFieldValue');
 
       // Act
-      await cartRepository.getProductQuantityFromCartAsync(userId, dto);
+      await cartRepository.getProductQuantityFromCartAsync(cartId, dto);
 
       // Assert
-      expect(spy).toHaveBeenCalledWith(`cart:${userId}`, String(dto.productId));
+      expect(spy).toHaveBeenCalledWith(`cart:${cartId}`, String(dto.productId));
     });
 
     it('should return parsed number when value exists', async () => {
       // Arrange
-      const userId = 123;
+      const cartId = 123;
       const dto: GetCartProductQuantityDto = { productId: 10 };
       jest.spyOn(redisService, 'getFieldValue').mockResolvedValueOnce('7');
 
       // Act
       const result = await cartRepository.getProductQuantityFromCartAsync(
-        userId,
+        cartId,
         dto,
       );
 
@@ -131,18 +131,48 @@ describe('ProductRedisRepository', () => {
 
     it('should return null when value does not exist', async () => {
       // Arrange
-      const userId = 123;
+      const cartId = 123;
       const dto: GetCartProductQuantityDto = { productId: 10 };
       jest.spyOn(redisService, 'getFieldValue').mockResolvedValueOnce(null);
 
       // Act
       const result = await cartRepository.getProductQuantityFromCartAsync(
-        userId,
+        cartId,
         dto,
       );
 
       // Assert
       expect(result).toBeNull();
+    });
+    it('should set expiration on cart hash when getProductQuantityFromCartAsync is called', async () => {
+      // Arrange
+      const cartId = 123;
+      const cartKey = `cart:${cartId}`;
+      const dto: GetCartProductQuantityDto = {
+        productId: 10,
+      };
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await cartRepository.getProductQuantityFromCartAsync(cartId, dto);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(cartKey, 5400);
+    });
+
+    it('should set expiration on cart hash when updateProductQuantityInCartAsync is called', async () => {
+      // Arrange
+      const cartId = 123;
+      const cartKey = `cart:${cartId}`;
+      const dto: UpdateCartProductQuantityDto = {
+        productId: 10,
+        quantity: 5,
+      };
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await cartRepository.updateProductQuantityInCartAsync(cartId, dto);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(cartKey, 5400);
     });
   });
 });

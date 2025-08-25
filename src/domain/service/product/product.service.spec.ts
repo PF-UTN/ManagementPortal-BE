@@ -402,21 +402,6 @@ describe('ProductService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
-
-  // describe('findProductByIdAsync', () => {
-  //   it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
-  //     // Arrange
-  //     const productId = 1;
-
-  //     // Act
-  //     await service.findProductByIdAsync(productId);
-
-  //     // Assert
-  //     expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(
-  //       productId,
-  //     );
-  //   });
-  // });
   describe('findProductByIdAsync', () => {
     it('should return product from Redis if found', async () => {
       // Arrange

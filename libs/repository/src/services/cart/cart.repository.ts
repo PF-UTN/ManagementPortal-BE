@@ -33,28 +33,30 @@ export class CartRepository {
   }
 
   async updateProductQuantityInCartAsync(
-    userId: number,
+    cartId: number,
     updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ): Promise<void> {
     const { productId, quantity } = updateCartProductQuantityDto;
-    const cartKey = `cart:${userId}`;
+    const cartKey = `cart:${cartId}`;
     await this.redisService.setFieldInHash(
       cartKey,
       productId.toString(),
       quantity.toString(),
     );
+    await this.redisService.setKeyExpiration(cartKey, 5400);
   }
 
   async getProductQuantityFromCartAsync(
-    userId: number,
+    cartId: number,
     getCartProductQuantityDto: GetCartProductQuantityDto,
   ): Promise<number | null> {
     const { productId } = getCartProductQuantityDto;
-    const cartKey = `cart:${userId}`;
+    const cartKey = `cart:${cartId}`;
     const value = await this.redisService.getFieldValue(
       cartKey,
       productId.toString(),
     );
+    await this.redisService.setKeyExpiration(cartKey, 5400);
     return value ? parseInt(value, 10) : null;
   }
 }
