@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { productDetailsDtoMock, productMockData } from '@mp/common/testing';
+import { productDetailsDtoMock } from '@mp/common/testing';
 
 import { CartService } from './../../../domain/service/cart/cart.service';
 import { ProductService } from './../../../domain/service/product/product.service';
@@ -23,11 +23,11 @@ describe('SaveProductRedisCommandHandler', () => {
         },
         {
           provide: ProductService,
-          useValue: mockDeep(ProductService)
-        }
+          useValue: mockDeep(ProductService),
+        },
       ],
     }).compile();
-    productService = module.get<ProductService>(ProductService)
+    productService = module.get<ProductService>(ProductService);
 
     cartService = module.get<CartService>(CartService);
 
@@ -44,17 +44,14 @@ describe('SaveProductRedisCommandHandler', () => {
     // Arrange
     const command = new SaveProductRedisCommand(productDetailsDtoMock.id);
     jest
-      .spyOn(productService, 'findProductByIdAsync').mockResolvedValueOnce(productMockData)
-    const spy = jest.spyOn(
-      cartService, 'saveProductToRedisAsync'
-    );
+      .spyOn(productService, 'findProductByIdAsync')
+      .mockResolvedValueOnce(productDetailsDtoMock);
+    const spy = jest.spyOn(cartService, 'saveProductToRedisAsync');
 
     // Act
     await handler.execute(command);
 
     // Assert
-    expect(spy).toHaveBeenCalledWith(
-      productDetailsDtoMock
-    );
+    expect(spy).toHaveBeenCalledWith(productDetailsDtoMock);
   });
 });

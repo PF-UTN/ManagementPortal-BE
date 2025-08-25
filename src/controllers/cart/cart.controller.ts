@@ -1,12 +1,16 @@
-import { Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { ProductDetailsDto } from '@mp/common/dtos';
+import {
+  ProductDetailsDto,
+  UpdateCartProductQuantityDto,
+} from '@mp/common/dtos';
 
 import { SaveProductRedisCommand } from './command/save-product-redis.command';
+import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
 
 @Controller('cart')
 export class CartController {
@@ -24,6 +28,29 @@ export class CartController {
   ): Promise<ProductDetailsDto> {
     return await this.commandBus.execute(
       new SaveProductRedisCommand(productId),
+    );
+  }
+
+  @Post('update/:cartId')
+  @RequiredPermissions(PermissionCodes.Cart.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update product quantity in Cart',
+    description: 'Update product quantity in cart in Redis.',
+  })
+  @ApiParam({
+    name: 'cartId',
+    description: 'ID of the cart to update',
+  })
+  async updateCartProductQuantityAsync(
+    @Param('cartId', ParseIntPipe) cartId: number,
+    @Body() updateCartProductQuantityDto: UpdateCartProductQuantityDto,
+  ) {
+    return await this.commandBus.execute(
+      new UpdateCartProductQuantityCommand(
+        cartId,
+        updateCartProductQuantityDto,
+      ),
     );
   }
 }
