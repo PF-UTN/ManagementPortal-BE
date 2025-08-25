@@ -11,6 +11,7 @@ import {
 } from '@mp/repository';
 
 import { MaintenancePlanItemService } from './maintenance-plan-item.service';
+import { SearchMaintenancePlanItemQuery } from '../../../controllers/vehicle/query/search-maintenance-plan-item-query';
 
 describe('MaintenancePlanItemService', () => {
   let service: MaintenancePlanItemService;
@@ -134,6 +135,56 @@ describe('MaintenancePlanItemService', () => {
       // Assert
       expect(repository.createMaintenancePlanItemAsync).toHaveBeenCalledWith(
         maintenancePlanItemCreationDtoMock,
+      );
+    });
+  });
+
+  describe('searchByTextAndVehicleIdAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const vehicleId = 1;
+
+      const query = new SearchMaintenancePlanItemQuery(vehicleId, {
+        searchText,
+        page,
+        pageSize,
+      });
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        service.searchByTextAndVehicleIdAsync(query),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call searchByTextAndVehicleIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const vehicleId = 1;
+
+      const query = new SearchMaintenancePlanItemQuery(vehicleId, {
+        searchText,
+        page,
+        pageSize,
+      });
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(true);
+
+      // Act
+      await service.searchByTextAndVehicleIdAsync(query);
+
+      // Assert
+      expect(repository.searchByTextAndVehicleIdAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.page,
+        query.pageSize,
+        query.vehicleId,
       );
     });
   });

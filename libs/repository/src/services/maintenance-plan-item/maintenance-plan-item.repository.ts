@@ -15,4 +15,43 @@ export class MaintenancePlanItemRepository {
       data: maintenancePlanItemCreationDto,
     });
   }
+
+  async searchByTextAndVehicleIdAsync(
+    searchText: string,
+    page: number,
+    pageSize: number,
+    vehicleId: number,
+  ) {
+    const [data, total] = await Promise.all([
+      this.prisma.maintenancePlanItem.findMany({
+        where: {
+          vehicleId: vehicleId,
+          maintenanceItem: {
+            description: {
+              contains: searchText,
+              mode: 'insensitive',
+            },
+          },
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          maintenanceItem: true,
+        },
+      }),
+      this.prisma.maintenancePlanItem.count({
+        where: {
+          vehicleId: vehicleId,
+          maintenanceItem: {
+            description: {
+              contains: searchText,
+              mode: 'insensitive',
+            },
+          },
+        },
+      }),
+    ]);
+
+    return { data, total };
+  }
 }
