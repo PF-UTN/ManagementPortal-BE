@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 
-import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
+import {
+  MaintenancePlanItemCreationDto,
+  UpdateMaintenancePlanItemDto,
+} from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 
@@ -53,5 +56,25 @@ export class MaintenancePlanItemRepository {
     ]);
 
     return { data, total };
+  }
+
+  async existsAsync(id: number): Promise<boolean> {
+    const maintenancePlanItem = await this.prisma.maintenancePlanItem.findFirst(
+      {
+        select: { id: true },
+        where: { id },
+      },
+    );
+    return !!maintenancePlanItem;
+  }
+
+  async updateMaintenancePlanItemAsync(
+    id: number,
+    data: UpdateMaintenancePlanItemDto,
+  ) {
+    return this.prisma.maintenancePlanItem.update({
+      where: { id },
+      data: { ...data },
+    });
   }
 }
