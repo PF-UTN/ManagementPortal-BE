@@ -9,6 +9,7 @@ import {
   UserSignInDto,
   ResetPasswordRequestDto,
 } from '@mp/common/dtos';
+import { RedisModule } from '@mp/common/services';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
@@ -43,7 +44,6 @@ describe('AuthenticationController', () => {
   let registrationRequestStatusServiceMock: RegistrationRequestStatusServiceMock;
   let commandBusMock: CommandBusMock;
   let queryBusMock: QueryBusMock;
-  const redisClientMock = mockDeep<RedisClientType>();
 
   beforeEach(async () => {
     authenticationServiceMock = new AuthenticationServiceMock();
@@ -53,6 +53,7 @@ describe('AuthenticationController', () => {
       new RegistrationRequestStatusServiceMock();
     commandBusMock = new CommandBusMock();
     queryBusMock = new QueryBusMock();
+    const redisClientMock = mockDeep<RedisClientType>();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -64,6 +65,7 @@ describe('AuthenticationController', () => {
         UserServiceModule,
         RegistrationRequestDomainServiceModule,
         RegistrationRequestStatusServiceModule,
+        RedisModule,
       ],
       controllers: [AuthenticationController],
       providers: [
@@ -91,20 +93,13 @@ describe('AuthenticationController', () => {
           provide: RegistrationRequestStatusService,
           useValue: registrationRequestStatusServiceMock,
         },
-        {
-          provide: 'REDIS_CLIENT',
-          useValue: redisClientMock,
-        },
       ],
-    }).compile();
+    })
+      .overrideProvider('REDIS_CLIENT')
+      .useValue(redisClientMock)
+      .compile();
 
     controller = module.get<AuthenticationController>(AuthenticationController);
-  });
-
-  afterEach(async () => {
-    if (redisClientMock.destroy) {
-      await redisClientMock.destroy();
-    }
   });
 
   it('should be defined', () => {

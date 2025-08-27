@@ -22,6 +22,7 @@ import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
   ProductCreationDto,
+  ProductDetailsDto,
   ProductToggleDto,
   ProductUpdateDto,
   SearchProductRequest,
@@ -29,6 +30,7 @@ import {
 
 import { CreateProductCommand } from './command/create-product.command';
 import { DeleteProductCommand } from './command/delete-product.command';
+import { SaveProductRedisCommand } from './command/save-product-redis.command';
 import { SearchProductQuery } from './command/search-product-query';
 import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
@@ -142,5 +144,20 @@ export class ProductController {
   })
   deleteProductAsync(@Param('id', ParseIntPipe) id: number) {
     return this.commandBus.execute(new DeleteProductCommand(id));
+  }
+
+  @Post('saveInRedis/:productId')
+  @RequiredPermissions(PermissionCodes.Cart.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Save product to Redis',
+    description: 'Save a product that has added to the cart in Redis.',
+  })
+  async saveProductToRedis(
+    @Param('productId', ParseIntPipe) productId: number,
+  ): Promise<ProductDetailsDto> {
+    return await this.commandBus.execute(
+      new SaveProductRedisCommand(productId),
+    );
   }
 }

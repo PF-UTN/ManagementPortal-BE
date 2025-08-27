@@ -5,11 +5,13 @@ import { mockDeep } from 'jest-mock-extended';
 import { SearchProductRequest } from '@mp/common/dtos';
 import {
   productCreationDtoMock,
+  productDetailsDtoMock,
   productUpdateDtoMock,
 } from '@mp/common/testing';
 
 import { CreateProductCommand } from './command/create-product.command';
 import { DeleteProductCommand } from './command/delete-product.command';
+import { SaveProductRedisCommand } from './command/save-product-redis.command';
 import { SearchProductQuery } from './command/search-product-query';
 import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
@@ -115,6 +117,21 @@ describe('ProductController', () => {
 
       // Act
       await controller.deleteProductAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+  describe('SaveProductToRedis', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new SaveProductRedisCommand(
+        productDetailsDtoMock.id,
+      );
+
+      // Act
+      await controller.saveProductToRedis(productDetailsDtoMock.id);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
