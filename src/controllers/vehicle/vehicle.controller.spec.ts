@@ -10,6 +10,7 @@ import {
   SearchVehicleRequest,
   UpdateVehicleDto,
   SearchMaintenancePlanItemRequest,
+  UpdateMaintenancePlanItemDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -17,6 +18,7 @@ import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.comm
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
+import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
@@ -247,6 +249,34 @@ describe('VehicleController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchMaintenancePlanItemQuery(vehicleId, request),
       );
+    });
+  });
+
+  describe('updateVehicleMaintenancePlanItemAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const maintenancePlanItemId = 1;
+
+      const updateMaintenancePlanItemDtoMock: UpdateMaintenancePlanItemDto = {
+        maintenanceItemId: 1,
+        kmInterval: 10000,
+        timeInterval: 6,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateVehicleMaintenancePlanItemCommand(
+        maintenancePlanItemId,
+        updateMaintenancePlanItemDtoMock,
+      );
+
+      // Act
+      await controller.updateVehicleMaintenancePlanItemAsync(
+        maintenancePlanItemId,
+        updateMaintenancePlanItemDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });
