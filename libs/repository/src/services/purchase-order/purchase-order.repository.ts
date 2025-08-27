@@ -226,6 +226,14 @@ export class PurchaseOrderRepository {
         id,
         purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
       },
+      include: {
+        purchaseOrderItems: {
+          select: {
+            quantity: true,
+            productId: true,
+          },
+        },
+      },
     });
   }
 

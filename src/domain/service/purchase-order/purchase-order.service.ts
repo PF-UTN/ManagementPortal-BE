@@ -16,6 +16,7 @@ import {
 import {
   PurchaseOrderCreationDto,
   PurchaseOrderDetailsDto,
+  PurchaseOrderItemCreationDto,
   PurchaseOrderItemDetailsDto,
   PurchaseOrderItemDto,
   PurchaseOrderUpdateDto,
@@ -51,23 +52,26 @@ export class PurchaseOrderService {
     const { purchaseOrderItems, ...purchaseOrderData } =
       purchaseOrderCreationDto;
 
-    if (!purchaseOrderItems || purchaseOrderItems.length === 0) {
+    if (
+      purchaseOrderData.purchaseOrderStatusId !==
+        PurchaseOrderStatusId.Ordered &&
+      purchaseOrderData.purchaseOrderStatusId !== PurchaseOrderStatusId.Draft
+    ) {
       throw new BadRequestException(
-        'Purchase order must have at least one item',
+        'Purchase order status must be Ordered or Draft',
       );
     }
 
     const productIds = purchaseOrderItems.map((item) => item.productId);
 
-    const productsExist =
-      await this.productRepository.existsManyAsync(productIds);
-    if (!productsExist) {
-      throw new NotFoundException(`One or more products do not exist.`);
-    }
+    await this.validatePurchaseOrderItemsAsync(productIds);
 
-    const totalAmount = purchaseOrderItems.reduce((sum, item) => {
-      return sum + item.quantity * Number(item.unitPrice);
-    }, 0);
+    await this.validateItemsBelongToSupplierAsync(
+      productIds,
+      purchaseOrderData.supplierId,
+    );
+
+    const totalAmount = calculateTotalAmount(purchaseOrderItems);
 
     return this.unitOfWork.execute(async (tx) => {
       const purchaseOrder =
@@ -75,7 +79,6 @@ export class PurchaseOrderService {
           {
             ...purchaseOrderData,
             totalAmount,
-            purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
           },
           tx,
         );
@@ -90,6 +93,13 @@ export class PurchaseOrderService {
 
       await this.purchaseOrderItemRepository.createManyPurchaseOrderItemAsync(
         purchaseOrderItemsToCreate,
+        tx,
+      );
+
+      await this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrderItemsToCreate,
+        purchaseOrderData.purchaseOrderStatusId,
         tx,
       );
     });
@@ -173,9 +183,11 @@ export class PurchaseOrderService {
     return await this.purchaseOrderRepository.deletePurchaseOrderAsync(id);
   }
 
-  async updatePurchaseOrderAsync(
+  async updatePurchaseOrderStatusAsync(
     id: number,
-    purchaseOrderUpdateDto: PurchaseOrderUpdateDto,
+    newStatus: PurchaseOrderStatusId,
+    observation?: string,
+    effectiveDeliveryDate?: Date,
   ) {
     const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
     if (!purchaseOrder) {
@@ -184,12 +196,130 @@ export class PurchaseOrderService {
       );
     }
 
-    if (purchaseOrderUpdateDto.purchaseOrderItems.length === 0) {
+    const currentStatus = purchaseOrder.purchaseOrderStatusId;
+
+    const validTransition = canTransition(currentStatus, newStatus);
+    if (!validTransition) {
+      throw new BadRequestException(
+        `Invalid status transition from ${PurchaseOrderStatusId[currentStatus]} to ${PurchaseOrderStatusId[newStatus]}`,
+      );
+    }
+
+    if (newStatus === PurchaseOrderStatusId.Cancelled && !observation) {
+      throw new BadRequestException(
+        'Observation is required when cancelling a purchase order.',
+      );
+    }
+
+    if (
+      newStatus === PurchaseOrderStatusId.Received &&
+      !effectiveDeliveryDate
+    ) {
+      throw new BadRequestException(
+        'Effective delivery date is required when receiving a purchase order.',
+      );
+    }
+
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      const manageStockTask = this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrder.purchaseOrderItems,
+        newStatus,
+        tx,
+      );
+
+      const updatePurchaseOrderTask =
+        this.purchaseOrderRepository.updatePurchaseOrderAsync(
+          purchaseOrder.id,
+          {
+            purchaseOrderStatus: { connect: { id: newStatus } },
+            observation: observation ?? purchaseOrder.observation,
+            effectiveDeliveryDate:
+              effectiveDeliveryDate ?? purchaseOrder.effectiveDeliveryDate,
+          },
+          tx,
+        );
+
+      await Promise.all([manageStockTask, updatePurchaseOrderTask]);
+    });
+  }
+
+  async validatePurchaseOrderExistsAsync(id: number): Promise<PurchaseOrder> {
+    const purchaseOrder = await this.purchaseOrderRepository.findByIdAsync(id);
+    if (!purchaseOrder) {
+      throw new NotFoundException(
+        `Purchase order with id ${id} does not exist.`,
+      );
+    }
+    return purchaseOrder;
+  }
+
+  async validatePurchaseOrderItemsAsync(productIds: number[]) {
+    if (!productIds || productIds.length === 0) {
       throw new BadRequestException('At least one item must be provided.');
     }
 
+    const productsExist =
+      await this.productRepository.existsManyAsync(productIds);
+
+    if (!productsExist) {
+      throw new NotFoundException(`One or more products do not exist.`);
+    }
+  }
+
+  async validateItemsBelongToSupplierAsync(
+    productIds: number[],
+    supplierId: number,
+  ) {
+    if (!productIds || productIds.length === 0) {
+      throw new BadRequestException('At least one item must be provided.');
+    }
+
+    const items =
+      await this.productRepository.findManyProductsWithSupplierIdAsync(
+        productIds,
+      );
+    const allBelongToSupplier = items.every(
+      (item) => item.supplierId === supplierId,
+    );
+
+    if (!allBelongToSupplier) {
+      throw new BadRequestException(
+        'All items must belong to the same supplier.',
+      );
+    }
+  }
+
+  async updatePurchaseOrderAsync(
+    id: number,
+    purchaseOrderUpdateDto: PurchaseOrderUpdateDto,
+  ) {
+    const purchaseOrder = await this.validatePurchaseOrderExistsAsync(id);
+
+    const productIds = purchaseOrderUpdateDto.purchaseOrderItems.map(
+      (item) => item.productId,
+    );
+
+    await this.validatePurchaseOrderItemsAsync(productIds);
+
+    await this.validateItemsBelongToSupplierAsync(
+      productIds,
+      purchaseOrder.supplierId,
+    );
+
     const currentPurchaseOrderStatus = purchaseOrder.purchaseOrderStatusId;
     const newPurchaseOrderStatus = purchaseOrderUpdateDto.purchaseOrderStatusId;
+
+    if (
+      currentPurchaseOrderStatus === newPurchaseOrderStatus &&
+      (newPurchaseOrderStatus === PurchaseOrderStatusId.Cancelled ||
+        newPurchaseOrderStatus === PurchaseOrderStatusId.Received ||
+        newPurchaseOrderStatus === PurchaseOrderStatusId.Deleted)
+    ) {
+      throw new BadRequestException(
+        `Purchase order ${id} cannot be updated because it is in a final state.`,
+      );
+    }
 
     if (currentPurchaseOrderStatus !== newPurchaseOrderStatus) {
       const validTransition = canTransition(
@@ -225,63 +355,87 @@ export class PurchaseOrderService {
       purchaseOrderUpdateDto;
 
     const currentPurchaseOrderItems =
-      this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
+      await this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
         purchaseOrder.id,
       );
 
-    const transformedItems: PurchaseOrderItemDto[] = (
-      await currentPurchaseOrderItems
-    ).map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: Number(item.unitPrice),
-    }));
+    const transformedItems: PurchaseOrderItemDto[] =
+      currentPurchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+      }));
 
-    const newPurchaseOrderItemsToCreate = purchaseOrderItems.map((item) => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      unitPrice: Number(item.unitPrice),
-      purchaseOrderId: purchaseOrder.id,
-      subtotalPrice: Number(item.unitPrice) * item.quantity,
-    }));
+    const arePurchaseOrderItemsEqual = isEqual(
+      purchaseOrderItems,
+      transformedItems,
+    );
 
-    const totalAmount = calculateTotalAmount(newPurchaseOrderItemsToCreate);
+    let totalAmount: number = Number(purchaseOrder.totalAmount);
+    let purchaseOrderItemsToCreate: PurchaseOrderItemCreationDto[];
 
-    this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      if (!isEqual(purchaseOrderItems, transformedItems)) {
+    if (!arePurchaseOrderItemsEqual) {
+      purchaseOrderItemsToCreate = purchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        purchaseOrderId: purchaseOrder.id,
+        subtotalPrice: Number(item.unitPrice) * item.quantity,
+      }));
+
+      totalAmount = calculateTotalAmount(purchaseOrderItemsToCreate);
+    } else {
+      purchaseOrderItemsToCreate = currentPurchaseOrderItems.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: Number(item.unitPrice),
+        purchaseOrderId: purchaseOrder.id,
+        subtotalPrice: Number(item.unitPrice) * item.quantity,
+      }));
+    }
+
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      if (!arePurchaseOrderItemsEqual) {
         await this.purchaseOrderItemRepository.deleteByPurchaseOrderIdAsync(
           purchaseOrder.id,
           tx,
         );
         await this.purchaseOrderItemRepository.createManyPurchaseOrderItemAsync(
-          newPurchaseOrderItemsToCreate,
-          tx,
-        );
-        await this.manageStockChanges(
-          purchaseOrder,
-          newPurchaseOrderItemsToCreate,
-          purchaseOrderUpdateDto.purchaseOrderStatusId,
+          purchaseOrderItemsToCreate,
           tx,
         );
       }
 
-      await this.purchaseOrderRepository.updatePurchaseOrderAsync(
-        purchaseOrder.id,
-        { ...purchaseOrderUpdateData, totalAmount },
+      const manageStockTask = this.manageStockChanges(
+        purchaseOrder,
+        purchaseOrderItemsToCreate,
+        purchaseOrderUpdateDto.purchaseOrderStatusId,
         tx,
       );
+
+      const updatePurchaseOrderTask =
+        this.purchaseOrderRepository.updatePurchaseOrderAsync(
+          purchaseOrder.id,
+          { ...purchaseOrderUpdateData, totalAmount },
+          tx,
+        );
+
+      await Promise.all([manageStockTask, updatePurchaseOrderTask]);
     });
   }
 
   private async manageStockChanges(
     purchaseOrder: PurchaseOrder,
-    purchaseOrderItems: PurchaseOrderItemDto[],
+    purchaseOrderItems: { productId: number; quantity: number }[],
     newStatus: PurchaseOrderStatusId,
     tx: Prisma.TransactionClient,
   ) {
     const stockUpdates: StockChangeCreationDataDto[] = [];
 
     switch (newStatus) {
+      case PurchaseOrderStatusId.Draft:
+        break;
+
       case PurchaseOrderStatusId.Received: {
         const stocks = await Promise.all(
           purchaseOrderItems.map((item) =>

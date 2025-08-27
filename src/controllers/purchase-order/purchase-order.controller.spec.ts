@@ -12,10 +12,12 @@ import {
   PurchaseOrderDetailsDto,
   PurchaseOrderUpdateDto,
   SearchPurchaseOrderRequest,
+  UpdatePurchaseOrderStatusRequestDto,
 } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
+import { UpdatePurchaseOrderStatusCommand } from './command/update-purchase-order-status.command';
 import { UpdatePurchaseOrderCommand } from './command/update-purchase-order.command';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
@@ -90,6 +92,7 @@ describe('PurchaseOrderController', () => {
         supplierId: 1,
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Purchase order for office supplies',
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
         purchaseOrderItems: [
           {
             productId: 1,
@@ -191,6 +194,30 @@ describe('PurchaseOrderController', () => {
 
       // Act
       await controller.updatePurchaseOrderAsync(id, purchaseOrderUpdateDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updatePurchaseOrderStatusAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const id = 1;
+      const updatePurchaseOrderStatusDto = {
+        observation: 'Order cancelled due to supplier delay',
+      } as UpdatePurchaseOrderStatusRequestDto;
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdatePurchaseOrderStatusCommand(
+        id,
+        updatePurchaseOrderStatusDto,
+      );
+
+      // Act
+      await controller.updatePurchaseOrderStatusAsync(
+        id,
+        updatePurchaseOrderStatusDto,
+      );
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);

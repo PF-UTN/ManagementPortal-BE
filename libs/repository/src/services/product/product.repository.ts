@@ -252,6 +252,16 @@ export class ProductRepository {
     });
   }
 
+  async findManyProductsWithSupplierIdAsync(productIds: number[]) {
+    return this.prisma.product.findMany({
+      where: { AND: [{ id: { in: productIds } }, { deletedAt: null }] },
+      select: {
+        id: true,
+        supplierId: true,
+      },
+    });
+  }
+
   async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
     await this.redisService.setFieldInHash(
       'products',

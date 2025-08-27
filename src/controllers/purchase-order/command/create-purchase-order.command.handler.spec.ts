@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
+import { PurchaseOrderStatusId } from '@mp/common/constants';
 import { PurchaseOrderCreationDto } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './create-purchase-order.command';
@@ -40,6 +41,7 @@ describe('CreatePurchaseOrderCommandHandler', () => {
       supplierId: 1,
       estimatedDeliveryDate: new Date('1990-01-15'),
       observation: 'Purchase order for office supplies',
+      purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
       purchaseOrderItems: [
         {
           productId: 1,

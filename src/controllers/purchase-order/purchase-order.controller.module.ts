@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { CreatePurchaseOrderCommandHandler } from './command/create-purchase-order.command.handler';
 import { DeletePurchaseOrderCommandHandler } from './command/delete-purchase-order.command.handler';
+import { UpdatePurchaseOrderStatusCommandHandler } from './command/update-purchase-order-status.command.handler';
 import { UpdatePurchaseOrderCommandHandler } from './command/update-purchase-order.command.handler';
 import { PurchaseOrderController } from './purchase-order.controller';
 import { GetPurchaseOrderByIdQueryHandler } from './query/get-purchase-order-by-id.query.handler';
@@ -16,6 +17,7 @@ const commandHandlers = [
   CreatePurchaseOrderCommandHandler,
   DeletePurchaseOrderCommandHandler,
   UpdatePurchaseOrderCommandHandler,
+  UpdatePurchaseOrderStatusCommandHandler,
 ];
 
 @Module({

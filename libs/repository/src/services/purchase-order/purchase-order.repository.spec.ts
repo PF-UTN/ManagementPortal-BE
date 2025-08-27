@@ -310,7 +310,7 @@ describe('PurchaseOrderRepository', () => {
       expect(result).toEqual(purchaseOrder);
     });
 
-    it('should call prisma.purchaseOrder.findUnique with correct id', async () => {
+    it('should call prisma.purchaseOrder.findUnique with correct id including purchaseOrderItems properties', async () => {
       // Arrange
       const purchaseOrderId = 1;
 
@@ -326,6 +326,14 @@ describe('PurchaseOrderRepository', () => {
         where: {
           id: purchaseOrderId,
           purchaseOrderStatusId: { not: PurchaseOrderStatusId.Deleted },
+        },
+        include: {
+          purchaseOrderItems: {
+            select: {
+              quantity: true,
+              productId: true,
+            },
+          },
         },
       });
     });
