@@ -101,6 +101,12 @@ describe('AuthenticationController', () => {
     controller = module.get<AuthenticationController>(AuthenticationController);
   });
 
+  afterEach(async () => {
+    if (redisClientMock.destroy) {
+      await redisClientMock.destroy();
+    }
+  });
+
   it('should be defined', () => {
     expect(controller).toBeDefined();
   });
