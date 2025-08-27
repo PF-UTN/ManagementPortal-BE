@@ -1,8 +1,14 @@
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
+import { RedisClientType } from 'redis';
 
-import { UserCreationDto, UserSignInDto, ResetPasswordRequestDto } from '@mp/common/dtos';
+import {
+  UserCreationDto,
+  UserSignInDto,
+  ResetPasswordRequestDto,
+} from '@mp/common/dtos';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
@@ -37,6 +43,7 @@ describe('AuthenticationController', () => {
   let registrationRequestStatusServiceMock: RegistrationRequestStatusServiceMock;
   let commandBusMock: CommandBusMock;
   let queryBusMock: QueryBusMock;
+  const redisClientMock = mockDeep<RedisClientType>();
 
   beforeEach(async () => {
     authenticationServiceMock = new AuthenticationServiceMock();
@@ -83,6 +90,10 @@ describe('AuthenticationController', () => {
         {
           provide: RegistrationRequestStatusService,
           useValue: registrationRequestStatusServiceMock,
+        },
+        {
+          provide: 'REDIS_CLIENT',
+          useValue: redisClientMock,
         },
       ],
     }).compile();
@@ -150,7 +161,10 @@ describe('AuthenticationController', () => {
     it('should call commandBus.execute with ResetPasswordCommand when resetPasswordAsync is called', async () => {
       // Arrange
       const token = 'mockToken';
-      const resetPasswordDto = { password: 'newPassword', confirmPassword: 'newPassword' };
+      const resetPasswordDto = {
+        password: 'newPassword',
+        confirmPassword: 'newPassword',
+      };
       const executeSpy = jest
         .spyOn(commandBusMock, 'execute')
         .mockResolvedValueOnce(undefined);

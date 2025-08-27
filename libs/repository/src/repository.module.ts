@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 
+import { RedisServiceModule } from '@mp/common/services';
+
 import {
   UserRepository,
   PrismaService,
@@ -24,6 +26,7 @@ import {
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
 @Module({
+  imports: [RedisServiceModule],
   providers: [
     PrismaService,
     UserRepository,
