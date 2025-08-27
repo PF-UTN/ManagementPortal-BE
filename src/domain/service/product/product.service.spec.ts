@@ -19,7 +19,6 @@ import {
 
 import { SearchProductQuery } from './../../../controllers/product/command/search-product-query';
 import { ProductService } from './product.service';
-import { CartService } from '../cart/cart.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -30,7 +29,6 @@ describe('ProductService', () => {
   let supplierService: SupplierService;
   let stockRepository: StockRepository;
   let unitOfWork: PrismaUnitOfWork;
-  let cartService: CartService;
   let product: ReturnType<
     typeof mockDeep<
       Prisma.ProductGetPayload<{
@@ -58,11 +56,9 @@ describe('ProductService', () => {
         { provide: SupplierService, useValue: mockDeep<SupplierService>() },
         { provide: StockRepository, useValue: mockDeep<StockRepository>() },
         { provide: PrismaUnitOfWork, useValue: mockDeep<PrismaUnitOfWork>() },
-        { provide: CartService, useValue: mockDeep<CartService>() },
       ],
     }).compile();
 
-    cartService = module.get<CartService>(CartService);
     productCategoryService = module.get<ProductCategoryService>(
       ProductCategoryService,
     );
@@ -407,7 +403,7 @@ describe('ProductService', () => {
       // Arrange
       const redisProductMock = productDetailsDtoMock;
       jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
         .mockResolvedValue(redisProductMock);
 
       // Act
@@ -419,13 +415,13 @@ describe('ProductService', () => {
     it('should call repository and save to Redis if product not in Redis but found in DB', async () => {
       // Arrange
       jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
         .mockResolvedValue(null);
       jest
         .spyOn(repository, 'findProductWithDetailsByIdAsync')
         .mockResolvedValue(productMockData);
       const saveSpy = jest
-        .spyOn(cartService, 'saveProductToRedisAsync')
+        .spyOn(repository, 'saveProductToRedisAsync')
         .mockResolvedValue(undefined);
 
       // Act
@@ -437,7 +433,7 @@ describe('ProductService', () => {
     it('should throw NotFoundException if product not found in Redis or DB', async () => {
       // Arrange
       jest
-        .spyOn(cartService, 'getProductByIdFromRedisAsync')
+        .spyOn(service, 'getProductByIdFromRedisAsync')
         .mockResolvedValue(null);
       jest
         .spyOn(repository, 'findProductWithDetailsByIdAsync')
@@ -447,6 +443,48 @@ describe('ProductService', () => {
       await expect(
         service.findProductByIdAsync(productMockData.id),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+  describe('saveProductToRedisAsync', () => {
+    it('should call saveProductToRedisAsync on cartRepository', async () => {
+      // Arrange
+      const spySave = jest
+        .spyOn(repository, 'saveProductToRedisAsync')
+        .mockResolvedValueOnce();
+
+      // Act
+      await service.saveProductToRedisAsync(productDetailsDtoMock);
+
+      // Assert
+      expect(spySave).toHaveBeenCalledWith(productDetailsDtoMock);
+    });
+  });
+
+  describe('getProductByIdFromRedisAsync', () => {
+    it('should return product from cartRepository', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockResolvedValueOnce(productDetailsDtoMock);
+
+      // Act
+      const result = await service.getProductByIdFromRedisAsync(1);
+
+      // Assert
+      expect(result).toEqual(productDetailsDtoMock);
+    });
+
+    it('should propagate error if cartRepository fails', async () => {
+      // Arrange
+      const error = new Error('Redis connection failed');
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockRejectedValueOnce(error);
+
+      // Act + Assert
+      await expect(service.getProductByIdFromRedisAsync(1)).rejects.toThrow(
+        error,
+      );
     });
   });
 });

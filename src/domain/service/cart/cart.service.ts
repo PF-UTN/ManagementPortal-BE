@@ -6,7 +6,6 @@ import {
 
 import {
   GetCartProductQuantityDto,
-  ProductDetailsDto,
   UpdateCartProductQuantityDto,
 } from '@mp/common/dtos';
 
@@ -20,13 +19,13 @@ export class CartService {
     private readonly productService: ProductService,
   ) {}
 
-  async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
-    await this.cartRepository.saveProductToRedisAsync(product);
-  }
+  // async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
+  //   await this.cartRepository.saveProductToRedisAsync(product);
+  // }
 
-  async getProductByIdFromRedisAsync(productId: number) {
-    return this.cartRepository.getProductByIdFromRedisAsync(productId);
-  }
+  // async getProductByIdFromRedisAsync(productId: number) {
+  //   return this.cartRepository.getProductByIdFromRedisAsync(productId);
+  // }
 
   async updateProductQuantityInCartAsync(
     cartId: number,

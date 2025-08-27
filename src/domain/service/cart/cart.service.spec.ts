@@ -230,46 +230,46 @@ describe('CartService', () => {
       ).rejects.toThrow('Redis connection failed');
     });
   });
-  describe('saveProductToRedisAsync', () => {
-    it('should call saveProductToRedisAsync on cartRepository', async () => {
-      // Arrange
-      const spySave = jest
-        .spyOn(cartRepository, 'saveProductToRedisAsync')
-        .mockResolvedValueOnce();
+  // describe('saveProductToRedisAsync', () => {
+  //   it('should call saveProductToRedisAsync on cartRepository', async () => {
+  //     // Arrange
+  //     const spySave = jest
+  //       .spyOn(cartRepository, 'saveProductToRedisAsync')
+  //       .mockResolvedValueOnce();
 
-      // Act
-      await service.saveProductToRedisAsync(productDetailsDtoMock);
+  //     // Act
+  //     await service.saveProductToRedisAsync(productDetailsDtoMock);
 
-      // Assert
-      expect(spySave).toHaveBeenCalledWith(productDetailsDtoMock);
-    });
-  });
+  //     // Assert
+  //     expect(spySave).toHaveBeenCalledWith(productDetailsDtoMock);
+  //   });
+  // });
 
-  describe('getProductByIdFromRedisAsync', () => {
-    it('should return product from cartRepository', async () => {
-      // Arrange
-      jest
-        .spyOn(cartRepository, 'getProductByIdFromRedisAsync')
-        .mockResolvedValueOnce(productDetailsDtoMock);
+  // describe('getProductByIdFromRedisAsync', () => {
+  //   it('should return product from cartRepository', async () => {
+  //     // Arrange
+  //     jest
+  //       .spyOn(cartRepository, 'getProductByIdFromRedisAsync')
+  //       .mockResolvedValueOnce(productDetailsDtoMock);
 
-      // Act
-      const result = await service.getProductByIdFromRedisAsync(1);
+  //     // Act
+  //     const result = await service.getProductByIdFromRedisAsync(1);
 
-      // Assert
-      expect(result).toEqual(productDetailsDtoMock);
-    });
+  //     // Assert
+  //     expect(result).toEqual(productDetailsDtoMock);
+  //   });
 
-    it('should propagate error if cartRepository fails', async () => {
-      // Arrange
-      const error = new Error('Redis connection failed');
-      jest
-        .spyOn(cartRepository, 'getProductByIdFromRedisAsync')
-        .mockRejectedValueOnce(error);
+  //   it('should propagate error if cartRepository fails', async () => {
+  //     // Arrange
+  //     const error = new Error('Redis connection failed');
+  //     jest
+  //       .spyOn(cartRepository, 'getProductByIdFromRedisAsync')
+  //       .mockRejectedValueOnce(error);
 
-      // Act + Assert
-      await expect(service.getProductByIdFromRedisAsync(1)).rejects.toThrow(
-        error,
-      );
-    });
-  });
+  //     // Act + Assert
+  //     await expect(service.getProductByIdFromRedisAsync(1)).rejects.toThrow(
+  //       error,
+  //     );
+  //   });
+  // });
 });

@@ -5,16 +5,12 @@ import { ProductDetailsDto } from '@mp/common/dtos';
 
 import { ProductService } from './../../../domain/service/product/product.service';
 import { SaveProductRedisCommand } from './save-product-redis.command';
-import { CartService } from '../../../domain/service/cart/cart.service';
 
 @CommandHandler(SaveProductRedisCommand)
 export class SaveProductRedisCommandHandler
   implements ICommandHandler<SaveProductRedisCommand>
 {
-  constructor(
-    private readonly cartService: CartService,
-    private readonly productService: ProductService,
-  ) {}
+  constructor(private readonly productService: ProductService) {}
 
   async execute(command: SaveProductRedisCommand): Promise<ProductDetailsDto> {
     const foundProduct = await this.productService.findProductByIdAsync(
@@ -24,7 +20,7 @@ export class SaveProductRedisCommandHandler
     if (!foundProduct) {
       throw new NotFoundException('Product not found');
     }
-    await this.cartService.saveProductToRedisAsync(foundProduct);
+    await this.productService.saveProductToRedisAsync(foundProduct);
 
     return foundProduct;
   }

@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  forwardRef,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -19,7 +17,6 @@ import {
 } from '@mp/repository';
 
 import { SearchProductQuery } from '../../../controllers/product/command/search-product-query';
-import { CartService } from '../cart/cart.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -31,8 +28,6 @@ export class ProductService {
     private readonly supplierService: SupplierService,
     private readonly stockRepository: StockRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
-    @Inject(forwardRef(() => CartService))
-    private readonly cartService: CartService,
   ) {}
 
   async searchWithFiltersAsync(query: SearchProductQuery) {
@@ -143,7 +138,7 @@ export class ProductService {
 
   async findProductByIdAsync(productId: number) {
     const foundProduct =
-      await this.cartService.getProductByIdFromRedisAsync(productId);
+      await this.productRepository.getProductByIdFromRedisAsync(productId);
 
     if (foundProduct) {
       return foundProduct;
@@ -178,8 +173,16 @@ export class ProductService {
       enabled: dbProduct.enabled,
     };
 
-    await this.cartService.saveProductToRedisAsync(product);
+    await this.productRepository.saveProductToRedisAsync(product);
 
     return product;
+  }
+
+  async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
+    await this.productRepository.saveProductToRedisAsync(product);
+  }
+
+  async getProductByIdFromRedisAsync(productId: number) {
+    return this.productRepository.getProductByIdFromRedisAsync(productId);
   }
 }

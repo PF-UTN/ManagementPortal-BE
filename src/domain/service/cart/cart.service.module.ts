@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { CartRepository } from 'libs/repository/src/services/cart/cart.repository';
 
 import { RedisServiceModule } from '@mp/common/services';
@@ -8,11 +8,7 @@ import { CartService } from './cart.service';
 import { ProductServiceModule } from '../product/product.service.module';
 
 @Module({
-  imports: [
-    RepositoryModule,
-    RedisServiceModule,
-    forwardRef(() => ProductServiceModule),
-  ],
+  imports: [RepositoryModule, RedisServiceModule, ProductServiceModule],
   providers: [CartService, CartRepository],
   exports: [CartService],
 })

@@ -3,14 +3,12 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { productDetailsDtoMock } from '@mp/common/testing';
 
-import { CartService } from './../../../domain/service/cart/cart.service';
 import { ProductService } from './../../../domain/service/product/product.service';
 import { SaveProductRedisCommand } from './save-product-redis.command';
 import { SaveProductRedisCommandHandler } from './save-product-redis.command.handler';
 
 describe('SaveProductRedisCommandHandler', () => {
   let handler: SaveProductRedisCommandHandler;
-  let cartService: CartService;
   let productService: ProductService;
 
   beforeEach(async () => {
@@ -18,18 +16,12 @@ describe('SaveProductRedisCommandHandler', () => {
       providers: [
         SaveProductRedisCommandHandler,
         {
-          provide: CartService,
-          useValue: mockDeep(CartService),
-        },
-        {
           provide: ProductService,
           useValue: mockDeep(ProductService),
         },
       ],
     }).compile();
     productService = module.get<ProductService>(ProductService);
-
-    cartService = module.get<CartService>(CartService);
 
     handler = module.get<SaveProductRedisCommandHandler>(
       SaveProductRedisCommandHandler,
@@ -46,7 +38,7 @@ describe('SaveProductRedisCommandHandler', () => {
     jest
       .spyOn(productService, 'findProductByIdAsync')
       .mockResolvedValueOnce(productDetailsDtoMock);
-    const spy = jest.spyOn(cartService, 'saveProductToRedisAsync');
+    const spy = jest.spyOn(productService, 'saveProductToRedisAsync');
 
     // Act
     await handler.execute(command);

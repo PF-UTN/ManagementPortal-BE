@@ -1,9 +1,9 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 
+import { RedisServiceModule } from '@mp/common/services';
 import { RepositoryModule } from '@mp/repository';
 
 import { ProductService } from './product.service';
-import { CartServiceModule } from '../cart/cart.service.module';
 import { ProductCategoryServiceModule } from '../product-category/product-category.service.module';
 import { SupplierServiceModule } from '../supplier/supplier.service.module';
 
@@ -12,7 +12,7 @@ import { SupplierServiceModule } from '../supplier/supplier.service.module';
     RepositoryModule,
     SupplierServiceModule,
     ProductCategoryServiceModule,
-    forwardRef(() => CartServiceModule),
+    RedisServiceModule,
   ],
   providers: [ProductService],
   exports: [ProductService],
