@@ -38,6 +38,7 @@ describe('PurchaseOrderService', () => {
     typeof mockDeep<
       PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       }
     >
   >;
@@ -91,6 +92,7 @@ describe('PurchaseOrderService', () => {
     purchaseOrder = mockDeep<
       PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       }
     >();
 
@@ -396,7 +398,10 @@ describe('PurchaseOrderService', () => {
           id: PurchaseOrderStatusId.Ordered,
           name: 'Ordered',
         },
-        supplier: purchaseOrderMock.supplier.businessName,
+        supplier: {
+          id: purchaseOrderMock.supplier.id,
+          businessName: purchaseOrderMock.supplier.businessName,
+        },
         purchaseOrderItems: purchaseOrderMock.purchaseOrderItems,
       };
 
@@ -486,10 +491,12 @@ describe('PurchaseOrderService', () => {
       const id = 1;
       const purchaseOrderMock: PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
         supplierId: 1,
+        supplier: { id: 1, businessName: 'Test Supplier' },
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         totalAmount: new Prisma.Decimal(100.0),
@@ -517,10 +524,12 @@ describe('PurchaseOrderService', () => {
       const id = 1;
       const purchaseOrderMock: PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Received,
         supplierId: 1,
+        supplier: { id: 1, businessName: 'Test Supplier' },
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         totalAmount: new Prisma.Decimal(100.0),
@@ -548,10 +557,12 @@ describe('PurchaseOrderService', () => {
       const id = 1;
       const purchaseOrderMock: PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       } = {
         id,
         purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
         supplierId: 1,
+        supplier: { id: 1, businessName: 'Test Supplier' },
         estimatedDeliveryDate: new Date('1990-01-15'),
         observation: 'Test observation',
         totalAmount: new Prisma.Decimal(100.0),
@@ -579,6 +590,7 @@ describe('PurchaseOrderService', () => {
   describe('updatePurchaseOrderStatusAsync', () => {
     const mockPurchaseOrder: PurchaseOrder & {
       purchaseOrderItems: { quantity: number; productId: number }[];
+      supplier: { id: number; businessName: string };
     } = {
       id: 1,
       purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
@@ -586,6 +598,7 @@ describe('PurchaseOrderService', () => {
       observation: 'Initial observation',
       effectiveDeliveryDate: null,
       supplierId: 1,
+      supplier: { id: 1, businessName: 'Supplier A' },
       estimatedDeliveryDate: new Date('2023-10-01'),
       createdAt: new Date('2023-09-01'),
       totalAmount: new Prisma.Decimal(100.0),
@@ -766,6 +779,7 @@ describe('PurchaseOrderService', () => {
         effectiveDeliveryDate: null,
       } as PurchaseOrder & {
         purchaseOrderItems: { quantity: number; productId: number }[];
+        supplier: { id: number; businessName: string };
       };
       jest
         .spyOn(purchaseOrderRepository, 'existsAsync')

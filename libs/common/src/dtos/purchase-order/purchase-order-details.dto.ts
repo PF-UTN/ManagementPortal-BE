@@ -11,6 +11,11 @@ export class PurchaseOrderDetailsDto {
     id: number;
     name: string;
   };
-  supplier: string;
+  supplier: PurchaseOrderDetailSupplierDto;
   purchaseOrderItems: PurchaseOrderItemDetailsDto[];
+}
+
+export class PurchaseOrderDetailSupplierDto {
+  id: number;
+  businessName: string;
 }

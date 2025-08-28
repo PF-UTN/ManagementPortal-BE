@@ -128,7 +128,10 @@ describe('PurchaseOrderController', () => {
           id: PurchaseOrderStatusId.Ordered,
           name: 'Ordenada',
         },
-        supplier: 'Test Supplier',
+        supplier: {
+          id: 1,
+          businessName: 'Test Supplier',
+        },
         purchaseOrderItems: [
           {
             id: 1,

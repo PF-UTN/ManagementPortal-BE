@@ -51,7 +51,10 @@ describe('GetPurchaseOrderByIdQueryHandler', () => {
           id: PurchaseOrderStatusId.Ordered,
           name: 'Pedida',
         },
-        supplier: 'Test Supplier',
+        supplier: {
+          id: 1,
+          businessName: 'Test Supplier',
+        },
         purchaseOrderItems: [
           {
             id: 1,

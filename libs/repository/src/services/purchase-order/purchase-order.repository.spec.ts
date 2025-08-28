@@ -334,6 +334,12 @@ describe('PurchaseOrderRepository', () => {
               productId: true,
             },
           },
+          supplier: {
+            select: {
+              id: true,
+              businessName: true,
+            },
+          },
         },
       });
     });
