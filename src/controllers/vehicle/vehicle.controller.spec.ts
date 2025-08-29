@@ -10,6 +10,7 @@ import {
   SearchVehicleRequest,
   UpdateVehicleDto,
   SearchMaintenancePlanItemRequest,
+  UpdateRepairDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -17,6 +18,7 @@ import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.comm
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
+import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
@@ -247,6 +249,32 @@ describe('VehicleController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchMaintenancePlanItemQuery(vehicleId, request),
       );
+    });
+  });
+
+  describe('updateVehicleRepairAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const repairId = 1;
+
+      const updateRepairDtoMock: UpdateRepairDto = {
+        date: new Date('1960-01-01'),
+        description: 'Puncture',
+        kmPerformed: 25000,
+        serviceSupplierId: 1,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateVehicleRepairCommand(
+        repairId,
+        updateRepairDtoMock,
+      );
+
+      // Act
+      await controller.updateVehicleRepairAsync(repairId, updateRepairDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });
