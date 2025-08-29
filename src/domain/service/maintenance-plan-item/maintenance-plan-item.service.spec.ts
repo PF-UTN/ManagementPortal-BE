@@ -3,7 +3,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MaintenancePlanItem } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
+import {
+  MaintenancePlanItemCreationDto,
+  UpdateMaintenancePlanItemDto,
+} from '@mp/common/dtos';
 import {
   MaintenanceItemRepository,
   MaintenancePlanItemRepository,
@@ -185,6 +188,79 @@ describe('MaintenancePlanItemService', () => {
         query.page,
         query.pageSize,
         query.vehicleId,
+      );
+    });
+  });
+
+  describe('updateMaintenancePlanItemAsync', () => {
+    it('should throw NotFoundException if maintenance plan item does not exist', async () => {
+      // Arrange
+      const updateMaintenancePlanItemDtoMock: UpdateMaintenancePlanItemDto = {
+        maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+        kmInterval: maintenancePlanItem.kmInterval,
+        timeInterval: maintenancePlanItem.timeInterval,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateMaintenancePlanItemAsync(
+          maintenancePlanItem.id,
+          updateMaintenancePlanItemDtoMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if maintenance item does not exist', async () => {
+      // Arrange
+      const updateMaintenancePlanItemDtoMock: UpdateMaintenancePlanItemDto = {
+        maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+        kmInterval: maintenancePlanItem.kmInterval,
+        timeInterval: maintenancePlanItem.timeInterval,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(maintenanceItemRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateMaintenancePlanItemAsync(
+          maintenancePlanItem.id,
+          updateMaintenancePlanItemDtoMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.updateMaintenancePlanItemAsync with the correct data', async () => {
+      // Arrange
+      const updateMaintenancePlanItemDtoMock: UpdateMaintenancePlanItemDto = {
+        maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+        kmInterval: maintenancePlanItem.kmInterval,
+        timeInterval: maintenancePlanItem.timeInterval,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(maintenanceItemRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+
+      jest
+        .spyOn(repository, 'updateMaintenancePlanItemAsync')
+        .mockResolvedValueOnce(maintenancePlanItem);
+
+      // Act
+      await service.updateMaintenancePlanItemAsync(
+        maintenancePlanItem.id,
+        updateMaintenancePlanItemDtoMock,
+      );
+
+      // Assert
+      expect(repository.updateMaintenancePlanItemAsync).toHaveBeenCalledWith(
+        maintenancePlanItem.id,
+        updateMaintenancePlanItemDtoMock,
       );
     });
   });

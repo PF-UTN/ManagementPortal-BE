@@ -2,7 +2,10 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { MaintenancePlanItem } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
+import {
+  MaintenancePlanItemCreationDto,
+  UpdateMaintenancePlanItemDto,
+} from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 import { MaintenancePlanItemRepository } from './maintenance-plan-item.repository';
@@ -129,6 +132,61 @@ describe('MaintenancePlanItemRepository', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('existsAsync', () => {
+    it('should return true if maintenance plan item exists', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(maintenancePlanItem);
+
+      // Act
+      const exists = await repository.existsAsync(id);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if maintenance plan item does not exist', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const exists = await repository.existsAsync(id);
+
+      // Assert
+      expect(exists).toBe(false);
+    });
+  });
+
+  describe('updateMaintenancePlanItemAsync', () => {
+    it('should update an existing maintenancePlanItem', async () => {
+      // Arrange
+      const updateMaintenancePlanItemDtoMock: UpdateMaintenancePlanItemDto = {
+        maintenanceItemId: maintenancePlanItem.maintenanceItemId,
+        kmInterval: maintenancePlanItem.kmInterval,
+        timeInterval: maintenancePlanItem.timeInterval,
+      };
+
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'update')
+        .mockResolvedValueOnce(maintenancePlanItem);
+
+      // Act
+      const updatedMaintenancePlanItem =
+        await repository.updateMaintenancePlanItemAsync(
+          maintenancePlanItem.id,
+          updateMaintenancePlanItemDtoMock,
+        );
+
+      // Assert
+      expect(updatedMaintenancePlanItem).toEqual(maintenancePlanItem);
     });
   });
 });
