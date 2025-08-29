@@ -144,38 +144,38 @@ export class ProductService {
       return foundProduct;
     }
 
-    const dbProduct =
+    const product =
       await this.productRepository.findProductWithDetailsByIdAsync(productId);
 
-    if (!dbProduct) {
+    if (!product) {
       throw new NotFoundException(`Product with ID ${productId} not found.`);
     }
 
-    const product: ProductDetailsDto = {
-      id: dbProduct.id,
-      name: dbProduct.name,
-      description: dbProduct.description,
-      price: dbProduct.price.toNumber(),
-      weight: dbProduct.weight.toNumber(),
+    const productDetail: ProductDetailsDto = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price.toNumber(),
+      weight: product.weight.toNumber(),
       stock: {
-        quantityAvailable: dbProduct.stock?.quantityAvailable ?? 0,
-        quantityReserved: dbProduct.stock?.quantityReserved ?? 0,
-        quantityOrdered: dbProduct.stock?.quantityOrdered ?? 0,
+        quantityAvailable: product.stock?.quantityAvailable ?? 0,
+        quantityReserved: product.stock?.quantityReserved ?? 0,
+        quantityOrdered: product.stock?.quantityOrdered ?? 0,
       },
       category: {
-        name: dbProduct.category.name,
+        name: product.category.name,
       },
       supplier: {
-        businessName: dbProduct.supplier.businessName,
-        email: dbProduct.supplier.email,
-        phone: dbProduct.supplier.phone,
+        businessName: product.supplier.businessName,
+        email: product.supplier.email,
+        phone: product.supplier.phone,
       },
-      enabled: dbProduct.enabled,
+      enabled: product.enabled,
     };
 
-    await this.productRepository.saveProductToRedisAsync(product);
+    await this.productRepository.saveProductToRedisAsync(productDetail);
 
-    return product;
+    return productDetail;
   }
 
   async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {

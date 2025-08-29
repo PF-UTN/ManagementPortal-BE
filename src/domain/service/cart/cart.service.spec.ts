@@ -8,8 +8,8 @@ import {
 } from '@mp/common/testing';
 
 import { CartRepository } from './../../../../libs/repository/src/services/cart/cart.repository';
+import { ProductService } from './../product/product.service';
 import { CartService } from './cart.service';
-import { ProductService } from '../product/product.service';
 
 describe('CartService', () => {
   let service: CartService;
