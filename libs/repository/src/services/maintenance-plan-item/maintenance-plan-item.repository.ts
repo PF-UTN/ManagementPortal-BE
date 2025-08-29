@@ -59,12 +59,11 @@ export class MaintenancePlanItemRepository {
   }
 
   async existsAsync(id: number): Promise<boolean> {
-    const maintenancePlanItem = await this.prisma.maintenancePlanItem.findFirst(
-      {
+    const maintenancePlanItem =
+      await this.prisma.maintenancePlanItem.findUnique({
         select: { id: true },
         where: { id },
-      },
-    );
+      });
     return !!maintenancePlanItem;
   }
 

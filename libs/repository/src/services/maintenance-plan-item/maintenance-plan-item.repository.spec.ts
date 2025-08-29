@@ -140,7 +140,7 @@ describe('MaintenancePlanItemRepository', () => {
       // Arrange
       const id = maintenancePlanItem.id;
       jest
-        .spyOn(prismaService.maintenancePlanItem, 'findFirst')
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
         .mockResolvedValueOnce(maintenancePlanItem);
 
       // Act
@@ -154,7 +154,7 @@ describe('MaintenancePlanItemRepository', () => {
       // Arrange
       const id = maintenancePlanItem.id;
       jest
-        .spyOn(prismaService.maintenancePlanItem, 'findFirst')
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
         .mockResolvedValueOnce(null);
 
       // Act

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { RepairCreationDataDto } from '@mp/common/dtos';
+import { RepairCreationDataDto, UpdateRepairDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 
@@ -62,5 +62,14 @@ export class RepairRepository {
     ]);
 
     return { data, total };
+  }
+
+  async updateRepairAsync(id: number, data: UpdateRepairDto) {
+    return this.prisma.repair.update({
+      where: { id },
+      data: {
+        ...data,
+      },
+    });
   }
 }
