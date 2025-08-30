@@ -4,8 +4,12 @@ import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { UpdateCartProductQuantityDto } from '@mp/common/dtos';
+import {
+  UpdateCartProductQuantityDto,
+  DeleteProductFromCartDto,
+} from '@mp/common/dtos';
 
+import { DeleteProductCartCommand } from './command/delete-product-cart.command';
 import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
 
 @Controller('cart')
@@ -32,6 +36,26 @@ export class CartController {
         cartId,
         updateCartProductQuantityDto,
       ),
+    );
+  }
+
+  @Post('delete/:cartId')
+  @RequiredPermissions(PermissionCodes.Cart.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete product from Cart',
+    description: 'Delete product from cart in Redis.',
+  })
+  @ApiParam({
+    name: 'cartId',
+    description: 'ID of the cart to update',
+  })
+  async deleteProductFromCartAsync(
+    @Param('cartId', ParseIntPipe) cartId: number,
+    @Body() deleteProductFromCartDto: DeleteProductFromCartDto,
+  ) {
+    return await this.commandBus.execute(
+      new DeleteProductCartCommand(cartId, deleteProductFromCartDto),
     );
   }
 }

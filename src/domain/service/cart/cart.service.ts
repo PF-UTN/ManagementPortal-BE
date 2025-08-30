@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { DeleteProductFromCartDto } from 'libs/common/src/dtos/cart/delete-cart-product.dto';
 
 import {
   GetCartProductQuantityDto,
@@ -73,6 +74,25 @@ export class CartService {
     return this.cartRepository.getProductQuantityFromCartAsync(
       cartId,
       getCartProductQuantityDto,
+    );
+  }
+
+  async deleteProductFromCartAsync(
+    cartId: number,
+    deleteProductFromCartDto: DeleteProductFromCartDto,
+  ): Promise<void> {
+    const exist = await this.cartRepository.existProductInCartAsync(
+      cartId,
+      deleteProductFromCartDto.productId,
+    );
+    if (!exist) {
+      throw new NotFoundException(
+        `Product with ID ${deleteProductFromCartDto.productId} not found in cart`,
+      );
+    }
+    await this.cartRepository.deleteProductFromCartAsync(
+      cartId,
+      deleteProductFromCartDto,
     );
   }
 }

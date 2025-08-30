@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DeleteProductFromCartDto } from 'libs/common/src/dtos/cart/delete-cart-product.dto';
 
 import {
   GetCartProductQuantityDto,
@@ -36,5 +37,25 @@ export class CartRepository {
     );
     await this.redisService.setKeyExpiration(cartKey, 5400);
     return value ? parseInt(value, 10) : null;
+  }
+
+  async existProductInCartAsync(
+    cartId: number,
+    productId: number,
+  ): Promise<boolean> {
+    const cartKey = `cart:${cartId}`;
+    return this.redisService.fieldExistsInObject(cartKey, productId.toString());
+  }
+
+  async deleteProductFromCartAsync(
+    cartId: number,
+    deleteProductFromCartDto: DeleteProductFromCartDto,
+  ): Promise<void> {
+    const { productId } = deleteProductFromCartDto;
+    const cartKey = `cart:${cartId}`;
+    await this.redisService.removeFieldFromObject(
+      cartKey,
+      productId.toString(),
+    );
   }
 }
