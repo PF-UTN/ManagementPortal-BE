@@ -52,4 +52,16 @@ export class MaintenanceRepository {
 
     return { data, total };
   }
+
+  async existsByMaintenancePlanItemIdAsync(
+    maintenancePlanItemId: number,
+  ): Promise<boolean> {
+    const count = await this.prisma.maintenance.count({
+      where: {
+        maintenancePlanItemId: maintenancePlanItemId,
+      },
+    });
+
+    return count > 0;
+  }
 }

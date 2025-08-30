@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import {
   MaintenancePlanItemCreationDto,
@@ -7,6 +11,7 @@ import {
 import {
   MaintenanceItemRepository,
   MaintenancePlanItemRepository,
+  MaintenanceRepository,
   VehicleRepository,
 } from '@mp/repository';
 
@@ -18,6 +23,7 @@ export class MaintenancePlanItemService {
     private readonly maintenancePlanItemRepository: MaintenancePlanItemRepository,
     private readonly vehicleRepository: VehicleRepository,
     private readonly maintenanceItemRepository: MaintenanceItemRepository,
+    private readonly maintenanceRepository: MaintenanceRepository,
   ) {}
 
   async createMaintenancePlanItemAsync(
@@ -95,6 +101,30 @@ export class MaintenancePlanItemService {
     return await this.maintenancePlanItemRepository.updateMaintenancePlanItemAsync(
       id,
       updateMaintenancePlanItemDto,
+    );
+  }
+
+  async deleteMaintenancePlanItemAsync(id: number) {
+    const existsMaintenancePlanItem =
+      await this.maintenancePlanItemRepository.existsAsync(id);
+
+    if (!existsMaintenancePlanItem) {
+      throw new NotFoundException(
+        `Maintenance plan item with id ${id} does not exist.`,
+      );
+    }
+
+    const isUsedInMaintenance =
+      await this.maintenanceRepository.existsByMaintenancePlanItemIdAsync(id);
+
+    if (isUsedInMaintenance) {
+      throw new BadRequestException(
+        `Maintenance plan item with id ${id} is being used in a Maintenance and cannot be deleted.`,
+      );
+    }
+
+    return await this.maintenancePlanItemRepository.deleteMaintenancePlanItemAsync(
+      id,
     );
   }
 }

@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { MaintenancePlanItem } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
@@ -10,6 +10,7 @@ import {
 import {
   MaintenanceItemRepository,
   MaintenancePlanItemRepository,
+  MaintenanceRepository,
   VehicleRepository,
 } from '@mp/repository';
 
@@ -21,6 +22,7 @@ describe('MaintenancePlanItemService', () => {
   let repository: MaintenancePlanItemRepository;
   let vehicleRepository: VehicleRepository;
   let maintenanceItemRepository: MaintenanceItemRepository;
+  let maintenanceRepository: MaintenanceRepository;
   let maintenancePlanItem: ReturnType<typeof mockDeep<MaintenancePlanItem>>;
 
   beforeEach(async () => {
@@ -39,6 +41,10 @@ describe('MaintenancePlanItemService', () => {
           provide: MaintenanceItemRepository,
           useValue: mockDeep(MaintenanceItemRepository),
         },
+        {
+          provide: MaintenanceRepository,
+          useValue: mockDeep(MaintenanceRepository),
+        },
       ],
     }).compile();
 
@@ -48,6 +54,9 @@ describe('MaintenancePlanItemService', () => {
     vehicleRepository = module.get<VehicleRepository>(VehicleRepository);
     maintenanceItemRepository = module.get<MaintenanceItemRepository>(
       MaintenanceItemRepository,
+    );
+    maintenanceRepository = module.get<MaintenanceRepository>(
+      MaintenanceRepository,
     );
 
     service = module.get<MaintenancePlanItemService>(
@@ -261,6 +270,53 @@ describe('MaintenancePlanItemService', () => {
       expect(repository.updateMaintenancePlanItemAsync).toHaveBeenCalledWith(
         maintenancePlanItem.id,
         updateMaintenancePlanItemDtoMock,
+      );
+    });
+  });
+
+  describe('deleteMaintenancePlanItemAsync', () => {
+    it('should throw NotFoundException if maintenance plan item does not exist', async () => {
+      // Arrange
+      const maintenancePlanItemId = maintenancePlanItem.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.deleteMaintenancePlanItemAsync(maintenancePlanItemId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if maintenance plan item is in use', async () => {
+      // Arrange
+      const maintenancePlanItemId = maintenancePlanItem.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(maintenanceRepository, 'existsByMaintenancePlanItemIdAsync')
+        .mockResolvedValueOnce(true);
+
+      // Act & Assert
+      await expect(
+        service.deleteMaintenancePlanItemAsync(maintenancePlanItemId),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should call repository.deleteMaintenancePlanItemAsync with the correct id', async () => {
+      // Arrange
+      const maintenancePlanItemId = maintenancePlanItem.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(maintenanceRepository, 'existsByMaintenancePlanItemIdAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act
+      await service.deleteMaintenancePlanItemAsync(maintenancePlanItemId);
+
+      // Assert
+      expect(repository.deleteMaintenancePlanItemAsync).toHaveBeenCalledWith(
+        maintenancePlanItemId,
       );
     });
   });
