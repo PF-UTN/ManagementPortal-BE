@@ -3,7 +3,6 @@ import { Module } from '@nestjs/common';
 import { CartServiceModule } from './../../domain/service/cart/cart.service.module';
 import { CreateProductCommandHandler } from './command/create-product.command.handler';
 import { DeleteProductCommandHandler } from './command/delete-product.command.handler';
-import { SaveProductRedisCommandHandler } from './command/save-product-redis.command.handler';
 import { SearchProductQueryHandler } from './command/search-product-query.handler';
 import { UpdateEnabledProductCommandHandler } from './command/update-enabled-product.command.handler';
 import { UpdateProductCommandHandler } from './command/update-product.command.handler';
@@ -17,7 +16,6 @@ const commandHandlers = [
   UpdateProductCommandHandler,
   UpdateEnabledProductCommandHandler,
   DeleteProductCommandHandler,
-  SaveProductRedisCommandHandler,
 ];
 
 @Module({
