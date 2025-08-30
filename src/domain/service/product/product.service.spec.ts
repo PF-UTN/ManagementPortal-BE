@@ -4,9 +4,11 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { OrderDirection, ProductOrderField } from '@mp/common/constants';
-import { SearchProductFiltersDto  } from '@mp/common/dtos';
+import { SearchProductFiltersDto } from '@mp/common/dtos';
 import {
   productCreationDtoMock,
+  productDetailsDtoMock,
+  productMockData,
   productUpdateDtoMock,
 } from '@mp/common/testing';
 import {
@@ -285,7 +287,10 @@ describe('ProductService', () => {
       await service.updateProductAsync(product.id, productUpdateDtoMock);
 
       // Assert
-      expect(updateProductAsyncSpy).toHaveBeenCalledWith(product.id, productUpdateDtoMock);
+      expect(updateProductAsyncSpy).toHaveBeenCalledWith(
+        product.id,
+        productUpdateDtoMock,
+      );
     });
 
     it('should throw NotFoundException if product does not exist', async () => {
@@ -332,13 +337,18 @@ describe('ProductService', () => {
       const productId = 1;
 
       jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
-      jest.spyOn(repository, 'deleteProductAsync').mockResolvedValueOnce(product);
+      jest
+        .spyOn(repository, 'deleteProductAsync')
+        .mockResolvedValueOnce(product);
 
       // Act
       await service.deleteProductAsync(productId);
 
       // Assert
-      expect(repository.deleteProductAsync).toHaveBeenCalledWith(productId, expect.any(Date));
+      expect(repository.deleteProductAsync).toHaveBeenCalledWith(
+        productId,
+        expect.any(Date),
+      );
     });
 
     it('should throw NotFoundException if product does not exist', async () => {
@@ -361,7 +371,9 @@ describe('ProductService', () => {
       const enabled = true;
 
       jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
-      jest.spyOn(repository, 'updateEnabledProductAsync').mockResolvedValueOnce(product);
+      jest
+        .spyOn(repository, 'updateEnabledProductAsync')
+        .mockResolvedValueOnce(product);
 
       // Act
       await service.updateEnabledProductAsync(productId, enabled);
@@ -386,18 +398,92 @@ describe('ProductService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
-
   describe('findProductByIdAsync', () => {
-    it('should call findProductWithDetailsByIdAsync on the repository with correct productId', async () => {
+    it('should return product from Redis if found', async () => {
       // Arrange
-      const productId = 1;
+      const redisProductMock = productDetailsDtoMock;
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(redisProductMock);
 
       // Act
-      await service.findProductByIdAsync(productId);
+      const result = await service.findProductByIdAsync(redisProductMock.id);
 
       // Assert
-      expect(repository.findProductWithDetailsByIdAsync).toHaveBeenCalledWith(
-        productId,
+      expect(result).toEqual(redisProductMock);
+    });
+    it('should call repository and save to Redis if product not in Redis but found in DB', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValue(productMockData);
+      const saveSpy = jest
+        .spyOn(repository, 'saveProductToRedisAsync')
+        .mockResolvedValue(undefined);
+
+      // Act
+      const result = await service.findProductByIdAsync(productMockData.id);
+
+      // Assert
+      expect(saveSpy).toHaveBeenCalledWith(result);
+    });
+    it('should throw NotFoundException if product not found in Redis or DB', async () => {
+      // Arrange
+      jest
+        .spyOn(service, 'getProductByIdFromRedisAsync')
+        .mockResolvedValue(null);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValue(null);
+
+      // Act & Assert
+      await expect(
+        service.findProductByIdAsync(productMockData.id),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+  describe('saveProductToRedisAsync', () => {
+    it('should call saveProductToRedisAsync on cartRepository', async () => {
+      // Arrange
+      const spySave = jest
+        .spyOn(repository, 'saveProductToRedisAsync')
+        .mockResolvedValueOnce();
+
+      // Act
+      await service.saveProductToRedisAsync(productDetailsDtoMock);
+
+      // Assert
+      expect(spySave).toHaveBeenCalledWith(productDetailsDtoMock);
+    });
+  });
+
+  describe('getProductByIdFromRedisAsync', () => {
+    it('should return product from cartRepository', async () => {
+      // Arrange
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockResolvedValueOnce(productDetailsDtoMock);
+
+      // Act
+      const result = await service.getProductByIdFromRedisAsync(1);
+
+      // Assert
+      expect(result).toEqual(productDetailsDtoMock);
+    });
+
+    it('should propagate error if cartRepository fails', async () => {
+      // Arrange
+      const error = new Error('Redis connection failed');
+      jest
+        .spyOn(repository, 'getProductByIdFromRedisAsync')
+        .mockRejectedValueOnce(error);
+
+      // Act + Assert
+      await expect(service.getProductByIdFromRedisAsync(1)).rejects.toThrow(
+        error,
       );
     });
   });

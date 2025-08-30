@@ -3,7 +3,11 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
-import { productCreationDtoMock } from '@mp/common/testing';
+import { RedisService } from '@mp/common/services';
+import {
+  productCreationDtoMock,
+  productDetailsDtoMock,
+} from '@mp/common/testing';
 import { productMockData } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
@@ -12,6 +16,7 @@ import { ProductRepository } from './product.repository';
 describe('ProductRepository', () => {
   let repository: ProductRepository;
   let prismaService: PrismaService;
+  let redisService: RedisService;
   let product: ReturnType<
     typeof mockDeep<
       Prisma.ProductGetPayload<{
@@ -35,11 +40,17 @@ describe('ProductRepository', () => {
           provide: PrismaService,
           useValue: mockDeep(PrismaService),
         },
+        {
+          provide: RedisService,
+          useValue: mockDeep(RedisService),
+        },
       ],
     }).compile();
 
     repository = module.get<ProductRepository>(ProductRepository);
     prismaService = module.get<PrismaService>(PrismaService);
+
+    redisService = module.get<RedisService>(RedisService);
 
     product = mockDeep<
       Prisma.ProductGetPayload<{
@@ -429,7 +440,56 @@ describe('ProductRepository', () => {
       expect(result).toEqual(productMockData);
     });
   });
+  describe('saveProductToRedisAsync', () => {
+    it('should call setFieldInHash with correct key, field, and value', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setFieldInHash');
 
+      // Act
+      await repository.saveProductToRedisAsync(product);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(
+        'products',
+        String(product.id),
+        JSON.stringify(product),
+      );
+    });
+    it('should set expiration on products hash', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await repository.saveProductToRedisAsync(product);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', 5400);
+    });
+  });
+  describe('getProductByIdFromRedisAsync', () => {
+    it('should call getFieldValue with correct key and field', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'getFieldValue');
+
+      // Act
+      await repository.getProductByIdFromRedisAsync(product.id);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', String(product.id));
+    });
+    it('should set expiration on products hash', async () => {
+      // Arrange
+      const product = productDetailsDtoMock;
+      const spy = jest.spyOn(redisService, 'setKeyExpiration');
+      // Act
+      await repository.getProductByIdFromRedisAsync(product.id);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('products', 5400);
+    });
+  });
   describe('findManyProductsWithSupplierIdAsync', () => {
     it('should return products with supplier IDs', async () => {
       // Arrange

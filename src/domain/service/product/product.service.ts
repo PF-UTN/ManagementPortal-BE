@@ -5,7 +5,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { ProductCreationDto, ProductUpdateDto } from '@mp/common/dtos';
+import {
+  ProductCreationDto,
+  ProductDetailsDto,
+  ProductUpdateDto,
+} from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
   ProductRepository,
@@ -133,6 +137,52 @@ export class ProductService {
   }
 
   async findProductByIdAsync(productId: number) {
-    return this.productRepository.findProductWithDetailsByIdAsync(productId);
+    const foundProduct =
+      await this.productRepository.getProductByIdFromRedisAsync(productId);
+
+    if (foundProduct) {
+      return foundProduct;
+    }
+
+    const product =
+      await this.productRepository.findProductWithDetailsByIdAsync(productId);
+
+    if (!product) {
+      throw new NotFoundException(`Product with ID ${productId} not found.`);
+    }
+
+    const productDetail: ProductDetailsDto = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price.toNumber(),
+      weight: product.weight.toNumber(),
+      stock: {
+        quantityAvailable: product.stock?.quantityAvailable ?? 0,
+        quantityReserved: product.stock?.quantityReserved ?? 0,
+        quantityOrdered: product.stock?.quantityOrdered ?? 0,
+      },
+      category: {
+        name: product.category.name,
+      },
+      supplier: {
+        businessName: product.supplier.businessName,
+        email: product.supplier.email,
+        phone: product.supplier.phone,
+      },
+      enabled: product.enabled,
+    };
+
+    await this.productRepository.saveProductToRedisAsync(productDetail);
+
+    return productDetail;
+  }
+
+  async saveProductToRedisAsync(product: ProductDetailsDto): Promise<void> {
+    await this.productRepository.saveProductToRedisAsync(product);
+  }
+
+  async getProductByIdFromRedisAsync(productId: number) {
+    return this.productRepository.getProductByIdFromRedisAsync(productId);
   }
 }
