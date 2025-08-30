@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Maintenance } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { PrismaService } from '../prisma.service';
@@ -7,6 +8,7 @@ import { MaintenanceRepository } from './maintenance.repository';
 describe('MaintenanceRepository', () => {
   let repository: MaintenanceRepository;
   let prismaService: PrismaService;
+  let maintenance: ReturnType<typeof mockDeep<Maintenance>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,6 +21,14 @@ describe('MaintenanceRepository', () => {
     prismaService = module.get<PrismaService>(PrismaService);
 
     repository = module.get<MaintenanceRepository>(MaintenanceRepository);
+
+    maintenance = mockDeep<Maintenance>();
+
+    maintenance.id = 1;
+    maintenance.date = mockDeep<Date>();
+    maintenance.kmPerformed = 10000;
+    maintenance.maintenancePlanItemId = 1;
+    maintenance.serviceSupplierId = 1;
   });
 
   it('should be defined', () => {
@@ -96,6 +106,36 @@ describe('MaintenanceRepository', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('existsByMaintenancePlanItemIdAsync', () => {
+    it('should return true if maintenance exists for the given maintenancePlanItemId', async () => {
+      // Arrange
+      const maintenancePlanItemId = maintenance.maintenancePlanItemId;
+
+      jest.spyOn(prismaService.maintenance, 'count').mockResolvedValueOnce(1);
+
+      const isUsedInMaintenance =
+        await repository.existsByMaintenancePlanItemIdAsync(
+          maintenancePlanItemId,
+        );
+
+      expect(isUsedInMaintenance).toBe(true);
+    });
+
+    it('should return false if maintenance does not exist for the given maintenancePlanItemId', async () => {
+      // Arrange
+      const maintenancePlanItemId = maintenance.maintenancePlanItemId;
+
+      jest.spyOn(prismaService.maintenance, 'count').mockResolvedValueOnce(0);
+
+      const isUsedInMaintenance =
+        await repository.existsByMaintenancePlanItemIdAsync(
+          maintenancePlanItemId,
+        );
+
+      expect(isUsedInMaintenance).toBe(false);
     });
   });
 });
