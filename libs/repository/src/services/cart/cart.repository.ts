@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { DeleteProductFromCartDto } from 'libs/common/src/dtos/cart/delete-cart-product.dto';
 
 import {
   GetCartProductQuantityDto,
   UpdateCartProductQuantityDto,
+  DeleteProductFromCartDto,
 } from '@mp/common/dtos';
 import { RedisService } from '@mp/common/services';
 

@@ -1,4 +1,4 @@
-import { DeleteProductFromCartDto } from 'libs/common/src/dtos/cart/delete-cart-product.dto';
+import { DeleteProductFromCartDto } from '@mp/common/dtos';
 
 export class DeleteProductCartCommand {
   constructor(
