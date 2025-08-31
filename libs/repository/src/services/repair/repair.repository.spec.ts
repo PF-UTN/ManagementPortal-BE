@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repair } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { RepairCreationDataDto } from '@mp/common/dtos';
+import { RepairCreationDataDto, UpdateRepairDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 import { RepairRepository } from './repair.repository';
@@ -178,6 +178,29 @@ describe('RepairRepository', () => {
           },
         }),
       );
+    });
+  });
+
+  describe('updateRepairAsync', () => {
+    it('should update an existing repair', async () => {
+      // Arrange
+      const updateRepairDtoMock: UpdateRepairDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(prismaService.repair, 'update').mockResolvedValueOnce(repair);
+
+      // Act
+      const updatedRepair = await repository.updateRepairAsync(
+        repair.id,
+        updateRepairDtoMock,
+      );
+
+      // Assert
+      expect(updatedRepair).toEqual(repair);
     });
   });
 });
