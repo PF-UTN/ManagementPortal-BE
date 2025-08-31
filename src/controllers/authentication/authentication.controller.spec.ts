@@ -1,8 +1,15 @@
 import { ConfigModule } from '@nestjs/config';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
+import { mockDeep } from 'jest-mock-extended';
+import { RedisClientType } from 'redis';
 
-import { UserCreationDto, UserSignInDto, ResetPasswordRequestDto } from '@mp/common/dtos';
+import {
+  UserCreationDto,
+  UserSignInDto,
+  ResetPasswordRequestDto,
+} from '@mp/common/dtos';
+import { RedisModule } from '@mp/common/services';
 import {
   AuthenticationServiceMock,
   CommandBusMock,
@@ -46,6 +53,7 @@ describe('AuthenticationController', () => {
       new RegistrationRequestStatusServiceMock();
     commandBusMock = new CommandBusMock();
     queryBusMock = new QueryBusMock();
+    const redisClientMock = mockDeep<RedisClientType>();
 
     const module: TestingModule = await Test.createTestingModule({
       imports: [
@@ -57,6 +65,7 @@ describe('AuthenticationController', () => {
         UserServiceModule,
         RegistrationRequestDomainServiceModule,
         RegistrationRequestStatusServiceModule,
+        RedisModule,
       ],
       controllers: [AuthenticationController],
       providers: [
@@ -85,7 +94,10 @@ describe('AuthenticationController', () => {
           useValue: registrationRequestStatusServiceMock,
         },
       ],
-    }).compile();
+    })
+      .overrideProvider('REDIS_CLIENT')
+      .useValue(redisClientMock)
+      .compile();
 
     controller = module.get<AuthenticationController>(AuthenticationController);
   });
@@ -150,7 +162,10 @@ describe('AuthenticationController', () => {
     it('should call commandBus.execute with ResetPasswordCommand when resetPasswordAsync is called', async () => {
       // Arrange
       const token = 'mockToken';
-      const resetPasswordDto = { password: 'newPassword', confirmPassword: 'newPassword' };
+      const resetPasswordDto = {
+        password: 'newPassword',
+        confirmPassword: 'newPassword',
+      };
       const executeSpy = jest
         .spyOn(commandBusMock, 'execute')
         .mockResolvedValueOnce(undefined);

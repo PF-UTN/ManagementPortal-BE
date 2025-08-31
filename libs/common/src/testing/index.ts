@@ -22,3 +22,4 @@ export * from './supplier.mock';
 export * from './product.mock';
 export * from './address.mock';
 export * from './product.data.mock';
+export * from './cart.mock';

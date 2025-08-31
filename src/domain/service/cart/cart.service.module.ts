@@ -5,9 +5,10 @@ import { RedisServiceModule } from '@mp/common/services';
 import { RepositoryModule } from '@mp/repository';
 
 import { CartService } from './cart.service';
+import { ProductServiceModule } from '../product/product.service.module';
 
 @Module({
-  imports: [RepositoryModule, RedisServiceModule],
+  imports: [RepositoryModule, RedisServiceModule, ProductServiceModule],
   providers: [CartService, CartRepository],
   exports: [CartService],
 })
