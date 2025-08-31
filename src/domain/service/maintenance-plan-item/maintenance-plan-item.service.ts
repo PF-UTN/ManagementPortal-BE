@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { MaintenancePlanItemCreationDto } from '@mp/common/dtos';
+import {
+  MaintenancePlanItemCreationDto,
+  UpdateMaintenancePlanItemDto,
+} from '@mp/common/dtos';
 import {
   MaintenanceItemRepository,
   MaintenancePlanItemRepository,
@@ -62,6 +65,36 @@ export class MaintenancePlanItemService {
       query.page,
       query.pageSize,
       query.vehicleId,
+    );
+  }
+
+  async updateMaintenancePlanItemAsync(
+    id: number,
+    updateMaintenancePlanItemDto: UpdateMaintenancePlanItemDto,
+  ) {
+    const existsMaintenancePlanItem =
+      await this.maintenancePlanItemRepository.existsAsync(id);
+
+    if (!existsMaintenancePlanItem) {
+      throw new NotFoundException(
+        `Maintenance plan item with id ${id} does not exist.`,
+      );
+    }
+
+    const existsMaintenanceItem =
+      await this.maintenanceItemRepository.existsAsync(
+        updateMaintenancePlanItemDto.maintenanceItemId,
+      );
+
+    if (!existsMaintenanceItem) {
+      throw new NotFoundException(
+        `Maintenance item with id ${updateMaintenancePlanItemDto.maintenanceItemId} does not exist.`,
+      );
+    }
+
+    return await this.maintenancePlanItemRepository.updateMaintenancePlanItemAsync(
+      id,
+      updateMaintenancePlanItemDto,
     );
   }
 }

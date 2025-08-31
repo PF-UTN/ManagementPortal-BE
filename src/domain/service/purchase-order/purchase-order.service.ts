@@ -145,7 +145,10 @@ export class PurchaseOrderService {
             purchaseOrder.purchaseOrderStatus.name
           ] || purchaseOrder.purchaseOrderStatus.name,
       },
-      supplier: purchaseOrder.supplier.businessName,
+      supplier: {
+        id: purchaseOrder.supplier.id,
+        businessName: purchaseOrder.supplier.businessName,
+      },
       purchaseOrderItems: itemDtos,
     };
 

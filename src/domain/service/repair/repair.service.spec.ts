@@ -3,7 +3,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Repair } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { RepairCreationDataDto, RepairCreationDto } from '@mp/common/dtos';
+import {
+  RepairCreationDataDto,
+  RepairCreationDto,
+  UpdateRepairDto,
+} from '@mp/common/dtos';
 import {
   RepairRepository,
   ServiceSupplierRepository,
@@ -204,6 +208,71 @@ describe('RepairService', () => {
         query.page,
         query.pageSize,
         query.vehicleId,
+      );
+    });
+  });
+
+  describe('updateRepairAsync', () => {
+    it('should throw NotFoundException if repair does not exist', async () => {
+      // Arrange
+      const updateRepairDtoMock: UpdateRepairDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateRepairAsync(repair.id, updateRepairDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if service supplier does not exist', async () => {
+      // Arrange
+      const updateRepairDtoMock: UpdateRepairDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateRepairAsync(repair.id, updateRepairDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.updateRepairAsync with the correct data', async () => {
+      // Arrange
+      const updateRepairDtoMock: UpdateRepairDto = {
+        date: repair.date,
+        description: repair.description,
+        kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
+      };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+
+      jest.spyOn(repository, 'updateRepairAsync').mockResolvedValueOnce(repair);
+
+      // Act
+      await service.updateRepairAsync(repair.id, updateRepairDtoMock);
+
+      // Assert
+      expect(repository.updateRepairAsync).toHaveBeenCalledWith(
+        repair.id,
+        updateRepairDtoMock,
       );
     });
   });
