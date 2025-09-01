@@ -252,4 +252,34 @@ describe('VehicleRepository', () => {
       expect(updatedVehicle).toEqual(vehicle);
     });
   });
+
+  describe('findByIdAsync', () => {
+    it('should return a vehicle if it exists', async () => {
+      // Arrange
+      const vehicleId = 1;
+      jest
+        .spyOn(prismaService.vehicle, 'findUnique')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      const foundVehicle = await repository.findByIdAsync(vehicleId);
+
+      // Assert
+      expect(foundVehicle).toEqual(vehicle);
+    });
+
+    it('should return null if the vehicle does not exist', async () => {
+      // Arrange
+      const vehicleId = 1;
+      jest
+        .spyOn(prismaService.vehicle, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const vehicle = await repository.findByIdAsync(vehicleId);
+
+      // Assert
+      expect(vehicle).toBeNull();
+    });
+  });
 });

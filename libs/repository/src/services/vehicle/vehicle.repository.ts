@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Vehicle } from '@prisma/client';
 
 import { UpdateVehicleDto } from '@mp/common/dtos';
 
@@ -84,6 +84,12 @@ export class VehicleRepository {
       data: {
         ...data,
       },
+    });
+  }
+
+  async findByIdAsync(id: number): Promise<Vehicle | null> {
+    return this.prisma.vehicle.findUnique({
+      where: { id, deleted: false },
     });
   }
 }
