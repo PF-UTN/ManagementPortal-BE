@@ -76,4 +76,10 @@ export class MaintenancePlanItemRepository {
       data: { ...data },
     });
   }
+
+  async deleteMaintenancePlanItemAsync(id: number) {
+    return this.prisma.maintenancePlanItem.delete({
+      where: { id },
+    });
+  }
 }
