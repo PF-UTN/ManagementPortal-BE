@@ -4,6 +4,7 @@ import { mockDeep } from 'jest-mock-extended';
 import {
   GetCartProductQuantityDto,
   UpdateCartProductQuantityDto,
+  DeleteProductFromCartDto,
 } from '@mp/common/dtos';
 import { RedisService } from '@mp/common/services';
 
@@ -121,6 +122,51 @@ describe('ProductRedisRepository', () => {
 
       // Assert
       expect(spy).toHaveBeenCalledWith(cartKey, 5400);
+    });
+  });
+  describe('deleteProductFromCartAsync', () => {
+    it('should call removeFieldFromObject with cart key and productId', async () => {
+      // Arrange
+      const cartId = 123;
+      const dto: DeleteProductFromCartDto = { productId: 10 };
+      const spy = jest.spyOn(redisService, 'removeFieldFromObject');
+
+      // Act
+      await cartRepository.deleteProductFromCartAsync(cartId, dto);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(`cart:${cartId}`, String(dto.productId));
+    });
+  });
+  describe('existProductInCartAsync', () => {
+    it('should call fieldExistsInObject with cart key and productId', async () => {
+      // Arrange
+      const cartId = 123;
+      const productId = 10;
+      const spy = jest.spyOn(redisService, 'fieldExistsInObject');
+
+      // Act
+      await cartRepository.existProductInCartAsync(cartId, productId);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(`cart:${cartId}`, String(productId));
+    });
+    it('should return boolean from fieldExistsInObject', async () => {
+      // Arrange
+      const cartId = 123;
+      const productId = 10;
+      jest
+        .spyOn(redisService, 'fieldExistsInObject')
+        .mockResolvedValueOnce(true);
+
+      // Act
+      const result = await cartRepository.existProductInCartAsync(
+        cartId,
+        productId,
+      );
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
 });

@@ -230,4 +230,34 @@ describe('CartService', () => {
       ).rejects.toThrow('Redis connection failed');
     });
   });
+  describe('deleteProductFromCartAsync', () => {
+    it('should throw NotFoundException if product is not in the cart', async () => {
+      // Arrange
+      jest
+        .spyOn(cartRepository, 'existProductInCartAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act + Assert
+      await expect(
+        service.deleteProductFromCartAsync(1, { productId: 1 }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call deleteProductFromCartAsync on the repository', async () => {
+      // Arrange
+      jest
+        .spyOn(cartRepository, 'existProductInCartAsync')
+        .mockResolvedValueOnce(true);
+      const spyDelete = jest.spyOn(
+        cartRepository,
+        'deleteProductFromCartAsync',
+      );
+
+      // Act
+      await service.deleteProductFromCartAsync(1, { productId: 1 });
+
+      // Assert
+      expect(spyDelete).toHaveBeenCalledWith(1, { productId: 1 });
+    });
+  });
 });
