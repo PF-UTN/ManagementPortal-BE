@@ -208,4 +208,44 @@ describe('VehicleService', () => {
       ).rejects.toThrow(NotFoundException);
     });
   });
+
+  describe('findByIdAsync', () => {
+    let vehicleId: number;
+
+    beforeEach(() => {
+      vehicleId = 1;
+    });
+
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.findByIdAsync(vehicleId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should call findByIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(vehicle);
+
+      // Act
+      await service.findByIdAsync(vehicleId);
+
+      // Assert
+      expect(repository.findByIdAsync).toHaveBeenCalledWith(vehicleId);
+    });
+
+    it('should return the vehicle if found', async () => {
+      // Arrange
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(vehicle);
+
+      // Act
+      const result = await service.findByIdAsync(vehicleId);
+
+      // Assert
+      expect(result).toEqual(vehicle);
+    });
+  });
 });
