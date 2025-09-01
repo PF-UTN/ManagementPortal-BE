@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpCode,
   Param,
   ParseIntPipe,
@@ -35,6 +36,7 @@ import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
@@ -273,5 +275,17 @@ export class VehicleController {
     return this.commandBus.execute(
       new DeleteVehicleMaintenancePlanItemCommand(id),
     );
+  }
+
+  @Get(':id')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Vehicle.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get a vehicle by ID',
+    description: 'Retrieve the vehicle with the provided ID.',
+  })
+  async getVehicleByIdAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.queryBus.execute(new GetVehicleByIdQuery(id));
   }
 }
