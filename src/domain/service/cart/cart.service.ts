@@ -95,4 +95,7 @@ export class CartService {
       deleteProductFromCartDto,
     );
   }
+  async emptyCartAsync(cartId: number): Promise<void> {
+    await this.cartRepository.emptyCartAsync(cartId);
+  }
 }

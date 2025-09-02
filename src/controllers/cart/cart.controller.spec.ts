@@ -7,6 +7,7 @@ import { UpdateCartProductQuantityDto } from '@mp/common/dtos';
 
 import { CartController } from './cart.controller';
 import { DeleteProductCartCommand } from './command/delete-product-cart.command';
+import { EmptyCartCommand } from './command/empty-cart.command';
 import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
 
 describe('CartController', () => {
@@ -88,6 +89,34 @@ describe('CartController', () => {
 
       // Act
       const result = await controller.deleteProductFromCartAsync(cartId, dto);
+
+      // Assert
+      expect(result).toEqual(resultMock);
+    });
+  });
+  describe('emptyCartAsync', () => {
+    const cartId = 1;
+    const resultMock = { success: true };
+
+    it('should call commandBus.execute with EmptyCartCommand', async () => {
+      // Arrange
+      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      await controller.emptyCartAsync(cartId);
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        new EmptyCartCommand(cartId),
+      );
+    });
+
+    it('should return the result from commandBus.execute', async () => {
+      // Arrange
+      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      const result = await controller.emptyCartAsync(cartId);
 
       // Assert
       expect(result).toEqual(resultMock);

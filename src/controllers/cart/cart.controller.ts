@@ -10,6 +10,7 @@ import {
 } from '@mp/common/dtos';
 
 import { DeleteProductCartCommand } from './command/delete-product-cart.command';
+import { EmptyCartCommand } from './command/empty-cart.command';
 import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
 
 @Controller('cart')
@@ -57,5 +58,20 @@ export class CartController {
     return await this.commandBus.execute(
       new DeleteProductCartCommand(cartId, deleteProductFromCartDto),
     );
+  }
+
+  @Post('empty/:cartId')
+  @RequiredPermissions(PermissionCodes.Cart.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Empty Cart',
+    description: 'Empty the cart in Redis.',
+  })
+  @ApiParam({
+    name: 'cartId',
+    description: 'ID of the cart to empty',
+  })
+  async emptyCartAsync(@Param('cartId', ParseIntPipe) cartId: number) {
+    return await this.commandBus.execute(new EmptyCartCommand(cartId));
   }
 }

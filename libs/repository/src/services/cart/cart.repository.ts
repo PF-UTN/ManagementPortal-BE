@@ -58,4 +58,9 @@ export class CartRepository {
       productId.toString(),
     );
   }
+
+  async emptyCartAsync(cartId: number): Promise<void> {
+    const cartKey = `cart:${cartId}`;
+    await this.redisService.deleteKey(cartKey);
+  }
 }

@@ -260,4 +260,16 @@ describe('CartService', () => {
       expect(spyDelete).toHaveBeenCalledWith(1, { productId: 1 });
     });
   });
+  describe('emptyCartAsync', () => {
+    it('should call emptyCartAsync on the repository', async () => {
+      // Arrange
+      const spyEmpty = jest.spyOn(cartRepository, 'emptyCartAsync');
+
+      // Act
+      await service.emptyCartAsync(1);
+
+      // Assert
+      expect(spyEmpty).toHaveBeenCalledWith(1);
+    });
+  });
 });

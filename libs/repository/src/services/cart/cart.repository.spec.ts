@@ -169,4 +169,18 @@ describe('ProductRedisRepository', () => {
       expect(result).toBe(true);
     });
   });
+  describe('emptyCartAsync', () => {
+    it('should call deleteKey with cart key', async () => {
+      // Arrange
+      const cartId = 123;
+      const cartKey = `cart:${cartId}`;
+      const spy = jest.spyOn(redisService, 'deleteKey');
+
+      // Act
+      await cartRepository.emptyCartAsync(cartId);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(cartKey);
+    });
+  });
 });
