@@ -61,4 +61,13 @@ export class VehicleService {
 
     return await this.vehicleRepository.updateVehicleAsync(id, updateVehicle);
   }
+
+  async findByIdAsync(id: number): Promise<Vehicle | null> {
+    const vehicle = await this.vehicleRepository.findByIdAsync(id);
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle with id ${id} does not exist.`);
+    }
+
+    return vehicle;
+  }
 }
