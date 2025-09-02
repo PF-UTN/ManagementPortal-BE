@@ -59,4 +59,16 @@ export const PermissionCodes = {
     UPDATE: 'maintenance:update',
     DELETE: 'maintenance:delete',
   },
+  StockChange: {
+    READ: 'stock-change:read',
+    CREATE: 'stock-change:create',
+    UPDATE: 'stock-change:update',
+    DELETE: 'stock-change:delete',
+  },
+  Stock: {
+    READ: 'stock:read',
+    CREATE: 'stock:create',
+    UPDATE: 'stock:update',
+    DELETE: 'stock:delete',
+  },
 };

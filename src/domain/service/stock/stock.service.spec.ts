@@ -1,16 +1,25 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Stock } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { StockDto } from '@mp/common/dtos';
-import { StockRepository } from '@mp/repository';
+import { StockChangedField, StockChangeTypeIds } from '@mp/common/constants';
+import { CreateManyStockChangeDto, StockDto } from '@mp/common/dtos';
+import {
+  PrismaUnitOfWork,
+  ProductRepository,
+  StockChangeRepository,
+  StockRepository,
+} from '@mp/repository';
 
 import { StockService } from './stock.service';
 
 describe('StockService', () => {
   let service: StockService;
   let stockRepository: StockRepository;
+  let stockChangeRepository: StockChangeRepository;
+  let productRepository: ProductRepository;
+  let unitOfWork: PrismaUnitOfWork;
   let stock: ReturnType<typeof mockDeep<Stock>>;
 
   beforeEach(async () => {
@@ -21,10 +30,27 @@ describe('StockService', () => {
           provide: StockRepository,
           useValue: mockDeep(StockRepository),
         },
+        {
+          provide: StockChangeRepository,
+          useValue: mockDeep(StockChangeRepository),
+        },
+        {
+          provide: ProductRepository,
+          useValue: mockDeep(ProductRepository),
+        },
+        {
+          provide: PrismaUnitOfWork,
+          useValue: mockDeep(PrismaUnitOfWork),
+        },
       ],
     }).compile();
 
     stockRepository = module.get<StockRepository>(StockRepository);
+    stockChangeRepository = module.get<StockChangeRepository>(
+      StockChangeRepository,
+    );
+    productRepository = module.get<ProductRepository>(ProductRepository);
+    unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
 
     service = module.get<StockService>(StockService);
 
@@ -124,6 +150,131 @@ describe('StockService', () => {
       await expect(
         service.updateStockByProductIdAsync(productId, stockDtoMock),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('adjustProductStockAsync', () => {
+    let createManyStockChangeDtoMock: CreateManyStockChangeDto;
+
+    beforeEach(() => {
+      createManyStockChangeDtoMock = {
+        productId: 1,
+        changes: [
+          {
+            changedField: StockChangedField.QuantityAvailable,
+            previousValue: stock.quantityAvailable,
+            newValue: 5,
+          },
+        ],
+        reason: 'Restock after inventory audit',
+      };
+    });
+
+    it('should throw NotFoundException if product does not exists', async () => {
+      // Arrange
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.adjustProductStockAsync(createManyStockChangeDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if stock does not exist', async () => {
+      // Arrange
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.adjustProductStockAsync(createManyStockChangeDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if previousValue does not match current stock value', async () => {
+      // Arrange
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce({ ...stock, quantityAvailable: 10 });
+
+      // Act & Assert
+      await expect(
+        service.adjustProductStockAsync(createManyStockChangeDtoMock),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should call unitOfWork.execute with the correct transaction client', async () => {
+      // Arrange
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(stock);
+
+      // Act
+      await service.adjustProductStockAsync(createManyStockChangeDtoMock);
+
+      // Assert
+      expect(unitOfWork.execute).toHaveBeenCalled();
+    });
+
+    it('should call stockRepository.updateStockAsync with correct data', async () => {
+      // Arrange
+      const stockUpdateDataMock = {
+        quantityAvailable: 5,
+      };
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(stock);
+
+      const txMock = {} as Prisma.TransactionClient;
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      // Act
+      await service.adjustProductStockAsync(createManyStockChangeDtoMock);
+
+      // Assert
+      expect(stockRepository.updateStockAsync).toHaveBeenCalledWith(
+        stock.id,
+        stockUpdateDataMock,
+        txMock,
+      );
+    });
+
+    it('should call stockChangeRepository.createManyStockChangeAsync with correct data', async () => {
+      // Arrange
+      const stockUpdatesMock = [
+        {
+          productId: stock.productId,
+          changeTypeId: StockChangeTypeIds.Adjustment,
+          changedField: StockChangedField.QuantityAvailable,
+          previousValue: stock.quantityAvailable,
+          newValue: 5,
+          reason: 'Restock after inventory audit',
+        },
+      ];
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(stock);
+
+      const txMock = {} as Prisma.TransactionClient;
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      // Act
+      await service.adjustProductStockAsync(createManyStockChangeDtoMock);
+
+      // Assert
+      expect(
+        stockChangeRepository.createManyStockChangeAsync,
+      ).toHaveBeenCalledWith(stockUpdatesMock, txMock);
     });
   });
 });
