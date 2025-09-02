@@ -419,7 +419,12 @@ export class PurchaseOrderService {
       const updatePurchaseOrderTask =
         this.purchaseOrderRepository.updatePurchaseOrderAsync(
           purchaseOrder.id,
-          { ...purchaseOrderUpdateData, totalAmount },
+          {
+            ...purchaseOrderUpdateData,
+            estimatedDeliveryDate:
+              purchaseOrderUpdateData.estimatedDeliveryDate.toISOString(),
+            totalAmount,
+          },
           tx,
         );
 
