@@ -9,6 +9,7 @@ import { CartController } from './cart.controller';
 import { DeleteProductCartCommand } from './command/delete-product-cart.command';
 import { EmptyCartCommand } from './command/empty-cart.command';
 import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
+import { GetCartByIdQuery } from './query/get-cart-by-id.query';
 
 describe('CartController', () => {
   let controller: CartController;
@@ -117,6 +118,34 @@ describe('CartController', () => {
 
       // Act
       const result = await controller.emptyCartAsync(cartId);
+
+      // Assert
+      expect(result).toEqual(resultMock);
+    });
+  });
+  describe('getCartByIdAsync', () => {
+    const cartId = 1;
+    const resultMock = { cartId: '1', items: [] };
+
+    it('should call commandBus.execute with GetCartByIdQuery', async () => {
+      // Arrange
+      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      await controller.getCartByIdAsync(cartId);
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalledWith(
+        new GetCartByIdQuery(cartId),
+      );
+    });
+
+    it('should return the result from commandBus.execute', async () => {
+      // Arrange
+      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      const result = await controller.getCartByIdAsync(cartId);
 
       // Assert
       expect(result).toEqual(resultMock);

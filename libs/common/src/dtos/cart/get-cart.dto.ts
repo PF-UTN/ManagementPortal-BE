@@ -11,7 +11,7 @@ import {
 
 import { ProductDetailsDto } from '../products';
 
-export class CartItemDto {
+export class CartItem2 {
   @ApiProperty({
     type: () => ProductDetailsDto,
     required: true,
@@ -30,7 +30,7 @@ export class CartItemDto {
   quantity: number;
 }
 
-export class CartDto {
+export class Cart2 {
   @ApiProperty({
     example: 'cart:12345',
     required: true,
@@ -40,11 +40,11 @@ export class CartDto {
   cartId: string;
 
   @ApiProperty({
-    type: [CartItemDto],
+    type: [CartItem2],
     required: true,
   })
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => CartItemDto)
-  items: CartItemDto[];
+  @Type(() => CartItem2)
+  items: CartItem2[];
 }

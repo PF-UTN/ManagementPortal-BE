@@ -2,3 +2,5 @@ export * from './cart.dto';
 export * from './get-cart-product-quantity.dto';
 export * from './update-cart-product-quantity.dto';
 export * from './delete-cart-product.dto';
+export * from './get-cart.dto';
+export * from './cart-in-redis.dto';

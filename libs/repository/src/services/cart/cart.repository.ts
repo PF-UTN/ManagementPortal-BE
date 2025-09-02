@@ -4,6 +4,7 @@ import {
   GetCartProductQuantityDto,
   UpdateCartProductQuantityDto,
   DeleteProductFromCartDto,
+  CartInRedis,
 } from '@mp/common/dtos';
 import { RedisService } from '@mp/common/services';
 
@@ -62,5 +63,23 @@ export class CartRepository {
   async emptyCartAsync(cartId: number): Promise<void> {
     const cartKey = `cart:${cartId}`;
     await this.redisService.deleteKey(cartKey);
+  }
+
+  async getCartAsync(cartId: number): Promise<CartInRedis> {
+    const cartKey = `cart:${cartId}`;
+    const cartObject = await this.redisService.getObjectByKey(cartKey);
+
+    const CartItems =
+      cartObject && Object.keys(cartObject).length > 0
+        ? Object.entries(cartObject).map(([productId, quantity]) => ({
+            productId: parseInt(productId, 10),
+            quantity: parseInt(quantity, 10),
+          }))
+        : [];
+
+    const cart: CartInRedis = {
+      CartItems,
+    };
+    return cart;
   }
 }

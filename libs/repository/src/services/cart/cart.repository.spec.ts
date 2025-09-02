@@ -183,4 +183,40 @@ describe('ProductRedisRepository', () => {
       expect(spy).toHaveBeenCalledWith(cartKey);
     });
   });
+  describe('getCartAsync', () => {
+    it('should return CartInRedis with items when Redis returns products', async () => {
+      // Arrange
+      const cartId = 123;
+      const redisCart = { '10': '2', '20': '5' };
+      jest
+        .spyOn(redisService, 'getObjectByKey')
+        .mockResolvedValueOnce(redisCart);
+
+      // Act
+      const result = await cartRepository.getCartAsync(cartId);
+
+      // Assert
+      expect(redisService.getObjectByKey).toHaveBeenCalledWith(
+        `cart:${cartId}`,
+      );
+      expect(result).toEqual({
+        CartItems: [
+          { productId: 10, quantity: 2 },
+          { productId: 20, quantity: 5 },
+        ],
+      });
+    });
+
+    it('should return CartInRedis with empty array when Redis returns empty object', async () => {
+      // Arrange
+      const cartId = 123;
+      jest.spyOn(redisService, 'getObjectByKey').mockResolvedValueOnce({});
+
+      // Act
+      const result = await cartRepository.getCartAsync(cartId);
+
+      // Assert
+      expect(result).toEqual({ CartItems: [] });
+    });
+  });
 });

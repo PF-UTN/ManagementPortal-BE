@@ -272,4 +272,83 @@ describe('CartService', () => {
       expect(spyEmpty).toHaveBeenCalledWith(1);
     });
   });
+  describe('getCartAsync', () => {
+    it('should return empty cart when repository returns empty array', async () => {
+      // Arrange
+      jest
+        .spyOn(cartRepository, 'getCartAsync')
+        .mockResolvedValue({ CartItems: [] });
+
+      // Act
+      const result = await service.getCartAsync(1);
+
+      // Assert
+      expect(result).toEqual({
+        cartId: '1',
+        items: [],
+      });
+    });
+
+    it('should return cart with items', async () => {
+      // Arrange
+      const cartItems = [
+        { productId: 10, quantity: 2 },
+        { productId: 20, quantity: 3 },
+      ];
+      jest
+        .spyOn(cartRepository, 'getCartAsync')
+        .mockResolvedValue({ CartItems: cartItems });
+
+      const product1 = { ...productDetailsDtoMock, id: 10 };
+      const product2 = { ...productDetailsDtoMock, id: 20 };
+
+      jest
+        .spyOn(productService, 'findProductByIdAsync')
+        .mockImplementation(async (id: number) => {
+          if (id === 10) return product1;
+          if (id === 20) return product2;
+          throw new NotFoundException();
+        });
+
+      // Act
+      const result = await service.getCartAsync(1);
+
+      //Assert
+      expect(result).toEqual({
+        cartId: '1',
+        items: [
+          { product: product1, quantity: 2 },
+          { product: product2, quantity: 3 },
+        ],
+      });
+    });
+
+    it('should skip items if productService returns null', async () => {
+      //Arrange
+      const cartItems = [
+        { productId: 10, quantity: 2 },
+        { productId: 99, quantity: 1 },
+      ];
+      jest
+        .spyOn(cartRepository, 'getCartAsync')
+        .mockResolvedValue({ CartItems: cartItems });
+
+      const product1 = { ...productDetailsDtoMock, id: 10 };
+      jest
+        .spyOn(productService, 'findProductByIdAsync')
+        .mockImplementation(async (id: number) => {
+          if (id === 10) return product1;
+          throw new NotFoundException();
+        });
+
+      // Act
+      const result = await service.getCartAsync(1);
+
+      // Assert
+      expect(result).toEqual({
+        cartId: '1',
+        items: [{ product: product1, quantity: 2 }],
+      });
+    });
+  });
 });

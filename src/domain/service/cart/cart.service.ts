@@ -4,7 +4,11 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { DeleteProductFromCartDto } from '@mp/common/dtos';
+import {
+  CartDto,
+  CartItemDto,
+  DeleteProductFromCartDto,
+} from '@mp/common/dtos';
 import {
   GetCartProductQuantityDto,
   UpdateCartProductQuantityDto,
@@ -97,5 +101,33 @@ export class CartService {
   }
   async emptyCartAsync(cartId: number): Promise<void> {
     await this.cartRepository.emptyCartAsync(cartId);
+  }
+
+  async getCartAsync(cartId: number): Promise<CartDto> {
+    const cartInRedis = await this.cartRepository.getCartAsync(cartId);
+
+    if (!cartInRedis || cartInRedis.CartItems.length === 0) {
+      return {
+        cartId: cartId.toString(),
+        items: [],
+      };
+    }
+    const items: CartItemDto[] = [];
+
+    for (const cartItem of cartInRedis.CartItems) {
+      try {
+        const product = await this.productService.findProductByIdAsync(
+          cartItem.productId,
+        );
+        items.push({ product, quantity: cartItem.quantity });
+      } catch {
+        continue;
+      }
+    }
+    const cart: CartDto = {
+      cartId: cartId.toString(),
+      items,
+    };
+    return cart;
   }
 }
