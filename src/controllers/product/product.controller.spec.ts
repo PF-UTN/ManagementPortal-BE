@@ -2,12 +2,17 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { SearchProductRequest } from '@mp/common/dtos';
+import { StockChangedField } from '@mp/common/constants';
+import {
+  CreateManyStockChangeDto,
+  SearchProductRequest,
+} from '@mp/common/dtos';
 import {
   productCreationDtoMock,
   productUpdateDtoMock,
 } from '@mp/common/testing';
 
+import { AdjustProductStockCommand } from './command/adjust-product-stock.command';
 import { CreateProductCommand } from './command/create-product.command';
 import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
@@ -115,6 +120,33 @@ describe('ProductController', () => {
 
       // Act
       await controller.deleteProductAsync(1);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('adjustProductStockAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const createManyStockChangeDtoMock: CreateManyStockChangeDto = {
+        productId: 1,
+        changes: [
+          {
+            changedField: StockChangedField.QuantityAvailable,
+            previousValue: 10,
+            newValue: 5,
+          },
+        ],
+        reason: 'Restock after inventory audit',
+      };
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new AdjustProductStockCommand(
+        createManyStockChangeDtoMock,
+      );
+
+      // Act
+      await controller.adjustProductStockAsync(createManyStockChangeDtoMock);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);

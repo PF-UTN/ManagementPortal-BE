@@ -21,12 +21,14 @@ import {
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
+  CreateManyStockChangeDto,
   ProductCreationDto,
   ProductToggleDto,
   ProductUpdateDto,
   SearchProductRequest,
 } from '@mp/common/dtos';
 
+import { AdjustProductStockCommand } from './command/adjust-product-stock.command';
 import { CreateProductCommand } from './command/create-product.command';
 import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
@@ -142,5 +144,25 @@ export class ProductController {
   })
   deleteProductAsync(@Param('id', ParseIntPipe) id: number) {
     return this.commandBus.execute(new DeleteProductCommand(id));
+  }
+
+  @Post('stock-change')
+  @HttpCode(201)
+  @RequiredPermissions(
+    PermissionCodes.Stock.UPDATE,
+    PermissionCodes.StockChange.CREATE,
+  )
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create stock adjustment for a product',
+    description:
+      'Create a stock adjustment entry for the product with the provided ID.',
+  })
+  adjustProductStockAsync(
+    @Body() createManyStockChangeDto: CreateManyStockChangeDto,
+  ) {
+    return this.commandBus.execute(
+      new AdjustProductStockCommand(createManyStockChangeDto),
+    );
   }
 }
