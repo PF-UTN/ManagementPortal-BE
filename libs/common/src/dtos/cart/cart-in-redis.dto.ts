@@ -1,8 +1,8 @@
 export class CartInRedis {
-  CartItems: CartInRedisItems[];
+  CartItems: CartInRedisItem[];
 }
 
-export class CartInRedisItems {
+export class CartInRedisItem {
   productId: number;
   quantity: number;
 }

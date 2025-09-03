@@ -1,4 +1,4 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
@@ -14,7 +14,7 @@ import { GetCartByIdQuery } from './query/get-cart-by-id.query';
 describe('CartController', () => {
   let controller: CartController;
   let commandBus: CommandBus;
-
+  let queryBus: QueryBus;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CartController],
@@ -23,11 +23,16 @@ describe('CartController', () => {
           provide: CommandBus,
           useValue: mockDeep<CommandBus>(),
         },
+        {
+          provide: QueryBus,
+          useValue: mockDeep<QueryBus>(),
+        },
       ],
     }).compile();
 
     controller = module.get<CartController>(CartController);
     commandBus = module.get<CommandBus>(CommandBus);
+    queryBus = module.get<QueryBus>(QueryBus);
   });
 
   it('should be defined', () => {
@@ -127,22 +132,22 @@ describe('CartController', () => {
     const cartId = 1;
     const resultMock = { cartId: '1', items: [] };
 
-    it('should call commandBus.execute with GetCartByIdQuery', async () => {
+    it('should call queryBus.execute with GetCartByIdQuery', async () => {
       // Arrange
-      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(resultMock);
 
       // Act
       await controller.getCartByIdAsync(cartId);
 
       // Assert
-      expect(commandBus.execute).toHaveBeenCalledWith(
+      expect(queryBus.execute).toHaveBeenCalledWith(
         new GetCartByIdQuery(cartId),
       );
     });
 
-    it('should return the result from commandBus.execute', async () => {
+    it('should return the result from queryBus.execute', async () => {
       // Arrange
-      jest.spyOn(commandBus, 'execute').mockResolvedValue(resultMock);
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(resultMock);
 
       // Act
       const result = await controller.getCartByIdAsync(cartId);

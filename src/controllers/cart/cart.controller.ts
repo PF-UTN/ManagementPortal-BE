@@ -6,7 +6,7 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
@@ -23,7 +23,10 @@ import { GetCartByIdQuery } from './query/get-cart-by-id.query';
 
 @Controller('cart')
 export class CartController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post('update/:cartId')
   @RequiredPermissions(PermissionCodes.Cart.UPDATE)
@@ -95,6 +98,6 @@ export class CartController {
     description: 'ID of the cart to retrieve',
   })
   async getCartByIdAsync(@Param('cartId', ParseIntPipe) cartId: number) {
-    return await this.commandBus.execute(new GetCartByIdQuery(cartId));
+    return await this.queryBus.execute(new GetCartByIdQuery(cartId));
   }
 }
