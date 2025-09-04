@@ -38,16 +38,9 @@ export class CartService {
       );
     }
 
-    const currentQuantityInCart =
-      (await this.cartRepository.getProductQuantityFromCartAsync(cartId, {
-        productId,
-      })) ?? 0;
-
-    const totalRequestedQuantity = currentQuantityInCart + quantity;
-
     const finalQuantity =
-      totalRequestedQuantity <= (product.stock?.quantityAvailable ?? 0)
-        ? totalRequestedQuantity
+      quantity <= (product.stock?.quantityAvailable ?? 0)
+        ? quantity
         : (product.stock?.quantityAvailable ?? 0);
 
     if (finalQuantity === 0) {

@@ -156,7 +156,7 @@ describe('CartService', () => {
       });
 
       //Assert
-      expect(spyUpdate).toHaveBeenCalledWith(1, { productId: 1, quantity: 5 });
+      expect(spyUpdate).toHaveBeenCalledWith(1, { productId: 1, quantity: 3 });
     });
 
     it('should allow updating when final quantity equals stock available', async () => {
