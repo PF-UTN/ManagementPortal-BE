@@ -1,5 +1,5 @@
 export class CartInRedis {
-  CartItems: CartInRedisItem[];
+  items: CartInRedisItem[];
 }
 
 export class CartInRedisItem {

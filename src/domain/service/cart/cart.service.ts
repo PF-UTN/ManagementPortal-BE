@@ -106,7 +106,7 @@ export class CartService {
   async getCartAsync(cartId: number): Promise<CartDto> {
     const cartInRedis = await this.cartRepository.getCartAsync(cartId);
 
-    if (!cartInRedis || cartInRedis.CartItems.length === 0) {
+    if (!cartInRedis || cartInRedis.items.length === 0) {
       return {
         cartId: cartId.toString(),
         items: [],
@@ -114,7 +114,7 @@ export class CartService {
     }
     const items: CartItemDto[] = [];
 
-    for (const cartItem of cartInRedis.CartItems) {
+    for (const cartItem of cartInRedis.items) {
       try {
         const product = await this.productService.findProductByIdAsync(
           cartItem.productId,

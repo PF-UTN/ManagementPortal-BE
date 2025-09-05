@@ -5,6 +5,7 @@ import {
   UpdateCartProductQuantityDto,
   DeleteProductFromCartDto,
   CartInRedis,
+  CartInRedisItem,
 } from '@mp/common/dtos';
 import { RedisService } from '@mp/common/services';
 
@@ -69,7 +70,7 @@ export class CartRepository {
     const cartKey = `cart:${cartId}`;
     const cartObject = await this.redisService.getObjectByKey(cartKey);
 
-    const CartItems =
+    const items: CartInRedisItem[] =
       cartObject && Object.keys(cartObject).length > 0
         ? Object.entries(cartObject).map(([productId, quantity]) => ({
             productId: parseInt(productId, 10),
@@ -78,7 +79,7 @@ export class CartRepository {
         : [];
 
     const cart: CartInRedis = {
-      CartItems,
+      items,
     };
     return cart;
   }

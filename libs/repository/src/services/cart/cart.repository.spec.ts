@@ -200,7 +200,7 @@ describe('ProductRedisRepository', () => {
         `cart:${cartId}`,
       );
       expect(result).toEqual({
-        CartItems: [
+        items: [
           { productId: 10, quantity: 2 },
           { productId: 20, quantity: 5 },
         ],
@@ -216,7 +216,7 @@ describe('ProductRedisRepository', () => {
       const result = await cartRepository.getCartAsync(cartId);
 
       // Assert
-      expect(result).toEqual({ CartItems: [] });
+      expect(result).toEqual({ items: [] });
     });
   });
 });

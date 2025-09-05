@@ -277,7 +277,7 @@ describe('CartService', () => {
       // Arrange
       jest
         .spyOn(cartRepository, 'getCartAsync')
-        .mockResolvedValue({ CartItems: [] });
+        .mockResolvedValue({ items: [] });
 
       // Act
       const result = await service.getCartAsync(1);
@@ -297,7 +297,7 @@ describe('CartService', () => {
       ];
       jest
         .spyOn(cartRepository, 'getCartAsync')
-        .mockResolvedValue({ CartItems: cartItems });
+        .mockResolvedValue({ items: cartItems });
 
       const product1 = { ...productDetailsDtoMock, id: 10 };
       const product2 = { ...productDetailsDtoMock, id: 20 };
@@ -331,7 +331,7 @@ describe('CartService', () => {
       ];
       jest
         .spyOn(cartRepository, 'getCartAsync')
-        .mockResolvedValue({ CartItems: cartItems });
+        .mockResolvedValue({ items: cartItems });
 
       const product1 = { ...productDetailsDtoMock, id: 10 };
       jest
