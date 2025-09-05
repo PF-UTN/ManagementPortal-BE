@@ -113,6 +113,8 @@ export class ProductService {
       productUpdateDto,
     );
 
+    this.updateProductInRedisAsync(id);
+
     return updatedProduct;
   }
 
@@ -123,6 +125,8 @@ export class ProductService {
       throw new NotFoundException(`Product with id ${id} does not exist.`);
     }
 
+    this.updateProductInRedisAsync(id);
+
     return this.productRepository.updateEnabledProductAsync(id, enabled);
   }
 
@@ -132,6 +136,8 @@ export class ProductService {
     if (!existsProduct) {
       throw new NotFoundException(`Product with id ${id} does not exist.`);
     }
+
+    this.deleteProductFromRedisAsync(id);
 
     return await this.productRepository.deleteProductAsync(id, new Date());
   }
@@ -184,5 +190,17 @@ export class ProductService {
 
   async getProductByIdFromRedisAsync(productId: number) {
     return this.productRepository.getProductByIdFromRedisAsync(productId);
+  }
+
+  async deleteProductFromRedisAsync(productId: number): Promise<void> {
+    await this.productRepository.deleteProductFromRedisAsync(productId);
+  }
+
+  async updateProductInRedisAsync(productId: number): Promise<void> {
+    const product = await this.getProductByIdFromRedisAsync(productId);
+    if (!product) {
+      return;
+    }
+    await this.productRepository.saveProductToRedisAsync(product);
   }
 }

@@ -282,4 +282,11 @@ export class ProductRepository {
     await this.redisService.setKeyExpiration('products', 5400);
     return JSON.parse(productJson) as ProductDetailsDto;
   }
+
+  async deleteProductFromRedisAsync(productId: number): Promise<void> {
+    await this.redisService.removeFieldFromObject(
+      'products',
+      productId.toString(),
+    );
+  }
 }
