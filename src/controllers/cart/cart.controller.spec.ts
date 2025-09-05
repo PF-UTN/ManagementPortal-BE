@@ -1,4 +1,4 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
@@ -9,11 +9,12 @@ import { CartController } from './cart.controller';
 import { DeleteProductCartCommand } from './command/delete-product-cart.command';
 import { EmptyCartCommand } from './command/empty-cart.command';
 import { UpdateCartProductQuantityCommand } from './command/update-product-quantity-in-cart.command';
+import { GetCartByIdQuery } from './query/get-cart-by-id.query';
 
 describe('CartController', () => {
   let controller: CartController;
   let commandBus: CommandBus;
-
+  let queryBus: QueryBus;
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [CartController],
@@ -22,11 +23,16 @@ describe('CartController', () => {
           provide: CommandBus,
           useValue: mockDeep<CommandBus>(),
         },
+        {
+          provide: QueryBus,
+          useValue: mockDeep<QueryBus>(),
+        },
       ],
     }).compile();
 
     controller = module.get<CartController>(CartController);
     commandBus = module.get<CommandBus>(CommandBus);
+    queryBus = module.get<QueryBus>(QueryBus);
   });
 
   it('should be defined', () => {
@@ -117,6 +123,34 @@ describe('CartController', () => {
 
       // Act
       const result = await controller.emptyCartAsync(cartId);
+
+      // Assert
+      expect(result).toEqual(resultMock);
+    });
+  });
+  describe('getCartByIdAsync', () => {
+    const cartId = 1;
+    const resultMock = { cartId: '1', items: [] };
+
+    it('should call queryBus.execute with GetCartByIdQuery', async () => {
+      // Arrange
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      await controller.getCartByIdAsync(cartId);
+
+      // Assert
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new GetCartByIdQuery(cartId),
+      );
+    });
+
+    it('should return the result from queryBus.execute', async () => {
+      // Arrange
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(resultMock);
+
+      // Act
+      const result = await controller.getCartByIdAsync(cartId);
 
       // Assert
       expect(result).toEqual(resultMock);

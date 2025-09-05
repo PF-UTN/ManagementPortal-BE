@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 import { RedisClientType } from 'redis';
 
-import { CartItem } from '@mp/common/dtos';
+import { CartInRedisItem } from '@mp/common/dtos';
 
 import { RedisService } from './redis.service';
 
@@ -24,8 +24,8 @@ describe('RedisService', () => {
     service = module.get<RedisService>(RedisService);
   });
   const key = 'cart:123';
-  const value: CartItem = {
-    productId: 'p1',
+  const value: CartInRedisItem = {
+    productId: 123,
     quantity: 2,
   };
   const ttlSeconds = 3600;
@@ -35,10 +35,18 @@ describe('RedisService', () => {
       const spy = jest.spyOn(redisClientMock, 'hSet');
 
       // Act
-      await service.setFieldInHash(key, value.productId, value.quantity);
+      await service.setFieldInHash(
+        key,
+        value.productId.toString(),
+        value.quantity,
+      );
 
       // Assert
-      expect(spy).toHaveBeenCalledWith(key, value.productId, value.quantity);
+      expect(spy).toHaveBeenCalledWith(
+        key,
+        value.productId.toString(),
+        value.quantity,
+      );
     });
     it('should call hSet with correct key and fields flattened', async () => {
       const hSetSpy = jest.spyOn(redisClientMock, 'hSet');
@@ -62,7 +70,10 @@ describe('RedisService', () => {
         .mockResolvedValueOnce(value.quantity.toString());
 
       // Act
-      const result = await service.getFieldValue(key, value.productId);
+      const result = await service.getFieldValue(
+        key,
+        value.productId.toString(),
+      );
 
       // Assert
       expect(result).toBe(value.quantity.toString());
@@ -84,10 +95,10 @@ describe('RedisService', () => {
       const spy = jest.spyOn(redisClientMock, 'hDel');
 
       // Act
-      await service.removeFieldFromObject(key, value.productId);
+      await service.removeFieldFromObject(key, value.productId.toString());
 
       // Assert
-      expect(spy).toHaveBeenCalledWith(key, value.productId);
+      expect(spy).toHaveBeenCalledWith(key, value.productId.toString());
     });
   });
   describe('getObjectByKey', () => {
@@ -109,7 +120,10 @@ describe('RedisService', () => {
       jest.spyOn(redisClientMock, 'hExists').mockResolvedValueOnce(1);
 
       // Act
-      const result = await service.fieldExistsInObject(key, value.productId);
+      const result = await service.fieldExistsInObject(
+        key,
+        value.productId.toString(),
+      );
 
       // Assert
       expect(result).toBe(true);
@@ -120,7 +134,10 @@ describe('RedisService', () => {
       jest.spyOn(redisClientMock, 'hExists').mockResolvedValueOnce(0);
 
       // Act
-      const result = await service.fieldExistsInObject(key, value.productId);
+      const result = await service.fieldExistsInObject(
+        key,
+        value.productId.toString(),
+      );
 
       // Assert
       expect(result).toBe(false);

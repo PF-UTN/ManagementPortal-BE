@@ -6,6 +6,7 @@ import { CartController } from './cart.controller';
 import { DeleteProductCartCommandHandler } from './command/delete-product-cart.command.handler';
 import { EmptyCartCommandHandler } from './command/empty-cart.command.handler';
 import { UpdateCartProductQuantityCommandHandler } from './command/update-product-quantity-in-cart.command.handler';
+import { GetCartByIdQueryHandler } from './query/get-cart-by-id.query.handler';
 
 const commandHandlers = [
   UpdateCartProductQuantityCommandHandler,
@@ -13,9 +14,11 @@ const commandHandlers = [
   EmptyCartCommandHandler,
 ];
 
+const queryHandlers = [GetCartByIdQueryHandler];
+
 @Module({
   imports: [CartServiceModule, ProductServiceModule],
   controllers: [CartController],
-  providers: [...commandHandlers],
+  providers: [...commandHandlers, ...queryHandlers],
 })
 export class CartModule {}
