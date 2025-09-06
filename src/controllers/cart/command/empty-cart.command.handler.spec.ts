@@ -27,15 +27,20 @@ describe('EmptyCartCommandHandler', () => {
     // Arrange + Act + Assert
     expect(handler).toBeDefined();
   });
-  it('should call cartService.emptyCartAsync with correct parameters', async () => {
-    // Arrange
-    const command = new EmptyCartCommand(1);
-    jest.spyOn(cartService, 'emptyCartAsync').mockResolvedValueOnce();
 
-    // Act
-    await handler.execute(command);
+  describe('execute', () => {
+    const token = 'fake-token';
+    const authorizationHeader = `Bearer ${token}`;
+    it('should call cartService.emptyCartAsync with correct parameters', async () => {
+      // Arrange
+      const command = new EmptyCartCommand(authorizationHeader);
+      jest.spyOn(cartService, 'emptyCartAsync').mockResolvedValueOnce();
 
-    // Assert
-    expect(cartService.emptyCartAsync).toHaveBeenCalledWith(command.cartId);
+      // Act
+      await handler.execute(command);
+
+      // Assert
+      expect(cartService.emptyCartAsync).toHaveBeenCalledWith(token);
+    });
   });
 });

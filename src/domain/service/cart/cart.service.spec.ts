@@ -10,11 +10,13 @@ import {
 import { CartRepository } from './../../../../libs/repository/src/services/cart/cart.repository';
 import { ProductService } from './../product/product.service';
 import { CartService } from './cart.service';
+import { AuthenticationService } from '../authentication/authentication.service';
 
 describe('CartService', () => {
   let service: CartService;
   let cartRepository: CartRepository;
   let productService: ProductService;
+  let authenticationService: AuthenticationService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -28,12 +30,26 @@ describe('CartService', () => {
           provide: ProductService,
           useValue: mockDeep<ProductService>(),
         },
+        {
+          provide: AuthenticationService,
+          useValue: mockDeep<AuthenticationService>(),
+        },
       ],
     }).compile();
 
     service = module.get<CartService>(CartService);
     cartRepository = module.get<CartRepository>(CartRepository);
     productService = module.get<ProductService>(ProductService);
+    authenticationService = module.get<AuthenticationService>(
+      AuthenticationService,
+    );
+
+    jest.spyOn(authenticationService, 'decodeTokenAsync').mockResolvedValue({
+      sub: 1,
+      email: 'test@example.com',
+      role: 'client',
+      permissions: [],
+    });
   });
 
   describe('updateProductQuantityInCartAsync', () => {
@@ -46,7 +62,7 @@ describe('CartService', () => {
       //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
-          1,
+          'fake-token',
           mockUpdateCartProductQuantityDto,
         ),
       ).rejects.toThrow(NotFoundException);
@@ -62,7 +78,7 @@ describe('CartService', () => {
       //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
-          1,
+          'fake-token',
           mockUpdateCartProductQuantityDto,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -89,7 +105,7 @@ describe('CartService', () => {
       //Act + Assert
       await expect(
         service.updateProductQuantityInCartAsync(
-          1,
+          'fake-token',
           mockUpdateCartProductQuantityDto,
         ),
       ).rejects.toThrow(BadRequestException);
@@ -118,7 +134,7 @@ describe('CartService', () => {
       );
 
       //Act
-      await service.updateProductQuantityInCartAsync(1, {
+      await service.updateProductQuantityInCartAsync('fake-token', {
         productId: 1,
         quantity: 5,
       });
@@ -150,7 +166,7 @@ describe('CartService', () => {
       );
 
       //Act
-      await service.updateProductQuantityInCartAsync(1, {
+      await service.updateProductQuantityInCartAsync('fake-token', {
         productId: 1,
         quantity: 3,
       });
@@ -179,7 +195,7 @@ describe('CartService', () => {
       );
 
       //Act
-      await service.updateProductQuantityInCartAsync(1, {
+      await service.updateProductQuantityInCartAsync('fake-token', {
         productId: 1,
         quantity: 5,
       });
@@ -196,9 +212,10 @@ describe('CartService', () => {
         .spyOn(cartRepository, 'getProductQuantityFromCartAsync')
         .mockResolvedValueOnce(3);
       //Act
-      const result = await service.getProductQuantityFromCartAsync(1, {
-        productId: 10,
-      });
+      const result = await service.getProductQuantityFromCartAsync(
+        'fake-token',
+        { productId: 10 },
+      );
       //Assert
       expect(result).toBe(3);
     });
@@ -210,9 +227,10 @@ describe('CartService', () => {
         .mockResolvedValueOnce(null);
 
       //Act
-      const result = await service.getProductQuantityFromCartAsync(1, {
-        productId: 99,
-      });
+      const result = await service.getProductQuantityFromCartAsync(
+        'fake-token',
+        { productId: 99 },
+      );
 
       //Assert
       expect(result).toBeNull();
@@ -226,10 +244,11 @@ describe('CartService', () => {
 
       // Act + Assert
       await expect(
-        service.getProductQuantityFromCartAsync(1, { productId: 1 }),
+        service.getProductQuantityFromCartAsync('fake-token', { productId: 1 }),
       ).rejects.toThrow('Redis connection failed');
     });
   });
+
   describe('deleteProductFromCartAsync', () => {
     it('should throw NotFoundException if product is not in the cart', async () => {
       // Arrange
@@ -239,7 +258,7 @@ describe('CartService', () => {
 
       // Act + Assert
       await expect(
-        service.deleteProductFromCartAsync(1, { productId: 1 }),
+        service.deleteProductFromCartAsync('fake-token', { productId: 1 }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -254,24 +273,26 @@ describe('CartService', () => {
       );
 
       // Act
-      await service.deleteProductFromCartAsync(1, { productId: 1 });
+      await service.deleteProductFromCartAsync('fake-token', { productId: 1 });
 
       // Assert
       expect(spyDelete).toHaveBeenCalledWith(1, { productId: 1 });
     });
   });
+
   describe('emptyCartAsync', () => {
-    it('should call emptyCartAsync on the repository', async () => {
+    it('should call repository.emptyCartAsync with cartId from token', async () => {
       // Arrange
-      const spyEmpty = jest.spyOn(cartRepository, 'emptyCartAsync');
+      jest.spyOn(cartRepository, 'emptyCartAsync').mockResolvedValue();
 
       // Act
-      await service.emptyCartAsync(1);
+      await service.emptyCartAsync('fake-token');
 
       // Assert
-      expect(spyEmpty).toHaveBeenCalledWith(1);
+      expect(cartRepository.emptyCartAsync).toHaveBeenCalledWith(1);
     });
   });
+
   describe('getCartAsync', () => {
     it('should return empty cart when repository returns empty array', async () => {
       // Arrange
@@ -280,7 +301,7 @@ describe('CartService', () => {
         .mockResolvedValue({ items: [] });
 
       // Act
-      const result = await service.getCartAsync(1);
+      const result = await service.getCartAsync('fake-token');
 
       // Assert
       expect(result).toEqual({
@@ -311,7 +332,7 @@ describe('CartService', () => {
         });
 
       // Act
-      const result = await service.getCartAsync(1);
+      const result = await service.getCartAsync('fake-token');
 
       //Assert
       expect(result).toEqual({
@@ -342,7 +363,7 @@ describe('CartService', () => {
         });
 
       // Act
-      const result = await service.getCartAsync(1);
+      const result = await service.getCartAsync('fake-token');
 
       // Assert
       expect(result).toEqual({

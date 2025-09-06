@@ -31,18 +31,27 @@ describe('DeleteProductCartCommandHandler', () => {
     expect(handler).toBeDefined();
   });
 
-  it('should call cartService.deleteProductFromCartAsync with correct parameters', async () => {
-    // Arrange
-    const command = new DeleteProductCartCommand(1, { productId: 2 });
-    jest
-      .spyOn(cartService, 'deleteProductFromCartAsync')
-      .mockResolvedValueOnce();
-    // Act
-    await handler.execute(command);
-    // Assert
-    expect(cartService.deleteProductFromCartAsync).toHaveBeenCalledWith(
-      command.cartId,
-      command.deleteProductFromCartDto,
-    );
+  describe('execute', () => {
+    const token = 'fake-token';
+    const authorizationHeader = `Bearer ${token}`;
+    it('should call cartService.deleteProductFromCartAsync with correct parameters', async () => {
+      // Arrange
+      const deleteProductFromCartDto = { productId: 2 };
+
+      const command = new DeleteProductCartCommand(
+        authorizationHeader,
+        deleteProductFromCartDto,
+      );
+
+      const spy = jest
+        .spyOn(cartService, 'deleteProductFromCartAsync')
+        .mockResolvedValueOnce();
+
+      // Act
+      await handler.execute(command);
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith(token, deleteProductFromCartDto);
+    });
   });
 });

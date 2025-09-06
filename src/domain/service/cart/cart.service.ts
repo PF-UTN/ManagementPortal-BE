@@ -14,6 +14,7 @@ import {
   UpdateCartProductQuantityDto,
 } from '@mp/common/dtos';
 
+import { AuthenticationService } from '../authentication/authentication.service';
 import { ProductService } from '../product/product.service';
 import { CartRepository } from './../../../../libs/repository/src/services/cart/cart.repository';
 
@@ -22,13 +23,17 @@ export class CartService {
   constructor(
     private readonly cartRepository: CartRepository,
     private readonly productService: ProductService,
+    private readonly authenticationService: AuthenticationService,
   ) {}
 
   async updateProductQuantityInCartAsync(
-    cartId: number,
+    token: string,
     updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ): Promise<void> {
     const { productId, quantity } = updateCartProductQuantityDto;
+
+    const payload = await this.authenticationService.decodeTokenAsync(token);
+    const cartId = payload.sub;
 
     const product = await this.productService.findProductByIdAsync(productId);
 
@@ -72,9 +77,11 @@ export class CartService {
   }
 
   async getProductQuantityFromCartAsync(
-    cartId: number,
+    token: string,
     getCartProductQuantityDto: GetCartProductQuantityDto,
   ): Promise<number | null> {
+    const payload = await this.authenticationService.decodeTokenAsync(token);
+    const cartId = payload.sub;
     return this.cartRepository.getProductQuantityFromCartAsync(
       cartId,
       getCartProductQuantityDto,
@@ -82,9 +89,11 @@ export class CartService {
   }
 
   async deleteProductFromCartAsync(
-    cartId: number,
+    token: string,
     deleteProductFromCartDto: DeleteProductFromCartDto,
   ): Promise<void> {
+    const payload = await this.authenticationService.decodeTokenAsync(token);
+    const cartId = payload.sub;
     const exist = await this.cartRepository.existProductInCartAsync(
       cartId,
       deleteProductFromCartDto.productId,
@@ -99,11 +108,17 @@ export class CartService {
       deleteProductFromCartDto,
     );
   }
-  async emptyCartAsync(cartId: number): Promise<void> {
+  async emptyCartAsync(token: string): Promise<void> {
+    const payload = await this.authenticationService.decodeTokenAsync(token);
+    const cartId = payload.sub;
     await this.cartRepository.emptyCartAsync(cartId);
   }
 
-  async getCartAsync(cartId: number): Promise<CartDto> {
+  async getCartAsync(token: string): Promise<CartDto> {
+    const payload = await this.authenticationService.decodeTokenAsync(token);
+
+    const cartId = payload.sub;
+
     const cartInRedis = await this.cartRepository.getCartAsync(cartId);
 
     if (!cartInRedis || cartInRedis.items.length === 0) {

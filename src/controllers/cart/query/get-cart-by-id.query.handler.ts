@@ -7,6 +7,8 @@ import { GetCartByIdQuery } from './get-cart-by-id.query';
 export class GetCartByIdQueryHandler {
   constructor(private readonly cartService: CartService) {}
   async execute(query: GetCartByIdQuery) {
-    return await this.cartService.getCartAsync(query.id);
+    const token = query.authorizationHeader.split(' ')[1];
+
+    return await this.cartService.getCartAsync(token);
   }
 }

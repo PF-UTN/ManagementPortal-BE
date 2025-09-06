@@ -1,13 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Headers, Delete } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
@@ -28,76 +21,69 @@ export class CartController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Post('update/:cartId')
+  @Post('product/quantity')
   @RequiredPermissions(PermissionCodes.Cart.UPDATE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update product quantity in Cart',
     description: 'Update product quantity in cart in Redis.',
   })
-  @ApiParam({
-    name: 'cartId',
-    description: 'ID of the cart to update',
-  })
   async updateCartProductQuantityAsync(
-    @Param('cartId', ParseIntPipe) cartId: number,
+    @Headers('Authorization') authorizationHeader: string,
     @Body() updateCartProductQuantityDto: UpdateCartProductQuantityDto,
   ) {
     return await this.commandBus.execute(
       new UpdateCartProductQuantityCommand(
-        cartId,
+        authorizationHeader,
         updateCartProductQuantityDto,
       ),
     );
   }
 
-  @Post('delete/:cartId')
+  @Delete('product')
   @RequiredPermissions(PermissionCodes.Cart.DELETE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Delete product from Cart',
     description: 'Delete product from cart in Redis.',
   })
-  @ApiParam({
-    name: 'cartId',
-    description: 'ID of the cart to update',
-  })
   async deleteProductFromCartAsync(
-    @Param('cartId', ParseIntPipe) cartId: number,
+    @Headers('Authorization') authorizationHeader: string,
     @Body() deleteProductFromCartDto: DeleteProductFromCartDto,
   ) {
     return await this.commandBus.execute(
-      new DeleteProductCartCommand(cartId, deleteProductFromCartDto),
+      new DeleteProductCartCommand(
+        authorizationHeader,
+        deleteProductFromCartDto,
+      ),
     );
   }
 
-  @Post('empty/:cartId')
+  @Delete()
   @RequiredPermissions(PermissionCodes.Cart.DELETE)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Empty Cart',
     description: 'Empty the cart in Redis.',
   })
-  @ApiParam({
-    name: 'cartId',
-    description: 'ID of the cart to empty',
-  })
-  async emptyCartAsync(@Param('cartId', ParseIntPipe) cartId: number) {
-    return await this.commandBus.execute(new EmptyCartCommand(cartId));
+  async emptyCartAsync(@Headers('Authorization') authorizationHeader: string) {
+    return await this.commandBus.execute(
+      new EmptyCartCommand(authorizationHeader),
+    );
   }
 
-  @Get('get/:cartId')
+  @Get()
   @RequiredPermissions(PermissionCodes.Cart.READ)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get Cart by ID',
-    description: 'Retrieve the cart by its ID.',
+    summary: 'Get User Cart',
+    description: 'Retrieve the cart from the user.',
   })
-  @ApiParam({
-    name: 'cartId',
-    description: 'ID of the cart to retrieve',
-  })
-  async getCartByIdAsync(@Param('cartId', ParseIntPipe) cartId: number) {
-    return await this.queryBus.execute(new GetCartByIdQuery(cartId));
+  async getCartByIdAsync(
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return await this.queryBus.execute(
+      new GetCartByIdQuery(authorizationHeader),
+    );
   }
 }

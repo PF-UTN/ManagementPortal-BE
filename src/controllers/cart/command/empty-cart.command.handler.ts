@@ -8,6 +8,7 @@ export class EmptyCartCommandHandler {
   constructor(private readonly cartService: CartService) {}
 
   async execute(command: EmptyCartCommand) {
-    await this.cartService.emptyCartAsync(command.cartId);
+    const token = command.authorizationHeader.split(' ')[1];
+    await this.cartService.emptyCartAsync(token);
   }
 }

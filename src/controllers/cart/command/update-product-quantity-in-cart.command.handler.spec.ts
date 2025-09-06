@@ -34,30 +34,39 @@ describe('UpdateCartProductCommandHandler', () => {
     expect(handler).toBeDefined();
   });
 
-  it('should throw BadRequestException if desired quantity <= 0', async () => {
-    // Arrange
-    const command = new UpdateCartProductQuantityCommand(
-      1,
-      mockUpdateCartProductQuantityDto,
-    );
+  describe('execute', () => {
+    const token = 'fake-token';
+    const authorizationHeader = `Bearer ${token}`;
+    it('should throw BadRequestException if desired quantity <= 0', async () => {
+      // Arrange
+      const command = new UpdateCartProductQuantityCommand(
+        authorizationHeader,
+        mockUpdateCartProductQuantityDto,
+      );
 
-    // Act + Assert
-    await expect(handler.execute(command)).rejects.toThrow(BadRequestException);
-  });
+      // Act + Assert
+      await expect(handler.execute(command)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
 
-  it('should call cartService.updateProductQuantityInCartAsync with correct params when quantity > 0', async () => {
-    // Arrange
-    const dto = { ...mockUpdateCartProductQuantityDto, quantity: 2 };
-    const command = new UpdateCartProductQuantityCommand(1, dto);
+    it('should call cartService.updateProductQuantityInCartAsync with correct params when quantity > 0', async () => {
+      // Arrange
+      const dto = { ...mockUpdateCartProductQuantityDto, quantity: 2 };
+      const command = new UpdateCartProductQuantityCommand(
+        authorizationHeader,
+        dto,
+      );
 
-    const spy = jest
-      .spyOn(cartService, 'updateProductQuantityInCartAsync')
-      .mockResolvedValueOnce();
+      const spy = jest
+        .spyOn(cartService, 'updateProductQuantityInCartAsync')
+        .mockResolvedValueOnce();
 
-    // Act
-    await handler.execute(command);
+      // Act
+      await handler.execute(command);
 
-    // Assert
-    expect(spy).toHaveBeenCalledWith(command.cartId, dto);
+      // Assert
+      expect(spy).toHaveBeenCalledWith(token, dto);
+    });
   });
 });

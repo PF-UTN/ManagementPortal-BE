@@ -18,9 +18,9 @@ export class UpdateCartProductQuantityCommandHandler
     if (!command.updateCartProductQuantityDto?.productId) {
       throw new BadRequestException('productId is required');
     }
-
+    const token = command.authorizationHeader.split(' ')[1];
     await this.cartService.updateProductQuantityInCartAsync(
-      command.cartId,
+      token,
       command.updateCartProductQuantityDto,
     );
   }

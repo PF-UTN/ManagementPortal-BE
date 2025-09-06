@@ -31,11 +31,12 @@ describe('GetCartByIdQueryHandler', () => {
   });
 
   describe('execute', () => {
-    const cartId = 1;
-    it('should call cartService.getCartAsync with the query id', async () => {
-      // Arrange
+    const token = 'fake-token';
+    const authorizationHeader = `Bearer ${token}`;
 
-      const query = new GetCartByIdQuery(cartId);
+    it('should call cartService.getCartAsync with the token extracted from authorizationHeader', async () => {
+      // Arrange
+      const query = new GetCartByIdQuery(authorizationHeader);
       const spy = jest
         .spyOn(cartService, 'getCartAsync')
         .mockResolvedValue(cartDtoMock);
@@ -44,12 +45,12 @@ describe('GetCartByIdQueryHandler', () => {
       await handler.execute(query);
 
       // Assert
-      expect(spy).toHaveBeenCalledWith(cartId);
+      expect(spy).toHaveBeenCalledWith(token);
     });
 
     it('should return the cart from cartService', async () => {
       // Arrange
-      const query = new GetCartByIdQuery(cartId);
+      const query = new GetCartByIdQuery(authorizationHeader);
       jest.spyOn(cartService, 'getCartAsync').mockResolvedValue(cartDtoMock);
 
       // Act

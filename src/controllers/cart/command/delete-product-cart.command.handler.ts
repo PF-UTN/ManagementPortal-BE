@@ -8,10 +8,12 @@ export class DeleteProductCartCommandHandler {
   constructor(private readonly cartService: CartService) {}
 
   async execute(command: DeleteProductCartCommand) {
-    const { cartId, deleteProductFromCartDto } = command;
+    const { authorizationHeader, deleteProductFromCartDto } = command;
+
+    const token = authorizationHeader.split(' ')[1];
 
     return this.cartService.deleteProductFromCartAsync(
-      cartId,
+      token,
       deleteProductFromCartDto,
     );
   }
