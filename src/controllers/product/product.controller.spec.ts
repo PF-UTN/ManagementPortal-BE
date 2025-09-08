@@ -1,3 +1,4 @@
+import { StreamableFile } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
@@ -5,8 +6,10 @@ import { mockDeep } from 'jest-mock-extended';
 import { StockChangedField } from '@mp/common/constants';
 import {
   CreateManyStockChangeDto,
+  DownloadProductRequest,
   SearchProductRequest,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 import {
   productCreationDtoMock,
   productUpdateDtoMock,
@@ -19,6 +22,7 @@ import { SearchProductQuery } from './command/search-product-query';
 import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
 import { ProductController } from './product.controller';
+import { DownloadProductQuery } from './query/download-product.query';
 
 describe('ProductController', () => {
   let controller: ProductController;
@@ -66,6 +70,66 @@ describe('ProductController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchProductQuery(request),
       );
+    });
+  });
+
+  describe('downloadAsync', () => {
+    const downloadProductRequest: DownloadProductRequest = {
+      searchText: 'test',
+      filters: {
+        categoryName: ['Electronics'],
+        supplierBusinessName: ['Supplier A'],
+        enabled: true,
+      },
+    };
+
+    const products = [{ id: 1, name: 'Product A' }];
+    const buffer = Buffer.from('test');
+    const expectedFilename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Productos`;
+
+    beforeEach(() => {
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(products);
+      jest
+        .spyOn(ExcelExportHelper, 'exportToExcelBuffer')
+        .mockReturnValue(buffer);
+    });
+
+    it('should call execute on the queryBus with correct parameters', async () => {
+      await controller.downloadAsync(downloadProductRequest);
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new DownloadProductQuery(downloadProductRequest),
+      );
+    });
+
+    it('should call exportToExcelBuffer with products', async () => {
+      await controller.downloadAsync(downloadProductRequest);
+      expect(ExcelExportHelper.exportToExcelBuffer).toHaveBeenCalledWith(
+        products,
+      );
+    });
+
+    it('should return a StreamableFile', async () => {
+      const result = await controller.downloadAsync(downloadProductRequest);
+      expect(result).toBeInstanceOf(StreamableFile);
+    });
+
+    it('should set the correct filename in the disposition', async () => {
+      const result = await controller.downloadAsync(downloadProductRequest);
+      expect(result.options.disposition).toBe(
+        `attachment; filename="${expectedFilename}"`,
+      );
+    });
+
+    it('should set the correct content type', async () => {
+      const result = await controller.downloadAsync(downloadProductRequest);
+      expect(result.options.type).toBe(
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    });
+
+    it('should set the correct length', async () => {
+      const result = await controller.downloadAsync(downloadProductRequest);
+      expect(result.options.length).toBe(buffer.length);
     });
   });
 

@@ -31,7 +31,7 @@ export class ProductRepository {
       orderBy &&
       (orderBy.field === 'name' || orderBy.field === 'price') &&
       (orderBy.direction === 'asc' || orderBy.direction === 'desc')
-        ? { [orderBy.field]: orderBy.direction as 'asc' | 'desc' }
+        ? { [orderBy.field]: orderBy.direction }
         : { name: 'asc' as const };
 
     const [data, total] = await Promise.all([
@@ -143,6 +143,88 @@ export class ProductRepository {
     ]);
 
     return { data, total };
+  }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchProductFiltersDto,
+    orderBy: { field: 'name' | 'price'; direction: 'asc' | 'desc' } = {
+      field: 'name',
+      direction: 'asc',
+    },
+  ) {
+    const prismaOrderBy =
+      orderBy &&
+      (orderBy.field === 'name' || orderBy.field === 'price') &&
+      (orderBy.direction === 'asc' || orderBy.direction === 'desc')
+        ? { [orderBy.field]: orderBy.direction }
+        : { name: 'asc' as const };
+
+    const data = await this.prisma.product.findMany({
+      where: {
+        AND: [
+          { deletedAt: null },
+          filters.enabled !== undefined ? { enabled: filters.enabled } : {},
+          filters.categoryName?.length
+            ? {
+                category: {
+                  is: {
+                    name: { in: filters.categoryName },
+                  },
+                },
+              }
+            : {},
+          filters.supplierBusinessName?.length
+            ? {
+                supplier: {
+                  is: {
+                    businessName: { in: filters.supplierBusinessName },
+                  },
+                },
+              }
+            : {},
+          {
+            OR: [
+              {
+                name: {
+                  contains: searchText,
+                  mode: 'insensitive',
+                },
+              },
+              {
+                description: {
+                  contains: searchText,
+                  mode: 'insensitive',
+                },
+              },
+            ],
+          },
+        ],
+      },
+      include: {
+        category: {
+          select: {
+            name: true,
+            description: true,
+          },
+        },
+        supplier: {
+          select: {
+            businessName: true,
+          },
+        },
+        stock: {
+          select: {
+            quantityAvailable: true,
+            quantityOrdered: true,
+            quantityReserved: true,
+          },
+        },
+      },
+      orderBy: prismaOrderBy,
+    });
+
+    return data;
   }
 
   async createProductAsync(

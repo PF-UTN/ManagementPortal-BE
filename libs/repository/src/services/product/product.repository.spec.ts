@@ -7,8 +7,8 @@ import { RedisService } from '@mp/common/services';
 import {
   productCreationDtoMock,
   productDetailsDtoMock,
+  productMockData,
 } from '@mp/common/testing';
-import { productMockData } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
 import { ProductRepository } from './product.repository';
@@ -251,6 +251,65 @@ describe('ProductRepository', () => {
               },
             ],
           },
+        }),
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call prisma.product.findMany with correct filters and no pagination', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchProductFiltersDto = {
+        enabled: true,
+        categoryName: ['Electronics'],
+        supplierBusinessName: ['Supplier A'],
+      };
+
+      // Act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // Assert
+      expect(prismaService.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { deletedAt: null },
+              { enabled: filters.enabled },
+              {
+                category: {
+                  is: {
+                    name: { in: filters.categoryName },
+                  },
+                },
+              },
+              {
+                supplier: {
+                  is: {
+                    businessName: { in: filters.supplierBusinessName },
+                  },
+                },
+              },
+              {
+                OR: [
+                  {
+                    name: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    description: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          orderBy: { name: 'asc' },
+          include: expect.any(Object),
         }),
       );
     });

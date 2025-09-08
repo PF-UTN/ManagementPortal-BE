@@ -141,6 +141,51 @@ describe('ProductService', () => {
     });
   });
 
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test download';
+      const filters: SearchProductFiltersDto = {
+        categoryName: ['Electronics'],
+        supplierBusinessName: ['Supplier B'],
+        enabled: false,
+      };
+      const orderBy = {
+        field: ProductOrderField.PRICE,
+        direction: OrderDirection.DESC,
+      };
+
+      // Act
+      await service.downloadWithFiltersAsync(searchText, filters, orderBy);
+
+      // Assert
+      expect(repository.downloadWithFiltersAsync).toHaveBeenCalledWith(
+        searchText,
+        filters,
+        orderBy,
+      );
+    });
+
+    it('should propagate errors from the repository', async () => {
+      // Arrange
+      const searchText = 'error case';
+      const filters: SearchProductFiltersDto = {
+        categoryName: [],
+        supplierBusinessName: [],
+        enabled: true,
+      };
+      const error = new Error('Repository failure');
+      jest
+        .spyOn(repository, 'downloadWithFiltersAsync')
+        .mockRejectedValueOnce(error);
+
+      // Act & Assert
+      await expect(
+        service.downloadWithFiltersAsync(searchText, filters),
+      ).rejects.toThrow(error);
+    });
+  });
+
   describe('createProductAsync', () => {
     it('should execute the method within a transaction using unitOfWork.execute', async () => {
       // Arrange
