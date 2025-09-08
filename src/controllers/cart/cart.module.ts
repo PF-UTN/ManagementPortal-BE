@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthenticationServiceModule } from 'src/domain/service/authentication/authentication.service.module';
 
 import { CartServiceModule } from './../../domain/service/cart/cart.service.module';
 import { ProductServiceModule } from './../../domain/service/product/product.service.module';
@@ -17,7 +18,11 @@ const commandHandlers = [
 const queryHandlers = [GetCartByIdQueryHandler];
 
 @Module({
-  imports: [CartServiceModule, ProductServiceModule],
+  imports: [
+    CartServiceModule,
+    ProductServiceModule,
+    AuthenticationServiceModule,
+  ],
   controllers: [CartController],
   providers: [...commandHandlers, ...queryHandlers],
 })
