@@ -144,6 +144,6 @@ export class AuthenticationService {
     }
   }
   async decodeTokenAsync(token: string) {
-    return this.jwtService.decode(token) as TokenPayload;
+    return this.jwtService.decode(token);
   }
 }
