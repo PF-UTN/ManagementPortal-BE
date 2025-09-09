@@ -1,9 +1,10 @@
+import { join } from 'path';
 import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 
 import { PurchaseOrderReportGenerationDataDto } from '@mp/common/dtos';
 
 const logo: Content = {
-  image: 'libs/common/src/public/images/dog.png',
+  image: join(process.cwd(), 'public', 'images', 'dog.png'),
   width: 120,
 };
 
