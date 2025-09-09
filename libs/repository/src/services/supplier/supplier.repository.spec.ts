@@ -209,4 +209,34 @@ describe('SupplierRepository', () => {
       });
     });
   });
+
+  describe('findByIdAsync', () => {
+    it('should return a supplier if it exists', async () => {
+      // Arrange
+      const supplierId = 1;
+      jest
+        .spyOn(prismaService.supplier, 'findUnique')
+        .mockResolvedValueOnce(supplier);
+
+      // Act
+      const foundSupplier = await repository.findByIdAsync(supplierId);
+
+      // Assert
+      expect(foundSupplier).toEqual(supplier);
+    });
+
+    it('should return null if the supplier does not exist', async () => {
+      // Arrange
+      const supplierId = 1;
+      jest
+        .spyOn(prismaService.supplier, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const foundSupplier = await repository.findByIdAsync(supplierId);
+
+      // Assert
+      expect(foundSupplier).toBeNull();
+    });
+  });
 });

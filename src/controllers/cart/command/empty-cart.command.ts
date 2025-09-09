@@ -1,3 +1,3 @@
 export class EmptyCartCommand {
-  constructor(public readonly cartId: number) {}
+  constructor(public readonly authorizationHeader: string) {}
 }

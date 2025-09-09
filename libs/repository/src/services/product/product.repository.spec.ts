@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
@@ -7,8 +7,8 @@ import { RedisService } from '@mp/common/services';
 import {
   productCreationDtoMock,
   productDetailsDtoMock,
+  productMockData,
 } from '@mp/common/testing';
-import { productMockData } from '@mp/common/testing';
 
 import { PrismaService } from '../prisma.service';
 import { ProductRepository } from './product.repository';
@@ -251,6 +251,65 @@ describe('ProductRepository', () => {
               },
             ],
           },
+        }),
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call prisma.product.findMany with correct filters and no pagination', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchProductFiltersDto = {
+        enabled: true,
+        categoryName: ['Electronics'],
+        supplierBusinessName: ['Supplier A'],
+      };
+
+      // Act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // Assert
+      expect(prismaService.product.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { deletedAt: null },
+              { enabled: filters.enabled },
+              {
+                category: {
+                  is: {
+                    name: { in: filters.categoryName },
+                  },
+                },
+              },
+              {
+                supplier: {
+                  is: {
+                    businessName: { in: filters.supplierBusinessName },
+                  },
+                },
+              },
+              {
+                OR: [
+                  {
+                    name: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                  {
+                    description: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          orderBy: { name: 'asc' },
+          include: expect.any(Object),
         }),
       );
     });
@@ -517,6 +576,27 @@ describe('ProductRepository', () => {
 
       // Assert
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getProductsNamesByIdsAsync', () => {
+    it('should return a map of product IDs to names', async () => {
+      // Arrange
+      const productIds = [1, 2, 3];
+      const products = [
+        { id: 1, name: 'Product 1' },
+        { id: 2, name: 'Product 2' },
+        { id: 3, name: 'Product 3' },
+      ];
+      jest
+        .spyOn(prismaService.product, 'findMany')
+        .mockResolvedValueOnce(products as Product[]);
+
+      // Act
+      const result = await repository.getProductsNamesByIdsAsync(productIds);
+
+      // Assert
+      expect(result).toEqual(new Map(products.map((p) => [p.id, p.name])));
     });
   });
 });

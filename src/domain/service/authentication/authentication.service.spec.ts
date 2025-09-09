@@ -414,4 +414,31 @@ describe('AuthenticationService', () => {
       ).resolves.not.toThrow();
     });
   });
+  describe('decodeTokenAsync', () => {
+    it('should call jwtService.decode with the token', async () => {
+      // Arrange
+      const token = 'test.token';
+      const payload = { sub: 1, email: 'test@mail.com' };
+      jest.spyOn(jwtService, 'decode').mockReturnValue(payload);
+
+      // Act
+      await service.decodeTokenAsync(token);
+
+      // Assert
+      expect(jwtService.decode).toHaveBeenCalledWith(token);
+    });
+
+    it('should return the decoded payload as TokenPayload', async () => {
+      // Arrange
+      const token = 'test.token';
+      const payload = { sub: 1, email: 'test@mail.com' };
+      jest.spyOn(jwtService, 'decode').mockReturnValue(payload);
+
+      // Act
+      const result = await service.decodeTokenAsync(token);
+
+      // Assert
+      expect(result).toEqual(payload);
+    });
+  });
 });

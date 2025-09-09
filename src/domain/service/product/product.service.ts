@@ -8,7 +8,9 @@ import { Prisma } from '@prisma/client';
 import {
   ProductCreationDto,
   ProductDetailsDto,
+  ProductSortDto,
   ProductUpdateDto,
+  SearchProductFiltersDto,
 } from '@mp/common/dtos';
 import {
   PrismaUnitOfWork,
@@ -37,6 +39,18 @@ export class ProductService {
       query.page,
       query.pageSize,
       query.orderBy,
+    );
+  }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchProductFiltersDto,
+    orderBy?: ProductSortDto,
+  ) {
+    return await this.productRepository.downloadWithFiltersAsync(
+      searchText,
+      filters,
+      orderBy,
     );
   }
 
