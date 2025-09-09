@@ -2,6 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Product, PurchaseOrder, Stock } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
+import { PassThrough } from 'stream';
 
 import {
   OrderDirection,
@@ -13,13 +14,16 @@ import {
   SearchPurchaseOrderFiltersDto,
   PurchaseOrderDetailsDto,
   PurchaseOrderUpdateDto,
+  PurchaseOrderReportGenerationDataDto,
 } from '@mp/common/dtos';
+import { MailingService, ReportService } from '@mp/common/services';
 import {
   PrismaUnitOfWork,
   ProductRepository,
   PurchaseOrderItemRepository,
   PurchaseOrderRepository,
   StockChangeRepository,
+  SupplierRepository,
 } from '@mp/repository';
 
 import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
@@ -33,7 +37,10 @@ describe('PurchaseOrderService', () => {
   let productRepository: ProductRepository;
   let stockService: StockService;
   let stockChangeRepository: StockChangeRepository;
+  let supplierRepository: SupplierRepository;
   let unitOfWork: PrismaUnitOfWork;
+  let mailingService: MailingService;
+  let reportService: ReportService;
   let purchaseOrder: ReturnType<
     typeof mockDeep<
       PurchaseOrder & {
@@ -68,8 +75,20 @@ describe('PurchaseOrderService', () => {
           useValue: mockDeep(StockChangeRepository),
         },
         {
+          provide: SupplierRepository,
+          useValue: mockDeep(SupplierRepository),
+        },
+        {
           provide: PrismaUnitOfWork,
           useValue: mockDeep(PrismaUnitOfWork),
+        },
+        {
+          provide: MailingService,
+          useValue: mockDeep(MailingService),
+        },
+        {
+          provide: ReportService,
+          useValue: mockDeep(ReportService),
         },
       ],
     }).compile();
@@ -85,7 +104,10 @@ describe('PurchaseOrderService', () => {
     stockChangeRepository = module.get<StockChangeRepository>(
       StockChangeRepository,
     );
+    supplierRepository = module.get<SupplierRepository>(SupplierRepository);
     unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
+    mailingService = module.get<MailingService>(MailingService);
+    reportService = module.get<ReportService>(ReportService);
 
     service = module.get<PurchaseOrderService>(PurchaseOrderService);
 
@@ -190,6 +212,28 @@ describe('PurchaseOrderService', () => {
         .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
         .mockResolvedValue([]);
 
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(mockDeep<Map<number, string>>());
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
+
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
 
@@ -236,6 +280,28 @@ describe('PurchaseOrderService', () => {
       jest
         .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
         .mockResolvedValue([]);
+
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(mockDeep<Map<number, string>>());
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
 
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
@@ -296,6 +362,28 @@ describe('PurchaseOrderService', () => {
         .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
         .mockResolvedValue([]);
 
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(mockDeep<Map<number, string>>());
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
+
       // Act
       await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
 
@@ -313,6 +401,103 @@ describe('PurchaseOrderService', () => {
           },
         ],
         txMock,
+      );
+    });
+
+    it('should call sendPurchaseOrderByEmailAsync with the correct parameters', async () => {
+      // Arrange
+      const purchaseOrderCreationDtoMock: PurchaseOrderCreationDto = {
+        supplierId: 1,
+        estimatedDeliveryDate: new Date('1990-02-15'),
+        observation: 'Test observation',
+        purchaseOrderItems: [{ productId: 1, quantity: 2, unitPrice: 10.0 }],
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+      };
+
+      jest
+        .spyOn(productRepository, 'existsManyAsync')
+        .mockResolvedValueOnce(true);
+
+      const txMock = {} as Prisma.TransactionClient;
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(mockDeep<Stock>());
+
+      jest
+        .spyOn(purchaseOrderRepository, 'createPurchaseOrderAsync')
+        .mockResolvedValueOnce({
+          id: 1,
+          purchaseOrderStatusId: 3,
+          supplierId: 1,
+          estimatedDeliveryDate: new Date('1990-02-15'),
+          observation: 'Test observation',
+          totalAmount: new Prisma.Decimal(20.0),
+          createdAt: new Date('1990-01-31'),
+          effectiveDeliveryDate: new Date('1990-02-16'),
+        });
+
+      jest
+        .spyOn(productRepository, 'findManyProductsWithSupplierIdAsync')
+        .mockResolvedValue([]);
+
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
+
+      const productNameMapMock: Map<number, string> = new Map([
+        [1, 'Test Product Name'],
+      ]);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(productNameMapMock);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: 1,
+          createdAt: new Date('1990-01-31'),
+          estimatedDeliveryDate:
+            purchaseOrderCreationDtoMock.estimatedDeliveryDate,
+          supplierBusinessName: supplierMock!.businessName,
+          supplierDocumentType: supplierMock!.documentType,
+          supplierDocumentNumber: supplierMock!.documentNumber,
+          observation: purchaseOrderCreationDtoMock.observation ?? '',
+          totalAmount: 20.0,
+          purchaseOrderItems:
+            purchaseOrderCreationDtoMock.purchaseOrderItems.map((item) => ({
+              productName: productNameMapMock.get(item.productId) ?? 'N/A',
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotalPrice: item.quantity * Number(item.unitPrice),
+            })),
+        };
+
+      // Act
+      await service.createPurchaseOrderAsync(purchaseOrderCreationDtoMock);
+
+      // Assert
+      expect(service.sendPurchaseOrderByEmailAsync).toHaveBeenCalledWith(
+        purchaseOrderReportGenerationDataDto,
+        supplierMock.email,
       );
     });
   });
@@ -589,12 +774,16 @@ describe('PurchaseOrderService', () => {
 
   describe('updatePurchaseOrderStatusAsync', () => {
     const mockPurchaseOrder: PurchaseOrder & {
-      purchaseOrderItems: { quantity: number; productId: number }[];
+      purchaseOrderItems: {
+        quantity: number;
+        productId: number;
+        unitPrice: number;
+      }[];
       supplier: { id: number; businessName: string };
     } = {
       id: 1,
       purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
-      purchaseOrderItems: [{ productId: 101, quantity: 5 }],
+      purchaseOrderItems: [{ productId: 101, quantity: 5, unitPrice: 20.0 }],
       observation: 'Initial observation',
       effectiveDeliveryDate: null,
       supplierId: 1,
@@ -748,6 +937,111 @@ describe('PurchaseOrderService', () => {
 
       // Assert
       expect(updatePurchaseOrderAsyncSpy).toHaveBeenCalled();
+    });
+
+    it('should call sendPurchaseOrderByEmailAsync with the correct parameters', async () => {
+      // Arrange
+      const txMock = {} as Prisma.TransactionClient;
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      jest
+        .spyOn(purchaseOrderRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(purchaseOrderRepository, 'findByIdAsync').mockResolvedValue({
+        ...mockPurchaseOrder,
+        purchaseOrderStatusId: PurchaseOrderStatusId.Draft,
+      });
+      jest
+        .spyOn(purchaseOrderRepository, 'updatePurchaseOrderAsync')
+        .mockResolvedValue({
+          ...mockPurchaseOrder,
+        });
+
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(purchaseOrderItemRepository, 'findByPurchaseOrderIdAsync')
+        .mockResolvedValueOnce([
+          {
+            id: 1,
+            purchaseOrderId: 1,
+            productId: 101,
+            quantity: 5,
+            unitPrice: new Prisma.Decimal(20),
+            product: {
+              id: 101,
+              supplierId: 1,
+              name: 'Test Product Name',
+              description: 'Test Description',
+              price: new Prisma.Decimal(20),
+              enabled: true,
+              weight: new Prisma.Decimal(1),
+              categoryId: 1,
+              deletedAt: null,
+            },
+            subtotalPrice: new Prisma.Decimal(100),
+          },
+        ]);
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
+
+      const productNameMapMock: Map<number, string> = new Map([
+        [101, 'Test Product Name'],
+      ]);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(productNameMapMock);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: mockPurchaseOrder.id,
+          createdAt: mockPurchaseOrder.createdAt,
+          estimatedDeliveryDate: mockPurchaseOrder.estimatedDeliveryDate,
+          supplierBusinessName: supplierMock!.businessName,
+          supplierDocumentType: supplierMock!.documentType,
+          supplierDocumentNumber: supplierMock!.documentNumber,
+          observation: mockPurchaseOrder.observation ?? '',
+          totalAmount: Number(mockPurchaseOrder.totalAmount),
+          purchaseOrderItems: mockPurchaseOrder.purchaseOrderItems.map(
+            (item) => ({
+              productName: productNameMapMock.get(item.productId) ?? 'N/A',
+              quantity: item.quantity,
+              unitPrice: Number(item.unitPrice),
+              subtotalPrice: item.quantity * Number(item.unitPrice),
+            }),
+          ),
+        };
+
+      // Act
+      await service.updatePurchaseOrderStatusAsync(
+        1,
+        PurchaseOrderStatusId.Ordered,
+        'Ordered successfully',
+      );
+
+      // Assert
+      expect(service.sendPurchaseOrderByEmailAsync).toHaveBeenCalledWith(
+        purchaseOrderReportGenerationDataDto,
+        supplierMock.email,
+      );
     });
   });
 
@@ -1038,11 +1332,238 @@ describe('PurchaseOrderService', () => {
       // Assert
       expect(unitOfWork.execute).toHaveBeenCalled();
     });
+
+    it('should call sendPurchaseOrderByEmailAsync with the correct parameters when new status is Ordered', async () => {
+      const id = 1;
+      const purchaseOrderUpdateDto: PurchaseOrderUpdateDto = {
+        purchaseOrderStatusId: PurchaseOrderStatusId.Ordered,
+        estimatedDeliveryDate: new Date('1990-01-15'),
+        observation: 'Test observation',
+        effectiveDeliveryDate: null,
+        purchaseOrderItems: [
+          {
+            productId: 1,
+            quantity: 10,
+            unitPrice: 10.0,
+          },
+        ],
+      };
+
+      const currentPurchaseOrderItems = [
+        {
+          id: 1,
+          productId: 1,
+          quantity: 10,
+          unitPrice: new Prisma.Decimal(10.0),
+          subtotalPrice: new Prisma.Decimal(100.0),
+          purchaseOrderId: 1,
+          product: mockDeep<Product>(),
+        },
+      ];
+
+      jest
+        .spyOn(purchaseOrderRepository, 'findByIdAsync')
+        .mockResolvedValueOnce({
+          ...purchaseOrder,
+          createdAt: new Date('1990-01-31'),
+          estimatedDeliveryDate: purchaseOrderUpdateDto.estimatedDeliveryDate,
+          totalAmount: new Prisma.Decimal(100.0),
+        });
+
+      jest
+        .spyOn(purchaseOrderItemRepository, 'findByPurchaseOrderIdAsync')
+        .mockResolvedValueOnce(currentPurchaseOrderItems);
+
+      const txMock = {} as Prisma.TransactionClient;
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(mockDeep<Stock>());
+
+      jest
+        .spyOn(stockChangeRepository, 'createManyStockChangeAsync')
+        .mockResolvedValueOnce(mockDeep<Promise<void>>());
+
+      const supplierMock = {
+        id: 1,
+        businessName: 'Test Supplier',
+        documentType: 'CUIT',
+        documentNumber: '1234567890',
+        email: 'supplier@test.com',
+        phone: '1234567890',
+        addressId: 1,
+      };
+
+      jest
+        .spyOn(purchaseOrderRepository, 'updatePurchaseOrderAsync')
+        .mockResolvedValueOnce({
+          ...purchaseOrderUpdateDto,
+          id,
+          supplierId: supplierMock.id,
+          createdAt: new Date('1990-01-31'),
+          totalAmount: new Prisma.Decimal(100.0),
+        });
+
+      jest
+        .spyOn(supplierRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(supplierMock);
+
+      jest
+        .spyOn(service, 'sendPurchaseOrderByEmailAsync')
+        .mockResolvedValueOnce({});
+
+      const productNameMapMock: Map<number, string> = new Map([
+        [1, 'Test Product Name'],
+      ]);
+
+      jest
+        .spyOn(productRepository, 'getProductsNamesByIdsAsync')
+        .mockResolvedValueOnce(productNameMapMock);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: id,
+          createdAt: new Date('1990-01-31'),
+          estimatedDeliveryDate: purchaseOrderUpdateDto.estimatedDeliveryDate,
+          supplierBusinessName: supplierMock!.businessName,
+          supplierDocumentType: supplierMock!.documentType,
+          supplierDocumentNumber: supplierMock!.documentNumber,
+          observation: purchaseOrderUpdateDto.observation ?? '',
+          totalAmount: 100.0,
+          purchaseOrderItems: purchaseOrderUpdateDto.purchaseOrderItems.map(
+            (item) => ({
+              productName: productNameMapMock.get(item.productId) ?? 'N/A',
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              subtotalPrice: item.quantity * Number(item.unitPrice),
+            }),
+          ),
+        };
+
+      // Act
+      await service.updatePurchaseOrderAsync(id, purchaseOrderUpdateDto);
+
+      // Assert
+      expect(service.sendPurchaseOrderByEmailAsync).toHaveBeenCalledWith(
+        purchaseOrderReportGenerationDataDto,
+        supplierMock.email,
+      );
+    });
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
     jest.clearAllMocks();
     jest.resetAllMocks();
+  });
+
+  describe('sendPurchaseOrderByEmailAsync', () => {
+    it('should call reportService.generatePurchaseOrderReport with the correct parameters', async () => {
+      // Arrange
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: 1,
+          createdAt: new Date('1990-01-31'),
+          estimatedDeliveryDate: new Date('1990-02-15'),
+          supplierBusinessName: 'Test Supplier',
+          supplierDocumentType: 'CUIT',
+          supplierDocumentNumber: '1234567890',
+          observation: 'Test Observation',
+          totalAmount: 20.0,
+          purchaseOrderItems: [
+            {
+              productName: 'Test Product',
+              quantity: 2,
+              unitPrice: 10.0,
+              subtotalPrice: 20.0,
+            },
+          ],
+        };
+
+      const supplierEmail = 'supplier@test.com';
+
+      const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
+      setImmediate(() => {
+        fakePdfStream.end();
+      });
+
+      jest
+        .spyOn(reportService, 'generatePurchaseOrderReport')
+        .mockResolvedValueOnce(fakePdfStream);
+
+      jest
+        .spyOn(mailingService, 'sendMailWithAttachmentAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendPurchaseOrderByEmailAsync(
+        purchaseOrderReportGenerationDataDto,
+        supplierEmail,
+      );
+
+      // Assert
+      expect(reportService.generatePurchaseOrderReport).toHaveBeenCalledWith(
+        purchaseOrderReportGenerationDataDto,
+      );
+    });
+
+    it('should call mailingService.sendMailWithAttachmentAsync with the correct parameters', async () => {
+      // Arrange
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: 1,
+          createdAt: new Date('1990-01-31'),
+          estimatedDeliveryDate: new Date('1990-02-15'),
+          supplierBusinessName: 'Test Supplier',
+          supplierDocumentType: 'CUIT',
+          supplierDocumentNumber: '1234567890',
+          observation: 'Test Observation',
+          totalAmount: 20.0,
+          purchaseOrderItems: [
+            {
+              productName: 'Test Product',
+              quantity: 2,
+              unitPrice: 10.0,
+              subtotalPrice: 20.0,
+            },
+          ],
+        };
+
+      const supplierEmail = 'supplier@test.com';
+
+      const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
+      setImmediate(() => {
+        fakePdfStream.end();
+      });
+
+      jest
+        .spyOn(reportService, 'generatePurchaseOrderReport')
+        .mockResolvedValueOnce(fakePdfStream);
+
+      jest
+        .spyOn(mailingService, 'sendMailWithAttachmentAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendPurchaseOrderByEmailAsync(
+        purchaseOrderReportGenerationDataDto,
+        supplierEmail,
+      );
+
+      // Assert
+      expect(mailingService.sendMailWithAttachmentAsync).toHaveBeenCalledWith(
+        supplierEmail,
+        `Orden de compra #${purchaseOrderReportGenerationDataDto.purchaseOrderId}`,
+        'Adjuntamos la orden de compra en formato PDF.',
+        {
+          filename: `MP-OC-${purchaseOrderReportGenerationDataDto.purchaseOrderId}.pdf`,
+          content: expect.any(Buffer),
+        },
+      );
+    });
   });
 });

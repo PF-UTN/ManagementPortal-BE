@@ -8,3 +8,4 @@ export * from './search-purchase-order-response.dto';
 export * from './purchase-order-order.dto';
 export * from './purchase-order.dto';
 export * from './purchase-order-update.dto';
+export * from './purchase-order-report-generation-data.dto';

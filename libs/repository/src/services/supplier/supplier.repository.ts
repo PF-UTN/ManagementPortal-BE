@@ -75,4 +75,10 @@ export class SupplierRepository {
       },
     });
   }
+
+  async findByIdAsync(id: number): Promise<Supplier | null> {
+    return this.prisma.supplier.findUnique({
+      where: { id },
+    });
+  }
 }

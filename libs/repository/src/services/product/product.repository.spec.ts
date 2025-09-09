@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma } from '@prisma/client';
+import { Prisma, Product } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SearchProductFiltersDto } from '@mp/common/dtos';
@@ -576,6 +576,27 @@ describe('ProductRepository', () => {
 
       // Assert
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getProductsNamesByIdsAsync', () => {
+    it('should return a map of product IDs to names', async () => {
+      // Arrange
+      const productIds = [1, 2, 3];
+      const products = [
+        { id: 1, name: 'Product 1' },
+        { id: 2, name: 'Product 2' },
+        { id: 3, name: 'Product 3' },
+      ];
+      jest
+        .spyOn(prismaService.product, 'findMany')
+        .mockResolvedValueOnce(products as Product[]);
+
+      // Act
+      const result = await repository.getProductsNamesByIdsAsync(productIds);
+
+      // Assert
+      expect(result).toEqual(new Map(products.map((p) => [p.id, p.name])));
     });
   });
 });

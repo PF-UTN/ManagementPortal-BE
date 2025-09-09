@@ -65,4 +65,21 @@ export class MailingService {
 
     return await this.sendMailAsync(to, subject, text);
   }
+
+  async sendMailWithAttachmentAsync(
+    to: string,
+    subject: string,
+    text: string,
+    attachment: { filename: string; content: Buffer },
+  ) {
+    const mailOptions = {
+      from: MAIL_FROM,
+      to,
+      subject,
+      text,
+      attachments: [attachment],
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
 }

@@ -19,17 +19,20 @@ import {
   PurchaseOrderItemCreationDto,
   PurchaseOrderItemDetailsDto,
   PurchaseOrderItemDto,
+  PurchaseOrderReportGenerationDataDto,
   PurchaseOrderUpdateDto,
   StockChangeCreationDataDto,
   StockDto,
 } from '@mp/common/dtos';
-import { calculateTotalAmount } from '@mp/common/helpers';
+import { calculateTotalAmount, pdfToBuffer } from '@mp/common/helpers';
+import { MailingService, ReportService } from '@mp/common/services';
 import {
   PrismaUnitOfWork,
   ProductRepository,
   PurchaseOrderItemRepository,
   PurchaseOrderRepository,
   StockChangeRepository,
+  SupplierRepository,
 } from '@mp/repository';
 
 import { StockService } from '../stock/stock.service';
@@ -43,7 +46,10 @@ export class PurchaseOrderService {
     private readonly productRepository: ProductRepository,
     private readonly stockService: StockService,
     private readonly stockChangeRepository: StockChangeRepository,
+    private readonly supplierRepository: SupplierRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
+    private readonly mailingService: MailingService,
+    private readonly reportService: ReportService,
   ) {}
 
   async createPurchaseOrderAsync(
@@ -73,7 +79,7 @@ export class PurchaseOrderService {
 
     const totalAmount = calculateTotalAmount(purchaseOrderItems);
 
-    return this.unitOfWork.execute(async (tx) => {
+    const createdPurchaseOrder = await this.unitOfWork.execute(async (tx) => {
       const purchaseOrder =
         await this.purchaseOrderRepository.createPurchaseOrderAsync(
           {
@@ -102,7 +108,43 @@ export class PurchaseOrderService {
         purchaseOrderData.purchaseOrderStatusId,
         tx,
       );
+
+      return purchaseOrder;
     });
+
+    if (
+      purchaseOrderData.purchaseOrderStatusId === PurchaseOrderStatusId.Ordered
+    ) {
+      const supplier = await this.supplierRepository.findByIdAsync(
+        createdPurchaseOrder.supplierId,
+      );
+
+      const productNameMap =
+        await this.productRepository.getProductsNamesByIdsAsync(productIds);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: createdPurchaseOrder.id,
+          createdAt: createdPurchaseOrder.createdAt,
+          estimatedDeliveryDate: createdPurchaseOrder.estimatedDeliveryDate,
+          supplierBusinessName: supplier!.businessName,
+          supplierDocumentType: supplier!.documentType,
+          supplierDocumentNumber: supplier!.documentNumber,
+          observation: createdPurchaseOrder.observation ?? '',
+          totalAmount: Number(createdPurchaseOrder.totalAmount),
+          purchaseOrderItems: purchaseOrderItems.map((item) => ({
+            productName: productNameMap.get(item.productId) ?? 'N/A',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotalPrice: item.quantity * Number(item.unitPrice),
+          })),
+        };
+
+      this.sendPurchaseOrderByEmailAsync(
+        purchaseOrderReportGenerationDataDto,
+        supplier!.email,
+      );
+    }
   }
 
   async findPurchaseOrderByIdAsync(
@@ -245,6 +287,45 @@ export class PurchaseOrderService {
 
       await Promise.all([manageStockTask, updatePurchaseOrderTask]);
     });
+
+    if (newStatus === PurchaseOrderStatusId.Ordered) {
+      const supplier = await this.supplierRepository.findByIdAsync(
+        purchaseOrder.supplierId,
+      );
+
+      const purchaseOrderItems =
+        await this.purchaseOrderItemRepository.findByPurchaseOrderIdAsync(
+          purchaseOrder.id,
+        );
+
+      const productIds = purchaseOrderItems.map((item) => item.productId);
+
+      const productNameMap =
+        await this.productRepository.getProductsNamesByIdsAsync(productIds);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: purchaseOrder.id,
+          createdAt: purchaseOrder.createdAt,
+          estimatedDeliveryDate: purchaseOrder.estimatedDeliveryDate,
+          supplierBusinessName: supplier!.businessName,
+          supplierDocumentType: supplier!.documentType,
+          supplierDocumentNumber: supplier!.documentNumber,
+          observation: purchaseOrder.observation ?? '',
+          totalAmount: Number(purchaseOrder.totalAmount),
+          purchaseOrderItems: purchaseOrderItems.map((item) => ({
+            productName: productNameMap.get(item.productId) ?? 'N/A',
+            quantity: item.quantity,
+            unitPrice: Number(item.unitPrice),
+            subtotalPrice: item.quantity * Number(item.unitPrice),
+          })),
+        };
+
+      this.sendPurchaseOrderByEmailAsync(
+        purchaseOrderReportGenerationDataDto,
+        supplier!.email,
+      );
+    }
   }
 
   async validatePurchaseOrderExistsAsync(id: number): Promise<PurchaseOrder> {
@@ -430,6 +511,38 @@ export class PurchaseOrderService {
 
       await Promise.all([manageStockTask, updatePurchaseOrderTask]);
     });
+
+    if (newPurchaseOrderStatus === PurchaseOrderStatusId.Ordered) {
+      const supplier = await this.supplierRepository.findByIdAsync(
+        purchaseOrder.supplierId,
+      );
+
+      const productNameMap =
+        await this.productRepository.getProductsNamesByIdsAsync(productIds);
+
+      const purchaseOrderReportGenerationDataDto: PurchaseOrderReportGenerationDataDto =
+        {
+          purchaseOrderId: purchaseOrder.id,
+          createdAt: purchaseOrder.createdAt,
+          estimatedDeliveryDate: purchaseOrder.estimatedDeliveryDate,
+          supplierBusinessName: supplier!.businessName,
+          supplierDocumentType: supplier!.documentType,
+          supplierDocumentNumber: supplier!.documentNumber,
+          observation: purchaseOrder.observation ?? '',
+          totalAmount: Number(purchaseOrder.totalAmount),
+          purchaseOrderItems: purchaseOrderItems.map((item) => ({
+            productName: productNameMap.get(item.productId) ?? 'N/A',
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotalPrice: item.quantity * Number(item.unitPrice),
+          })),
+        };
+
+      this.sendPurchaseOrderByEmailAsync(
+        purchaseOrderReportGenerationDataDto,
+        supplier!.email,
+      );
+    }
   }
 
   private async manageStockChanges(
@@ -596,5 +709,25 @@ export class PurchaseOrderService {
       default:
         break;
     }
+  }
+
+  async sendPurchaseOrderByEmailAsync(
+    purchaseOrder: PurchaseOrderReportGenerationDataDto,
+    supplierEmail: string,
+  ) {
+    const pdfDoc =
+      await this.reportService.generatePurchaseOrderReport(purchaseOrder);
+
+    const buffer = await pdfToBuffer(pdfDoc);
+
+    return this.mailingService.sendMailWithAttachmentAsync(
+      supplierEmail,
+      `Orden de compra #${purchaseOrder.purchaseOrderId}`,
+      'Adjuntamos la orden de compra en formato PDF.',
+      {
+        filename: `MP-OC-${purchaseOrder.purchaseOrderId}.pdf`,
+        content: buffer,
+      },
+    );
   }
 }

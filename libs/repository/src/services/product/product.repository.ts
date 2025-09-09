@@ -364,4 +364,17 @@ export class ProductRepository {
     await this.redisService.setKeyExpiration('products', 5400);
     return JSON.parse(productJson) as ProductDetailsDto;
   }
+
+  async getProductsNamesByIdsAsync(
+    productIds: number[],
+  ): Promise<Map<number, string>> {
+    const products = await this.prisma.product.findMany({
+      where: { AND: [{ id: { in: productIds } }, { deletedAt: null }] },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    return new Map(products.map((p) => [p.id, p.name]));
+  }
 }
