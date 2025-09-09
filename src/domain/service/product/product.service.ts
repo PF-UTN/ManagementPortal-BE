@@ -127,7 +127,7 @@ export class ProductService {
       productUpdateDto,
     );
 
-    this.updateProductInRedisAsync(id);
+    this.deleteProductFromRedisAsync(id);
 
     return updatedProduct;
   }
@@ -139,7 +139,7 @@ export class ProductService {
       throw new NotFoundException(`Product with id ${id} does not exist.`);
     }
 
-    this.updateProductInRedisAsync(id);
+    this.deleteProductFromRedisAsync(id);
 
     return this.productRepository.updateEnabledProductAsync(id, enabled);
   }
@@ -208,13 +208,5 @@ export class ProductService {
 
   async deleteProductFromRedisAsync(productId: number): Promise<void> {
     await this.productRepository.deleteProductFromRedisAsync(productId);
-  }
-
-  async updateProductInRedisAsync(productId: number): Promise<void> {
-    const product = await this.getProductByIdFromRedisAsync(productId);
-    if (!product) {
-      return;
-    }
-    await this.productRepository.saveProductToRedisAsync(product);
   }
 }

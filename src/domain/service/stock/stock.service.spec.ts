@@ -13,6 +13,7 @@ import {
 } from '@mp/repository';
 
 import { StockService } from './stock.service';
+import { ProductService } from '../product/product.service';
 
 describe('StockService', () => {
   let service: StockService;
@@ -21,6 +22,7 @@ describe('StockService', () => {
   let productRepository: ProductRepository;
   let unitOfWork: PrismaUnitOfWork;
   let stock: ReturnType<typeof mockDeep<Stock>>;
+  let productService: ProductService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -42,6 +44,10 @@ describe('StockService', () => {
           provide: PrismaUnitOfWork,
           useValue: mockDeep(PrismaUnitOfWork),
         },
+        {
+          provide: ProductService,
+          useValue: mockDeep(ProductService),
+        },
       ],
     }).compile();
 
@@ -53,6 +59,8 @@ describe('StockService', () => {
     unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
 
     service = module.get<StockService>(StockService);
+
+    productService = module.get<ProductService>(ProductService);
 
     stock = mockDeep<Stock>();
 
@@ -150,6 +158,38 @@ describe('StockService', () => {
       await expect(
         service.updateStockByProductIdAsync(productId, stockDtoMock),
       ).rejects.toThrow(NotFoundException);
+    });
+    it('should call productService.deleteProductFromRedisAsync after updating stock', async () => {
+      // Arrange
+      const productId = 1;
+      const stockDtoMock: StockDto = {
+        quantityAvailable: 50,
+        quantityOrdered: 5,
+        quantityReserved: 10,
+      };
+      const updatedStock = { ...stock, quantityAvailable: 50 };
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(stock);
+      jest
+        .spyOn(stockRepository, 'updateStockAsync')
+        .mockResolvedValueOnce({ ...updatedStock });
+      jest
+        .spyOn(productService, 'deleteProductFromRedisAsync')
+        .mockResolvedValueOnce(undefined);
+      const txMock = {} as Prisma.TransactionClient;
+
+      // Act
+      await service.updateStockByProductIdAsync(
+        productId,
+        stockDtoMock,
+        txMock,
+      );
+
+      // Assert
+      expect(productService.deleteProductFromRedisAsync).toHaveBeenCalledWith(
+        productId,
+      );
     });
   });
 
@@ -275,6 +315,31 @@ describe('StockService', () => {
       expect(
         stockChangeRepository.createManyStockChangeAsync,
       ).toHaveBeenCalledWith(stockUpdatesMock, txMock);
+    });
+    it('should call productService.deleteProductFromRedisAsync after adjusting stock', async () => {
+      // Arrange
+      jest.spyOn(productRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(stockRepository, 'findByProductIdAsync')
+        .mockResolvedValueOnce(stock);
+
+      const txMock = {} as Prisma.TransactionClient;
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      const deleteFromRedisSpy = jest.spyOn(
+        productService,
+        'deleteProductFromRedisAsync',
+      );
+
+      // Act
+      await service.adjustProductStockAsync(createManyStockChangeDtoMock);
+
+      // Assert
+      expect(deleteFromRedisSpy).toHaveBeenCalledWith(
+        createManyStockChangeDtoMock.productId,
+      );
     });
   });
 });
