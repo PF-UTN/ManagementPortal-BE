@@ -9,6 +9,7 @@ import {
   Put,
   Patch,
   Delete,
+  StreamableFile,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -26,7 +27,9 @@ import {
   ProductToggleDto,
   ProductUpdateDto,
   SearchProductRequest,
+  DownloadProductRequest,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { AdjustProductStockCommand } from './command/adjust-product-stock.command';
 import { CreateProductCommand } from './command/create-product.command';
@@ -34,6 +37,7 @@ import { DeleteProductCommand } from './command/delete-product.command';
 import { SearchProductQuery } from './command/search-product-query';
 import { UpdateEnabledProductCommand } from './command/update-enabled-product.command';
 import { UpdateProductCommand } from './command/update-product.command';
+import { DownloadProductQuery } from './query/download-product.query';
 import { GetProductByIdQuery } from './query/get-product-by-id.query';
 
 @Controller('product')
@@ -55,6 +59,32 @@ export class ProductController {
     return this.queryBus.execute(
       new SearchProductQuery(searchProductRequestDto),
     );
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Product.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download listed products',
+    description:
+      'Download an XLSX for products based on the provided filters and search text.',
+  })
+  async downloadAsync(
+    @Body() downloadProductRequest: DownloadProductRequest,
+  ): Promise<StreamableFile> {
+    const products = await this.queryBus.execute(
+      new DownloadProductQuery(downloadProductRequest),
+    );
+
+    const buffer = ExcelExportHelper.exportToExcelBuffer(products);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Productos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Post()

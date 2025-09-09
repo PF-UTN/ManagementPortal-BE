@@ -8,6 +8,7 @@ import { SearchProductQueryHandler } from './command/search-product-query.handle
 import { UpdateEnabledProductCommandHandler } from './command/update-enabled-product.command.handler';
 import { UpdateProductCommandHandler } from './command/update-product.command.handler';
 import { ProductController } from './product.controller';
+import { DownloadProductQueryHandler } from './query/download-product.query.handler';
 import { GetProductByIdQueryHandler } from './query/get-product-by-id.query.handler';
 import { ProductServiceModule } from '../../domain/service/product/product.service.module';
 import { StockServiceModule } from '../../domain/service/stock/stock.service.module';
@@ -19,6 +20,7 @@ const commandHandlers = [
   UpdateEnabledProductCommandHandler,
   DeleteProductCommandHandler,
   AdjustProductStockCommandHandler,
+  DownloadProductQueryHandler,
 ];
 
 @Module({
