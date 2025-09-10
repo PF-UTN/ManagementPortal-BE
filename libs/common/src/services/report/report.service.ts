@@ -12,7 +12,7 @@ export class ReportService {
   async generatePurchaseOrderReport(
     purchaseOrder: PurchaseOrderReportGenerationDataDto,
   ): Promise<PDFKit.PDFDocument> {
-    const docDefinition = purchaseOrderReport(purchaseOrder);
+    const docDefinition = await purchaseOrderReport(purchaseOrder);
 
     return this.printer.createPdf(docDefinition);
   }

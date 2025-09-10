@@ -2,18 +2,7 @@ import { Module } from '@nestjs/common';
 import PdfPrinter from 'pdfmake';
 
 import { PrinterService } from './printer.service';
-
-const fonts = {
-  Roboto: {
-    normal:
-      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Regular.ttf',
-    bold: 'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Medium.ttf',
-    italics:
-      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Italic.ttf',
-    bolditalics:
-      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-MediumItalic.ttf',
-  },
-};
+import { getFonts } from '../../helpers/image/fonts.helper';
 
 @Module({
   imports: [],
@@ -21,7 +10,7 @@ const fonts = {
     PrinterService,
     {
       provide: 'PDF_PRINTER',
-      useFactory: () => new PdfPrinter(fonts),
+      useFactory: async () => new PdfPrinter(await getFonts()),
     },
   ],
   exports: [PrinterService],
