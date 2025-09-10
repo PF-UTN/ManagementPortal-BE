@@ -8,10 +8,10 @@ describe('pdfToBuffer', () => {
     // Arrange
     const fonts = {
       Roboto: {
-        normal: '/fonts/Roboto-Regular.ttf',
-        bold: '/fonts/Roboto-Medium.ttf',
-        italics: '/fonts/Roboto-Italic.ttf',
-        bolditalics: '/fonts/Roboto-MediumItalic.ttf',
+        normal: 'libs/common/src/public/fonts/Roboto-Regular.ttf',
+        bold: 'libs/common/src/public/fonts/Roboto-Medium.ttf',
+        italics: 'libs/common/src/public/fonts/Roboto-Italic.ttf',
+        bolditalics: 'libs/common/src/public/fonts/Roboto-MediumItalic.ttf',
       },
     };
     const printer = new PdfPrinter(fonts);
