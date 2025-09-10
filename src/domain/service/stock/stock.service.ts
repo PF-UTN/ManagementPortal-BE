@@ -18,6 +18,8 @@ import {
   StockRepository,
 } from '@mp/repository';
 
+import { ProductService } from '../product/product.service';
+
 @Injectable()
 export class StockService {
   constructor(
@@ -25,6 +27,7 @@ export class StockService {
     private readonly stockChangeRepository: StockChangeRepository,
     private readonly productRepository: ProductRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
+    private readonly productService: ProductService,
   ) {}
 
   async findByProductIdAsync(
@@ -48,6 +51,7 @@ export class StockService {
     }
 
     await this.stockRepository.updateStockAsync(stock.id, stockDto, tx);
+    await this.productService.deleteProductFromRedisAsync(productId);
   }
 
   async adjustProductStockAsync(
@@ -105,10 +109,19 @@ export class StockService {
         stockUpdateData,
         tx,
       );
+      const updateProductRedisTask =
+        this.productService.deleteProductFromRedisAsync(
+          stockChangeData.productId,
+        );
+
       const createStockChangeTask =
         this.stockChangeRepository.createManyStockChangeAsync(stockUpdates, tx);
 
-      await Promise.all([updateStockTask, createStockChangeTask]);
+      await Promise.all([
+        updateStockTask,
+        createStockChangeTask,
+        updateProductRedisTask,
+      ]);
     });
   }
 }

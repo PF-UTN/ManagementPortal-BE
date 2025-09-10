@@ -337,6 +337,30 @@ describe('ProductService', () => {
         productUpdateDtoMock,
       );
     });
+    it('should call deleteProductFromRedisAsync', async () => {
+      // Arrange
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+
+      jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce(product);
+
+      const deleteFromRedisSpy = jest
+        .spyOn(service, 'deleteProductFromRedisAsync')
+        .mockResolvedValueOnce();
+
+      // Act
+      await service.updateProductAsync(product.id, productUpdateDtoMock);
+
+      // Assert
+      expect(deleteFromRedisSpy).toHaveBeenCalledWith(product.id);
+    });
 
     it('should throw NotFoundException if product does not exist', async () => {
       // Arrange
@@ -396,6 +420,21 @@ describe('ProductService', () => {
       );
     });
 
+    it('should call deleteProductFromRedisAsync', async () => {
+      // Arrange
+      const productId = 1;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      const deleteFromRedisSpy = jest
+        .spyOn(service, 'deleteProductFromRedisAsync')
+        .mockResolvedValueOnce();
+      // Act
+      await service.deleteProductAsync(productId);
+
+      // Assert
+      expect(deleteFromRedisSpy).toHaveBeenCalledWith(productId);
+    });
+
     it('should throw NotFoundException if product does not exist', async () => {
       // Arrange
       const productId = 1;
@@ -428,6 +467,21 @@ describe('ProductService', () => {
         productId,
         enabled,
       );
+    });
+    it('should call deleteProductFromRedisAsync', async () => {
+      // Arrange
+      const productId = 1;
+      const enabled = true;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      const deleteFromRedisSpy = jest
+        .spyOn(service, 'deleteProductFromRedisAsync')
+        .mockResolvedValueOnce();
+      // Act
+      await service.updateEnabledProductAsync(productId, enabled);
+
+      // Assert
+      expect(deleteFromRedisSpy).toHaveBeenCalledWith(productId);
     });
 
     it('should throw NotFoundException if product does not exist', async () => {
@@ -530,6 +584,21 @@ describe('ProductService', () => {
       await expect(service.getProductByIdFromRedisAsync(1)).rejects.toThrow(
         error,
       );
+    });
+    describe('deleteProductFromRedisAsync', () => {
+      it('should call productRepository.deleteProductFromRedisAsync with correct productId', async () => {
+        // Arrange
+        const productId = 123;
+        const deleteFromRedisSpy = jest
+          .spyOn(repository, 'deleteProductFromRedisAsync')
+          .mockResolvedValueOnce();
+
+        // Act
+        await service.deleteProductFromRedisAsync(productId);
+
+        // Assert
+        expect(deleteFromRedisSpy).toHaveBeenCalledWith(productId);
+      });
     });
   });
 });

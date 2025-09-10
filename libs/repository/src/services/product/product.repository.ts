@@ -377,4 +377,11 @@ export class ProductRepository {
     });
     return new Map(products.map((p) => [p.id, p.name]));
   }
+
+  async deleteProductFromRedisAsync(productId: number): Promise<void> {
+    await this.redisService.removeFieldFromObject(
+      'products',
+      productId.toString(),
+    );
+  }
 }
