@@ -585,5 +585,20 @@ describe('ProductService', () => {
         error,
       );
     });
+    describe('deleteProductFromRedisAsync', () => {
+      it('should call productRepository.deleteProductFromRedisAsync with correct productId', async () => {
+        // Arrange
+        const productId = 123;
+        const deleteFromRedisSpy = jest
+          .spyOn(repository, 'deleteProductFromRedisAsync')
+          .mockResolvedValueOnce();
+
+        // Act
+        await service.deleteProductFromRedisAsync(productId);
+
+        // Assert
+        expect(deleteFromRedisSpy).toHaveBeenCalledWith(productId);
+      });
+    });
   });
 });
