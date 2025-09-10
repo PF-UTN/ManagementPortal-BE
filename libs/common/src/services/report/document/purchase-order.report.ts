@@ -3,7 +3,7 @@ import type { Content, TDocumentDefinitions } from 'pdfmake/interfaces';
 import { PurchaseOrderReportGenerationDataDto } from '@mp/common/dtos';
 
 const logo: Content = {
-  image: 'libs/common/src/public/images/dog.png',
+  image: 'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/dog.png',
   width: 120,
 };
 

@@ -5,10 +5,13 @@ import { PrinterService } from './printer.service';
 
 const fonts = {
   Roboto: {
-    normal: 'libs/common/src/public/fonts/Roboto-Regular.ttf',
-    bold: 'libs/common/src/public/fonts/Roboto-Medium.ttf',
-    italics: 'libs/common/src/public/fonts/Roboto-Italic.ttf',
-    bolditalics: 'libs/common/src/public/fonts/Roboto-MediumItalic.ttf',
+    normal:
+      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Regular.ttf',
+    bold: 'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Medium.ttf',
+    italics:
+      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-Italic.ttf',
+    bolditalics:
+      'https://rykocsrdf1gsyk57.public.blob.vercel-storage.com/fonts/Roboto-MediumItalic.ttf',
   },
 };
 
