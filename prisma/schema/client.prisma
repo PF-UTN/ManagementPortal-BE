@@ -7,4 +7,5 @@ model Client {
     taxCategoryId Int
     address       Address     @relation(fields: [addressId], references: [id])
     addressId     Int         @unique
+    orders        Order[]
 }
