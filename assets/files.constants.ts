@@ -6,9 +6,13 @@ const ASSETS_PATH = join(process.cwd(), 'assets');
 
 // ================== IMAGES ==================
 export const Images = {
-  DOG_DATAURL: `data:image/png;base64,${readFileSync(join(ASSETS_PATH, 'images/dog.png')).toString('base64')}`,
-
   DOG_PATH: join(ASSETS_PATH, 'images/dog.png'),
+
+  // Lazy-loaded Data URL
+  get DOG_DATAURL() {
+    const buffer = readFileSync(this.DOG_PATH);
+    return `data:image/png;base64,${buffer.toString('base64')}`;
+  },
 };
 
 // ================== FONTS ==================
