@@ -1,3 +1,4 @@
+import { join } from 'path';
 import PdfPrinter from 'pdfmake';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
 
@@ -8,10 +9,15 @@ describe('pdfToBuffer', () => {
     // Arrange
     const fonts = {
       Roboto: {
-        normal: 'libs/common/src/public/fonts/Roboto-Regular.ttf',
-        bold: 'libs/common/src/public/fonts/Roboto-Medium.ttf',
-        italics: 'libs/common/src/public/fonts/Roboto-Italic.ttf',
-        bolditalics: 'libs/common/src/public/fonts/Roboto-MediumItalic.ttf',
+        normal: join(process.cwd(), 'public', 'fonts', 'Roboto-Regular.ttf'),
+        bold: join(process.cwd(), 'public', 'fonts', 'Roboto-Medium.ttf'),
+        italics: join(process.cwd(), 'public', 'fonts', 'Roboto-Italic.ttf'),
+        bolditalics: join(
+          process.cwd(),
+          'public',
+          'fonts',
+          'Roboto-MediumItalic.ttf',
+        ),
       },
     };
     const printer = new PdfPrinter(fonts);
