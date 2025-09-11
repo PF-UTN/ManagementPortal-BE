@@ -53,6 +53,10 @@ export const permissionPostDeployAsync = async () => {
     { id: 46, name: PermissionCodes.StockChange.CREATE },
     { id: 47, name: PermissionCodes.StockChange.UPDATE },
     { id: 48, name: PermissionCodes.StockChange.DELETE },
+    { id: 49, name: PermissionCodes.MaintenanceItem.READ },
+    { id: 50, name: PermissionCodes.MaintenanceItem.CREATE },
+    { id: 51, name: PermissionCodes.MaintenanceItem.UPDATE },
+    { id: 52, name: PermissionCodes.MaintenanceItem.DELETE },
   ];
 
   await mergeTableData('Permission', sourceData);
