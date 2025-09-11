@@ -1,10 +1,8 @@
 model PaymentDetail {
-  id           Int       @id @default(autoincrement())
-  orderId      Int       @unique
-  order        Order     @relation("OrderToPaymentDetail", fields: [orderId], references: [id])
-  paymentType  PaymentType @relation(fields: [paymentTypeId], references: [id])
+  id            Int         @id @default(autoincrement())
+  orderId       Int         @unique
+  order         Order       @relation("OrderToPaymentDetail", fields: [orderId], references: [id])
+  paymentType   PaymentType @relation(fields: [paymentTypeId], references: [id])
   paymentTypeId Int
-  createdAt    DateTime  @default(now())
+  createdAt     DateTime    @default(now())
 }
-
-
