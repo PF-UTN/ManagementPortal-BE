@@ -1,0 +1,11 @@
+model Order {
+  id            Int            @id @default(autoincrement())
+  paymentDetail PaymentDetail? @relation("OrderToPaymentDetail")
+  client        Client         @relation(fields: [clientId], references: [id])
+  clientId      Int
+  orderStatus   OrderStatus    @relation(fields: [orderStatusId], references: [id])
+  orderStatusId Int
+  totalAmount   Decimal
+  createdAt     DateTime       @default(now())
+  orderItems    OrderItem[]
+}
