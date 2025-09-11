@@ -538,7 +538,7 @@ export class PurchaseOrderService {
           })),
         };
 
-      this.sendPurchaseOrderByEmailAsync(
+      await this.sendPurchaseOrderByEmailAsync(
         purchaseOrderReportGenerationDataDto,
         supplier!.email,
       );
