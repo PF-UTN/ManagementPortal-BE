@@ -1,3 +1,4 @@
+import { StreamableFile } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
@@ -8,18 +9,21 @@ import {
   PurchaseOrderStatusId,
 } from '@mp/common/constants';
 import {
+  DownloadPurchaseOrderRequest,
   PurchaseOrderCreationDto,
   PurchaseOrderDetailsDto,
   PurchaseOrderUpdateDto,
   SearchPurchaseOrderRequest,
   UpdatePurchaseOrderStatusRequestDto,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
 import { UpdatePurchaseOrderStatusCommand } from './command/update-purchase-order-status.command';
 import { UpdatePurchaseOrderCommand } from './command/update-purchase-order.command';
 import { PurchaseOrderController } from './purchase-order.controller';
+import { DownloadPurchaseOrderQuery } from './query/download-purchase-order.query';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
 
@@ -85,6 +89,75 @@ describe('PurchaseOrderController', () => {
       );
     });
   });
+
+  describe('PurchaseOrderController - downloadPurchaseOrdersAsync', () => {
+    const downloadPurchaseOrderRequest: DownloadPurchaseOrderRequest = {
+      searchText: 'test',
+      filters: {
+        supplierBusinessName: ['Proveedor A'],
+      },
+    };
+
+    const buffer = Buffer.from('test');
+    const expectedFilename = `${DateHelper.formatYYYYMMDD(
+      new Date(),
+    )} - Listado Ordenes de Compra`;
+
+    beforeEach(async () => {
+      jest
+        .spyOn(ExcelExportHelper, 'exportToExcelBuffer')
+        .mockReturnValue(buffer);
+    });
+
+    it('should call queryBus.execute with DownloadPurchaseOrderQuery', async () => {
+      await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new DownloadPurchaseOrderQuery(downloadPurchaseOrderRequest),
+      );
+    });
+
+    it('should call ExcelExportHelper.exportToExcelBuffer with purchase orders', async () => {
+      await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(ExcelExportHelper.exportToExcelBuffer).toHaveBeenCalled();
+    });
+
+    it('should return a StreamableFile', async () => {
+      const result = await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(result).toBeInstanceOf(StreamableFile);
+    });
+
+    it('should set the correct filename in the disposition', async () => {
+      const result = await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(result.options.disposition).toBe(
+        `attachment; filename="${expectedFilename}"`,
+      );
+    });
+
+    it('should set the correct content type', async () => {
+      const result = await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(result.options.type).toBe(
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    });
+
+    it('should set the correct length', async () => {
+      const result = await controller.downloadPurchaseOrdersAsync(
+        downloadPurchaseOrderRequest,
+      );
+      expect(result.options.length).toBe(buffer.length);
+    });
+  });
+
   describe('createPurchaseOrderAsync', () => {
     it('should call execute on the commandBus with correct parameters', async () => {
       // Arrange
