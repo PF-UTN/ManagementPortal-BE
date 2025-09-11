@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  StreamableFile,
 } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
@@ -36,6 +37,7 @@ import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
@@ -199,6 +201,21 @@ export class VehicleController {
   ) {
     return this.queryBus.execute(
       new SearchMaintenanceQuery(id, searchMaintenanceRequest),
+    );
+  }
+
+  @Post(':id/maintenance/download')
+  @RequiredPermissions(PermissionCodes.Maintenance.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download vehicles maintenance and repairs data',
+    description: 'Download vehicles maintenance and repairs data.',
+  })
+  async downloadVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StreamableFile> {
+    return await this.queryBus.execute(
+      new DownloadVehiclesMaintenanceQuery(id),
     );
   }
 

@@ -103,6 +103,28 @@ describe('RepairRepository', () => {
     });
   });
 
+  describe('findByVehicleIdAsync', () => {
+    let vehicleId: number;
+
+    beforeEach(() => {
+      vehicleId = 1;
+    });
+
+    it('should construct the correct query with search text filter', async () => {
+      // Act
+      await repository.findByVehicleIdAsync(vehicleId);
+
+      // Assert
+      expect(prismaService.repair.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [{ vehicleId: vehicleId }, { deleted: false }],
+          },
+        }),
+      );
+    });
+  });
+
   describe('searchByTextAndVehicleIdAsync', () => {
     let searchText: string;
     let page: number;

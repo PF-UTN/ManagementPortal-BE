@@ -184,6 +184,40 @@ describe('RepairService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
+    it('should call findByVehicleIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const vehicleId = 1;
+
+      // Act
+      await service.findByVehicleIdAsync(vehicleId);
+
+      // Assert
+      expect(repository.findByVehicleIdAsync).toHaveBeenCalledWith(vehicleId);
+    });
+  });
+
+  describe('searchByTextAndVehicleIdAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const searchText = 'test';
+      const page = 1;
+      const pageSize = 10;
+      const vehicleId = 1;
+
+      const query = new SearchRepairQuery(vehicleId, {
+        searchText,
+        page,
+        pageSize,
+      });
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValue(false);
+
+      // Act & Assert
+      await expect(
+        service.searchByTextAndVehicleIdAsync(query),
+      ).rejects.toThrow(NotFoundException);
+    });
+
     it('should call searchByTextAndVehicleIdAsync on the repository with correct parameters', async () => {
       // Arrange
       const searchText = 'test';
