@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { MaintenanceItemCreationDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -12,5 +14,11 @@ export class MaintenanceItemRepository {
       where: { id },
     });
     return !!maintenanceItem;
+  }
+
+  async createMaintenanceItemAsync(data: MaintenanceItemCreationDto) {
+    return this.prisma.maintenanceItem.create({
+      data,
+    });
   }
 }
