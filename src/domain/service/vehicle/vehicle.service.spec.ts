@@ -137,6 +137,21 @@ describe('VehicleService', () => {
     });
   });
 
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+
+      // Act
+      await service.downloadBySearchTextAsync(searchText);
+
+      // Assert
+      expect(repository.downloadBySearchTextAsync).toHaveBeenCalledWith(
+        searchText,
+      );
+    });
+  });
+
   describe('deleteVehicleAsync', () => {
     it('should call deleteVehicleAsync on the repository with correct parameters', async () => {
       // Arrange
