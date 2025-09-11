@@ -12,8 +12,10 @@ import {
   SearchMaintenancePlanItemRequest,
   UpdateMaintenancePlanItemDto,
   UpdateRepairDto,
+  MaintenanceItemCreationDto,
 } from '@mp/common/dtos';
 
+import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
@@ -333,6 +335,28 @@ describe('VehicleController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new GetVehicleByIdQuery(vehicleId),
       );
+    });
+  });
+
+  describe('createVehicleMaintenanceItemAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const maintenanceItemCreationDtoMock: MaintenanceItemCreationDto = {
+        description: 'Test Maintenance Item',
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateVehicleMaintenanceItemCommand(
+        maintenanceItemCreationDtoMock,
+      );
+
+      // Act
+      await controller.createVehicleMaintenanceItemAsync(
+        maintenanceItemCreationDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
   });
 });

@@ -25,8 +25,10 @@ import {
   SearchMaintenancePlanItemRequest,
   UpdateRepairDto,
   UpdateMaintenancePlanItemDto,
+  MaintenanceItemCreationDto,
 } from '@mp/common/dtos';
 
+import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
@@ -287,5 +289,21 @@ export class VehicleController {
   })
   async getVehicleByIdAsync(@Param('id', ParseIntPipe) id: number) {
     return this.queryBus.execute(new GetVehicleByIdQuery(id));
+  }
+
+  @Post('maintenance-item')
+  @HttpCode(201)
+  @RequiredPermissions(PermissionCodes.MaintenanceItem.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a maintenance item',
+    description: 'Creates a new maintenance item with the provided details.',
+  })
+  async createVehicleMaintenanceItemAsync(
+    @Body() maintenanceItemCreationDto: MaintenanceItemCreationDto,
+  ) {
+    return this.commandBus.execute(
+      new CreateVehicleMaintenanceItemCommand(maintenanceItemCreationDto),
+    );
   }
 }
