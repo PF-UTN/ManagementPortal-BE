@@ -43,7 +43,6 @@
     "date-fns": "^4.1.0",
     "lodash": "^4.17.21",
     "nodemailer": "^6.10.0",
-    "p-retry": "^7.0.0",
     "pdfmake": "^0.2.20",
     "redis": "^5.6.0",
     "reflect-metadata": "^0.2.2",
