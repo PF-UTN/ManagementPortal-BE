@@ -42,6 +42,10 @@ export class VehicleService {
     );
   }
 
+  async downloadBySearchTextAsync(searchText: string) {
+    return await this.vehicleRepository.downloadBySearchTextAsync(searchText);
+  }
+
   async deleteVehicleAsync(id: number) {
     const existsVehicle = await this.vehicleRepository.existsAsync(id);
 

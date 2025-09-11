@@ -1,3 +1,4 @@
+import { StreamableFile } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
@@ -12,6 +13,7 @@ import {
   SearchMaintenancePlanItemRequest,
   UpdateMaintenancePlanItemDto,
   UpdateRepairDto,
+  DownloadVehicleRequest,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -23,12 +25,17 @@ import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesQuery } from './query/download-vehicles-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
 import { VehicleController } from './vehicle.controller';
+import {
+  DateHelper,
+  ExcelExportHelper,
+} from '../../../libs/common/src/helpers';
 
 describe('VehicleController', () => {
   let controller: VehicleController;
@@ -95,6 +102,65 @@ describe('VehicleController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchVehicleQuery(request),
       );
+    });
+  });
+
+  describe('downloadAsync', () => {
+    const downloadVehicleRequest: DownloadVehicleRequest = {
+      searchText: 'Corolla',
+    };
+
+    const buffer = Buffer.from('test');
+    const expectedFilename = `${DateHelper.formatYYYYMMDD(
+      new Date(),
+    )} - Listado Vehiculos`;
+
+    beforeEach(() => {
+      jest
+        .spyOn(ExcelExportHelper, 'exportToExcelBuffer')
+        .mockReturnValue(buffer);
+    });
+
+    it('should call queryBus.execute with DownloadVehiclesQuery', async () => {
+      await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new DownloadVehiclesQuery(downloadVehicleRequest),
+      );
+    });
+
+    it('should call ExcelExportHelper.exportToExcelBuffer with vehicles', async () => {
+      await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(ExcelExportHelper.exportToExcelBuffer).toHaveBeenCalled();
+    });
+
+    it('should return a StreamableFile', async () => {
+      const result = await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(result).toBeInstanceOf(StreamableFile);
+    });
+
+    it('should set the correct filename in the disposition', async () => {
+      const result = await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(result.options.disposition).toBe(
+        `attachment; filename="${expectedFilename}"`,
+      );
+    });
+
+    it('should set the correct content type', async () => {
+      const result = await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(result.options.type).toBe(
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+    });
+
+    it('should set the correct length', async () => {
+      const result = await controller.downloadAsync(downloadVehicleRequest);
+
+      expect(result.options.length).toBe(buffer.length);
     });
   });
 
