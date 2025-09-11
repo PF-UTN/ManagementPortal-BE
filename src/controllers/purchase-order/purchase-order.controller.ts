@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  StreamableFile,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -25,14 +26,20 @@ import {
   PurchaseOrderCreationDto,
   PurchaseOrderUpdateDto,
   SearchPurchaseOrderRequest,
+  DownloadPurchaseOrderRequest,
 } from '@mp/common/dtos';
 
 import { CreatePurchaseOrderCommand } from './command/create-purchase-order.command';
 import { DeletePurchaseOrderCommand } from './command/delete-purchase-order.command';
 import { UpdatePurchaseOrderStatusCommand } from './command/update-purchase-order-status.command';
 import { UpdatePurchaseOrderCommand } from './command/update-purchase-order.command';
+import { DownloadPurchaseOrderQuery } from './query/download-purchase-order.query';
 import { GetPurchaseOrderByIdQuery } from './query/get-purchase-order-by-id.query';
 import { SearchPurchaseOrderQuery } from './query/search-purchase-order.query';
+import {
+  DateHelper,
+  ExcelExportHelper,
+} from '../../../libs/common/src/helpers';
 
 @Controller('purchase-order')
 export class PurchaseOrderController {
@@ -87,6 +94,31 @@ export class PurchaseOrderController {
     return this.queryBus.execute(
       new SearchPurchaseOrderQuery(searchPurchaseOrderDto),
     );
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.PurchaseOrder.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download purchase orders',
+    description:
+      'Download purchase orders based on the provided filters and search text.',
+  })
+  async downloadPurchaseOrdersAsync(
+    @Body() downloadPurchaseOrderDto: DownloadPurchaseOrderRequest,
+  ): Promise<StreamableFile> {
+    const purchaseOrders = await this.queryBus.execute(
+      new DownloadPurchaseOrderQuery(downloadPurchaseOrderDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(purchaseOrders);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Ordenes de Compra`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Delete(':id')

@@ -28,6 +28,7 @@ import {
 
 import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
 import { PurchaseOrderService } from './purchase-order.service';
+import { DownloadPurchaseOrderQuery } from '../../../controllers/purchase-order/query/download-purchase-order.query';
 import { StockService } from '../stock/stock.service';
 
 describe('PurchaseOrderService', () => {
@@ -654,6 +655,38 @@ describe('PurchaseOrderService', () => {
         query.filters,
         query.orderBy,
       );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchPurchaseOrderFiltersDto = {
+        statusName: ['Ordered'],
+        supplierBusinessName: ['Supplier A'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+        fromEstimatedDeliveryDate: '2025-01-15',
+        toEstimatedDeliveryDate: '2025-01-20',
+      };
+      const orderBy = {
+        field: PurchaseOrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      };
+      const query = new DownloadPurchaseOrderQuery({
+        searchText,
+        filters,
+        orderBy,
+      });
+
+      // Act
+      await service.downloadWithFiltersAsync(query);
+
+      // Assert
+      expect(
+        purchaseOrderRepository.downloadWithFiltersAsync,
+      ).toHaveBeenCalledWith(query.searchText, query.filters, query.orderBy);
     });
   });
 

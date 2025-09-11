@@ -295,6 +295,98 @@ describe('PurchaseOrderRepository', () => {
     });
   });
 
+  describe('searchWithFiltersAsync', () => {
+    const filters = {
+      statusName: ['Ordered'],
+      supplierBusinessName: ['Supplier A', 'Supplier B'],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+      fromEstimatedDeliveryDate: '2023-06-01',
+      toEstimatedDeliveryDate: '2023-06-30',
+    };
+
+    const searchText = 'Test Supplier';
+
+    const orderBy = {
+      field: PurchaseOrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    };
+
+    const mockData = [purchaseOrder];
+
+    beforeEach(() => {
+      jest
+        .spyOn(prismaService.purchaseOrder, 'findMany')
+        .mockResolvedValue(mockData);
+    });
+
+    it('should call prisma.purchaseOrder.findMany with correct filters and order', async () => {
+      // Act
+      await repository.downloadWithFiltersAsync(searchText, filters, orderBy);
+
+      // Assert
+      expect(prismaService.purchaseOrder.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            NOT: {
+              purchaseOrderStatus: {
+                name: 'Deleted',
+              },
+            },
+            AND: expect.arrayContaining([
+              { purchaseOrderStatus: { name: { in: filters.statusName } } },
+              { createdAt: { gte: new Date(filters.fromDate) } },
+              { createdAt: { lte: endOfDay(parseISO(filters.toDate)) } },
+              {
+                estimatedDeliveryDate: {
+                  gte: new Date(filters.fromEstimatedDeliveryDate),
+                },
+              },
+              {
+                estimatedDeliveryDate: {
+                  lte: endOfDay(parseISO(filters.toEstimatedDeliveryDate)),
+                },
+              },
+              {
+                OR: expect.arrayContaining([
+                  {
+                    supplier: {
+                      businessName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  {
+                    purchaseOrderStatus: {
+                      name: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                ]),
+              },
+            ]),
+          }),
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+    });
+
+    it('should return data from prisma results', async () => {
+      // Act
+      const result = await repository.downloadWithFiltersAsync(
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(result).toEqual(mockData);
+    });
+  });
+
   describe('findByIdAsync', () => {
     it('should return a purchase order by id', async () => {
       // Arrange

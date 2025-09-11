@@ -35,6 +35,7 @@ import {
   SupplierRepository,
 } from '@mp/repository';
 
+import { DownloadPurchaseOrderQuery } from '../../../controllers/purchase-order/query/download-purchase-order.query';
 import { StockService } from '../stock/stock.service';
 import { SearchPurchaseOrderQuery } from './../../../controllers/purchase-order/query/search-purchase-order.query';
 
@@ -201,6 +202,14 @@ export class PurchaseOrderService {
     return this.purchaseOrderRepository.searchWithFiltersAsync(
       query.page,
       query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
+  }
+
+  async downloadWithFiltersAsync(query: DownloadPurchaseOrderQuery) {
+    return this.purchaseOrderRepository.downloadWithFiltersAsync(
       query.searchText,
       query.filters,
       query.orderBy,
