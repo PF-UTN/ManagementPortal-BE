@@ -5,6 +5,7 @@ model Product {
     price        Decimal         @db.Decimal(10, 2)
     enabled      Boolean         @default(true)
     weight       Decimal         @db.Decimal(10, 2)
+    imageUrl     String?         @db.VarChar(255)
     category     ProductCategory @relation(fields: [categoryId], references: [id])
     categoryId   Int
     supplier     Supplier        @relation(fields: [supplierId], references: [id])

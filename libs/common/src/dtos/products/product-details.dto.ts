@@ -1,21 +1,22 @@
 export class ProductDetailsDto {
-    id: number;
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  weight: number;
+  enabled: boolean;
+  imageUrl?: string;
+  stock: {
+    quantityAvailable: number;
+    quantityReserved: number;
+    quantityOrdered: number;
+  };
+  category: {
     name: string;
-    description: string;
-    price: number;
-    weight: number;
-    enabled: boolean;
-    stock: {
-        quantityAvailable: number;
-        quantityReserved: number;
-        quantityOrdered: number;
-    };
-    category: {
-        name: string;
-    };
-    supplier: {
-        businessName: string;
-        email: string;
-        phone: string;
-    };
+  };
+  supplier: {
+    businessName: string;
+    email: string;
+    phone: string;
+  };
 }
