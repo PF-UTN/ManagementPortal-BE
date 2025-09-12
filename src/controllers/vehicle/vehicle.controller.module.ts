@@ -7,10 +7,12 @@ import { CreateVehicleCommandHandler } from './command/create-vehicle.command.ha
 import { DeleteVehicleMaintenancePlanItemCommandHandler } from './command/delete-vehicle-maintenance-plan-item.command.handler';
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
+import { UpdateVehicleMaintenanceItemCommandHandler } from './command/update-vehicle-maintenance-item.command.handler';
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
 import { GetVehicleByIdQueryHandler } from './query/get-vehicle-by-id.query.handler';
+import { SearchMaintenanceItemQueryHandler } from './query/search-maintenance-item-query.handler';
 import { SearchMaintenancePlanItemQueryHandler } from './query/search-maintenance-plan-item-query.handler';
 import { SearchMaintenanceQueryHandler } from './query/search-maintenance-query.handler';
 import { SearchRepairQueryHandler } from './query/search-repair-query.handler';
@@ -28,6 +30,7 @@ const queryHandlers = [
   SearchMaintenanceQueryHandler,
   SearchMaintenancePlanItemQueryHandler,
   GetVehicleByIdQueryHandler,
+  SearchMaintenanceItemQueryHandler,
 ];
 const commandHandlers = [
   CreateVehicleCommandHandler,
@@ -40,6 +43,7 @@ const commandHandlers = [
   UpdateVehicleRepairCommandHandler,
   DeleteVehicleMaintenancePlanItemCommandHandler,
   CreateVehicleMaintenanceItemCommandHandler,
+  UpdateVehicleMaintenanceItemCommandHandler,
 ];
 
 @Module({
