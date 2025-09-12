@@ -5,7 +5,7 @@ export const SwaggerConfiguration = (app: INestApplication) => {
   const config = new DocumentBuilder()
     .setTitle('Management Portal API')
     .setDescription('API documentation for the Management Portal')
-    .setVersion('1.0')
+    .setVersion('3.0')
     .addBearerAuth()
     .build();
 

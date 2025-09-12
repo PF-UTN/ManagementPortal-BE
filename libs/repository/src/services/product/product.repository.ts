@@ -259,9 +259,15 @@ export class ProductRepository {
     });
   }
 
-  async updateProductAsync(id: number, data: ProductCreationDataDto) {
+  async updateProductAsync(
+    id: number,
+    data: ProductCreationDataDto,
+    tx?: Prisma.TransactionClient,
+  ) {
     const { categoryId, supplierId, ...productData } = data;
-    return this.prisma.product.update({
+    const client = tx ?? this.prisma;
+
+    return client.product.update({
       where: { id },
       data: {
         ...productData,

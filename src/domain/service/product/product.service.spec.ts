@@ -7,9 +7,17 @@ import { OrderDirection, ProductOrderField } from '@mp/common/constants';
 import { SearchProductFiltersDto } from '@mp/common/dtos';
 import {
   productCreationDtoMock,
+  productCreationDtoWithImageMock,
   productDetailsDtoMock,
   productMockData,
   productUpdateDtoMock,
+  productUpdateDtoWithImageMock,
+  vercelBlobServiceMock,
+  mockSuccessfulUpload,
+  mockSuccessfulDeletion,
+  mockFilenameGeneration,
+  productCategoryMockData,
+  suppliersMock,
 } from '@mp/common/testing';
 import {
   PrismaUnitOfWork,
@@ -19,6 +27,7 @@ import {
 
 import { SearchProductQuery } from './../../../controllers/product/command/search-product-query';
 import { ProductService } from './product.service';
+import { VercelBlobService } from '../../../services/vercel-blob.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -29,16 +38,14 @@ describe('ProductService', () => {
   let supplierService: SupplierService;
   let stockRepository: StockRepository;
   let unitOfWork: PrismaUnitOfWork;
+
   let product: ReturnType<
     typeof mockDeep<
       Prisma.ProductGetPayload<{
         include: {
-          category: {
-            select: { name: true; description: true };
-          };
-          supplier: {
-            select: { businessName: true };
-          };
+          category: true;
+          supplier: true;
+          stock: true;
         };
       }>
     >
@@ -56,6 +63,7 @@ describe('ProductService', () => {
         { provide: SupplierService, useValue: mockDeep<SupplierService>() },
         { provide: StockRepository, useValue: mockDeep<StockRepository>() },
         { provide: PrismaUnitOfWork, useValue: mockDeep<PrismaUnitOfWork>() },
+        { provide: VercelBlobService, useValue: vercelBlobServiceMock },
       ],
     }).compile();
 
@@ -73,12 +81,9 @@ describe('ProductService', () => {
     product = mockDeep<
       Prisma.ProductGetPayload<{
         include: {
-          category: {
-            select: { name: true; description: true };
-          };
-          supplier: {
-            select: { businessName: true };
-          };
+          category: true;
+          supplier: true;
+          stock: true;
         };
       }>
     >();
@@ -91,13 +96,12 @@ describe('ProductService', () => {
     product.weight = mockDeep<Prisma.Decimal>();
     product.supplierId = productCreationDtoMock.supplierId;
     product.categoryId = productCreationDtoMock.categoryId;
-    product.category = {
-      name: 'Test Category',
-      description: 'This is a test category',
-    };
-    product.supplier = {
-      businessName: 'Test Supplier',
-    };
+    product.category = productCategoryMockData[0];
+    product.supplier = suppliersMock[0];
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -313,6 +317,79 @@ describe('ProductService', () => {
         service.createProductAsync(productCreationDtoMock),
       ).rejects.toThrow(BadRequestException);
     });
+
+    it('should upload image when creating product with image', async () => {
+      // Arrange
+      const mockImageUrl =
+        'https://blob.vercel-storage.com/products/123-1640995200000-test.jpg';
+      const mockFilename = 'products/123-1640995200000-test.jpg';
+
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        const tx = {} as Prisma.TransactionClient;
+        return cb(tx);
+      });
+
+      jest
+        .spyOn(repository, 'createProductAsync')
+        .mockResolvedValueOnce(product);
+
+      jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce({ ...product, imageUrl: mockImageUrl });
+
+      mockFilenameGeneration(mockFilename);
+      mockSuccessfulUpload(mockImageUrl);
+
+      // Act
+      await service.createProductAsync(productCreationDtoWithImageMock);
+
+      // Assert
+      expect(vercelBlobServiceMock.generateImageFilename).toHaveBeenCalledWith(
+        product.id,
+        productCreationDtoWithImageMock.image?.originalname,
+      );
+      expect(vercelBlobServiceMock.uploadImage).toHaveBeenCalledWith(
+        productCreationDtoWithImageMock.image?.buffer,
+        mockFilename,
+        productCreationDtoWithImageMock.image?.mimetype,
+      );
+      expect(repository.updateProductAsync).toHaveBeenCalledWith(
+        product.id,
+        expect.objectContaining({ imageUrl: mockImageUrl }),
+        expect.any(Object),
+      );
+    });
+
+    it('should not upload image when creating product without image', async () => {
+      // Arrange
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        const tx = {} as Prisma.TransactionClient;
+        return cb(tx);
+      });
+
+      jest
+        .spyOn(repository, 'createProductAsync')
+        .mockResolvedValueOnce(product);
+
+      // Act
+      await service.createProductAsync(productCreationDtoMock);
+
+      // Assert
+      expect(vercelBlobServiceMock.uploadImage).not.toHaveBeenCalled();
+      expect(
+        vercelBlobServiceMock.generateImageFilename,
+      ).not.toHaveBeenCalled();
+    });
   });
 
   describe('updateProductAsync', () => {
@@ -397,6 +474,128 @@ describe('ProductService', () => {
       await expect(
         service.updateProductAsync(product.id, productUpdateDtoMock),
       ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should upload new image and delete old image when updating product with new image', async () => {
+      // Arrange
+      const currentImageUrl =
+        'https://blob.vercel-storage.com/products/123-old-image.jpg';
+      const newImageUrl =
+        'https://blob.vercel-storage.com/products/123-1640995200000-updated.jpg';
+      const mockFilename = 'products/123-1640995200000-updated.jpg';
+
+      const currentProduct = { ...product, imageUrl: currentImageUrl };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValueOnce(currentProduct);
+      jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce({ ...product, imageUrl: newImageUrl });
+
+      mockFilenameGeneration(mockFilename);
+      mockSuccessfulUpload(newImageUrl);
+      mockSuccessfulDeletion();
+
+      // Act
+      await service.updateProductAsync(
+        product.id,
+        productUpdateDtoWithImageMock,
+      );
+
+      // Assert
+      expect(vercelBlobServiceMock.deleteImage).toHaveBeenCalledWith(
+        currentImageUrl,
+      );
+      expect(vercelBlobServiceMock.generateImageFilename).toHaveBeenCalledWith(
+        product.id,
+        productUpdateDtoWithImageMock.image?.originalname,
+      );
+      expect(vercelBlobServiceMock.uploadImage).toHaveBeenCalledWith(
+        productUpdateDtoWithImageMock.image?.buffer,
+        mockFilename,
+        productUpdateDtoWithImageMock.image?.mimetype,
+      );
+      expect(repository.updateProductAsync).toHaveBeenCalledWith(
+        product.id,
+        expect.objectContaining({ imageUrl: newImageUrl }),
+      );
+    });
+
+    it('should upload new image when updating product without existing image', async () => {
+      // Arrange
+      const newImageUrl =
+        'https://blob.vercel-storage.com/products/123-1640995200000-new.jpg';
+      const mockFilename = 'products/123-1640995200000-new.jpg';
+
+      const currentProduct = { ...product, imageUrl: null };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValueOnce(currentProduct);
+      jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce({ ...product, imageUrl: newImageUrl });
+
+      mockFilenameGeneration(mockFilename);
+      mockSuccessfulUpload(newImageUrl);
+
+      // Act
+      await service.updateProductAsync(
+        product.id,
+        productUpdateDtoWithImageMock,
+      );
+
+      // Assert
+      expect(vercelBlobServiceMock.deleteImage).not.toHaveBeenCalled();
+      expect(vercelBlobServiceMock.generateImageFilename).toHaveBeenCalledWith(
+        product.id,
+        productUpdateDtoWithImageMock.image?.originalname,
+      );
+      expect(vercelBlobServiceMock.uploadImage).toHaveBeenCalledWith(
+        productUpdateDtoWithImageMock.image?.buffer,
+        mockFilename,
+        productUpdateDtoWithImageMock.image?.mimetype,
+      );
+    });
+
+    it('should not upload image when updating product without new image', async () => {
+      // Arrange
+      const currentImageUrl =
+        'https://blob.vercel-storage.com/products/123-existing.jpg';
+      const currentProduct = { ...product, imageUrl: currentImageUrl };
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(productCategoryService, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest.spyOn(supplierService, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'findProductWithDetailsByIdAsync')
+        .mockResolvedValueOnce(currentProduct);
+      jest
+        .spyOn(repository, 'updateProductAsync')
+        .mockResolvedValueOnce(product);
+
+      // Act
+      await service.updateProductAsync(product.id, productUpdateDtoMock);
+
+      // Assert
+      expect(vercelBlobServiceMock.uploadImage).not.toHaveBeenCalled();
+      expect(vercelBlobServiceMock.deleteImage).not.toHaveBeenCalled();
+      expect(
+        vercelBlobServiceMock.generateImageFilename,
+      ).not.toHaveBeenCalled();
     });
   });
 
