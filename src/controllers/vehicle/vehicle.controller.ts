@@ -26,6 +26,8 @@ import {
   UpdateRepairDto,
   UpdateMaintenancePlanItemDto,
   MaintenanceItemCreationDto,
+  SearchMaintenanceItemRequest,
+  UpdateMaintenanceItemDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
@@ -35,10 +37,12 @@ import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
+import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-maintenance-item.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
+import { SearchMaintenanceItemQuery } from './query/search-maintenance-item-query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
@@ -304,6 +308,44 @@ export class VehicleController {
   ) {
     return this.commandBus.execute(
       new CreateVehicleMaintenanceItemCommand(maintenanceItemCreationDto),
+    );
+  }
+
+  @Post('maintenance-item/search')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.MaintenanceItem.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search maintenance items with search text',
+    description:
+      'Search for maintenance items based on the provided search text.',
+  })
+  async searchVehicleMaintenanceItemAsync(
+    @Body() searchMaintenanceItemRequest: SearchMaintenanceItemRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchMaintenanceItemQuery(searchMaintenanceItemRequest),
+    );
+  }
+
+  @Put('maintenance-item/:id')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.MaintenanceItem.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an existing maintenance item',
+    description: 'Update the maintenance item with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the maintenance item to update',
+  })
+  updateVehicleMaintenanceItemAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMaintenanceItemDto: UpdateMaintenanceItemDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateVehicleMaintenanceItemCommand(id, updateMaintenanceItemDto),
     );
   }
 }
