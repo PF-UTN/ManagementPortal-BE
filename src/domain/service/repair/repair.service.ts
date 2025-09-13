@@ -81,6 +81,10 @@ export class RepairService {
     );
   }
 
+  async findByVehicleIdAsync(vehicleId: number) {
+    return await this.repairRepository.findByVehicleIdAsync(vehicleId);
+  }
+
   async updateRepairAsync(id: number, updateRepairDto: UpdateRepairDto) {
     const existsRepair = await this.repairRepository.existsAsync(id);
 

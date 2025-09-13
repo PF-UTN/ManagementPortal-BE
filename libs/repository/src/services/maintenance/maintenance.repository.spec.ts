@@ -35,6 +35,28 @@ describe('MaintenanceRepository', () => {
     expect(repository).toBeDefined();
   });
 
+  describe('findByVehicleIdAsync', () => {
+    let vehicleId: number;
+
+    beforeEach(() => {
+      vehicleId = 1;
+    });
+
+    it('should construct the correct query with search text filter and vehicleId', async () => {
+      await repository.findByVehicleIdAsync(vehicleId);
+
+      expect(prismaService.maintenance.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            maintenancePlanItem: {
+              vehicleId: vehicleId,
+            },
+          },
+        }),
+      );
+    });
+  });
+
   describe('searchByTextAndVehicleIdAsync', () => {
     let searchText: string;
     let page: number;

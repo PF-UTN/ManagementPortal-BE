@@ -6,6 +6,24 @@ import { PrismaService } from '../prisma.service';
 export class MaintenanceRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findByVehicleIdAsync(vehicleId: number) {
+    return await this.prisma.maintenance.findMany({
+      where: {
+        maintenancePlanItem: {
+          vehicleId: vehicleId,
+        },
+      },
+      include: {
+        serviceSupplier: true,
+        maintenancePlanItem: {
+          include: {
+            maintenanceItem: true,
+          },
+        },
+      },
+    });
+  }
+
   async searchByTextAndVehicleIdAsync(
     searchText: string,
     page: number,

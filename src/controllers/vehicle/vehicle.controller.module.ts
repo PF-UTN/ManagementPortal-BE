@@ -10,6 +10,7 @@ import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.ha
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
+import { DownloadVehiclesMaintenanceQueryHandler } from './query/download-vehicles-maintenance.query.handler';
 import { GetVehicleByIdQueryHandler } from './query/get-vehicle-by-id.query.handler';
 import { SearchMaintenancePlanItemQueryHandler } from './query/search-maintenance-plan-item-query.handler';
 import { SearchMaintenanceQueryHandler } from './query/search-maintenance-query.handler';
@@ -28,6 +29,7 @@ const queryHandlers = [
   SearchMaintenanceQueryHandler,
   SearchMaintenancePlanItemQueryHandler,
   GetVehicleByIdQueryHandler,
+  DownloadVehiclesMaintenanceQueryHandler,
 ];
 const commandHandlers = [
   CreateVehicleCommandHandler,
