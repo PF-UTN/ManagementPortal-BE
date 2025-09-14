@@ -182,6 +182,36 @@ describe('VehicleRepository', () => {
     });
   });
 
+  describe('downloadBySearchTextAsync', () => {
+    it('should construct the correct query with search text filter', async () => {
+      // Arrange
+      const searchText = 'test';
+
+      // Act
+      await repository.downloadBySearchTextAsync(searchText);
+
+      // Assert
+      expect(prismaService.vehicle.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            AND: [
+              { deleted: false },
+              {
+                OR: [
+                  {
+                    licensePlate: { contains: searchText, mode: 'insensitive' },
+                  },
+                  { brand: { contains: searchText, mode: 'insensitive' } },
+                  { model: { contains: searchText, mode: 'insensitive' } },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+    });
+  });
+
   describe('existsAsync', () => {
     it('should return true if vehicle exists', async () => {
       // Arrange
