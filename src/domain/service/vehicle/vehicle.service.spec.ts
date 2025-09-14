@@ -137,8 +137,8 @@ describe('VehicleService', () => {
     });
   });
 
-  describe('searchWithFiltersAsync', () => {
-    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+  describe('downloadBySearchTextAsync', () => {
+    it('should call downloadBySearchTextAsync on the repository with correct parameters', async () => {
       // Arrange
       const searchText = 'test';
 
