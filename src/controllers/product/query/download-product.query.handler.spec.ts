@@ -58,6 +58,7 @@ describe('DownloadProductQueryHandler', () => {
           businessName: 'Supplier 1',
         },
         deletedAt: null,
+        imageUrl: null,
       },
       {
         id: 2,
@@ -77,6 +78,7 @@ describe('DownloadProductQueryHandler', () => {
           businessName: 'Supplier 2',
         },
         deletedAt: null,
+        imageUrl: null,
       },
     ];
 
