@@ -15,3 +15,4 @@ export * from './cart';
 export * from './stock-change';
 export * from './maintenance-plan-item';
 export * from './maintenance';
+export * from './maintenance-item';
