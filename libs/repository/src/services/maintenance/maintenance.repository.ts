@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { MaintenanceCreationDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -63,5 +65,11 @@ export class MaintenanceRepository {
     });
 
     return count > 0;
+  }
+
+  async createMaintenanceAsync(data: MaintenanceCreationDto) {
+    return this.prisma.maintenance.create({
+      data,
+    });
   }
 }

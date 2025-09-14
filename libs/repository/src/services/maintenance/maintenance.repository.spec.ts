@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Maintenance } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { MaintenanceCreationDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 import { MaintenanceRepository } from './maintenance.repository';
 
@@ -136,6 +138,30 @@ describe('MaintenanceRepository', () => {
         );
 
       expect(isUsedInMaintenance).toBe(false);
+    });
+  });
+
+  describe('createMaintenanceAsync', () => {
+    it('should create a new maintenance', async () => {
+      // Arrange
+      const maintenanceCreationMock: MaintenanceCreationDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        maintenancePlanItemId: maintenance.maintenancePlanItemId,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(prismaService.maintenance, 'create')
+        .mockResolvedValueOnce(maintenance);
+
+      // Act
+      const createdMaintenance = await repository.createMaintenanceAsync(
+        maintenanceCreationMock,
+      );
+
+      // Assert
+      expect(createdMaintenance).toEqual(maintenance);
     });
   });
 });
