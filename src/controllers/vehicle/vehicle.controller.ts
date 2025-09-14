@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  StreamableFile,
 } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
@@ -28,7 +29,9 @@ import {
   MaintenanceItemCreationDto,
   SearchMaintenanceItemRequest,
   UpdateMaintenanceItemDto,
+  DownloadVehicleRequest,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -41,13 +44,13 @@ import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-ma
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesQuery } from './query/download-vehicles-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenanceItemQuery } from './query/search-maintenance-item-query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
-
 @Controller('vehicle')
 export class VehicleController {
   constructor(
@@ -79,6 +82,30 @@ export class VehicleController {
   })
   async searchAsync(@Body() searchVehicleRequest: SearchVehicleRequest) {
     return this.queryBus.execute(new SearchVehicleQuery(searchVehicleRequest));
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Vehicle.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download vehicles',
+    description: 'Download vehicles based on the provided search text.',
+  })
+  async downloadAsync(
+    @Body() downloadPurchaseOrderDto: DownloadVehicleRequest,
+  ): Promise<StreamableFile> {
+    const vehicles = await this.queryBus.execute(
+      new DownloadVehiclesQuery(downloadPurchaseOrderDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(vehicles);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Vehiculos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Delete(':id')
