@@ -63,6 +63,26 @@ export class VehicleRepository {
     return { data, total };
   }
 
+  downloadBySearchTextAsync(searchText: string) {
+    return this.prisma.vehicle.findMany({
+      where: {
+        AND: [
+          { deleted: false },
+          {
+            OR: [
+              { licensePlate: { contains: searchText, mode: 'insensitive' } },
+              { brand: { contains: searchText, mode: 'insensitive' } },
+              { model: { contains: searchText, mode: 'insensitive' } },
+            ],
+          },
+        ],
+      },
+      orderBy: {
+        licensePlate: 'asc',
+      },
+    });
+  }
+
   async existsAsync(id: number): Promise<boolean> {
     const vehicle = await this.prisma.vehicle.findFirst({
       select: { id: true },
