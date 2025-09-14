@@ -11,6 +11,10 @@ export class MaintenanceService {
     private readonly vehicleRepository: VehicleRepository,
   ) {}
 
+  async findByVehicleIdAsync(vehicleId: number) {
+    return await this.maintenanceRepository.findByVehicleIdAsync(vehicleId);
+  }
+
   async searchByTextAndVehicleIdAsync(query: SearchMaintenanceQuery) {
     const existsVehicle = await this.vehicleRepository.existsAsync(
       query.vehicleId,

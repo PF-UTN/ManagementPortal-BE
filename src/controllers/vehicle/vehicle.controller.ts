@@ -44,6 +44,7 @@ import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-ma
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
 import { DownloadVehiclesQuery } from './query/download-vehicles-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenanceItemQuery } from './query/search-maintenance-item-query';
@@ -232,6 +233,21 @@ export class VehicleController {
   ) {
     return this.queryBus.execute(
       new SearchMaintenanceQuery(id, searchMaintenanceRequest),
+    );
+  }
+
+  @Post(':id/maintenance/download')
+  @RequiredPermissions(PermissionCodes.Maintenance.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download vehicles maintenance and repairs data',
+    description: 'Download vehicles maintenance and repairs data.',
+  })
+  async downloadVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StreamableFile> {
+    return await this.queryBus.execute(
+      new DownloadVehiclesMaintenanceQuery(id),
     );
   }
 

@@ -30,6 +30,7 @@ import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-ma
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
 import { DownloadVehiclesQuery } from './query/download-vehicles-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
 import { SearchMaintenanceItemQuery } from './query/search-maintenance-item-query';
@@ -271,6 +272,17 @@ describe('VehicleController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+  describe('downloadVehicleMaintenanceAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      const vehicleId = 1;
+
+      await controller.downloadVehicleMaintenanceAsync(vehicleId);
+
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new DownloadVehiclesMaintenanceQuery(vehicleId),
+      );
     });
   });
 

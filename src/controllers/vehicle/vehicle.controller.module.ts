@@ -11,6 +11,7 @@ import { UpdateVehicleMaintenanceItemCommandHandler } from './command/update-veh
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
+import { DownloadVehiclesMaintenanceQueryHandler } from './query/download-vehicles-maintenance.query.handler';
 import { DownloadVehiclesQueryHandler } from './query/download-vehicles.query.handler';
 import { GetVehicleByIdQueryHandler } from './query/get-vehicle-by-id.query.handler';
 import { SearchMaintenanceItemQueryHandler } from './query/search-maintenance-item-query.handler';
@@ -30,8 +31,9 @@ const queryHandlers = [
   SearchRepairQueryHandler,
   SearchMaintenanceQueryHandler,
   SearchMaintenancePlanItemQueryHandler,
-  GetVehicleByIdQueryHandler,
   SearchMaintenanceItemQueryHandler,
+  GetVehicleByIdQueryHandler,
+  DownloadVehiclesMaintenanceQueryHandler,
   DownloadVehiclesQueryHandler,
 ];
 const commandHandlers = [

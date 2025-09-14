@@ -64,6 +64,17 @@ export class RepairRepository {
     return { data, total };
   }
 
+  async findByVehicleIdAsync(vehicleId: number) {
+    return await this.prisma.repair.findMany({
+      where: {
+        AND: [{ vehicleId: vehicleId }, { deleted: false }],
+      },
+      include: {
+        serviceSupplier: true,
+      },
+    });
+  }
+
   async updateRepairAsync(id: number, data: UpdateRepairDto) {
     return this.prisma.repair.update({
       where: { id },
