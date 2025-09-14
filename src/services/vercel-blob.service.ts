@@ -82,13 +82,11 @@ export class VercelBlobService {
     file: Buffer | Uint8Array,
     contentType: string,
   ): void {
-    // Check file size (5MB limit)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.length > maxSize) {
       throw new BadRequestException('Image file size must be less than 5MB');
     }
 
-    // Check file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(contentType.toLowerCase())) {
       throw new BadRequestException(

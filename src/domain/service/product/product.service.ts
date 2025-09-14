@@ -81,13 +81,11 @@ export class ProductService {
       const { stock, image, ...productData } = productCreationDto;
       let imageUrl: string | undefined;
 
-      // Create product first to get the ID
       const newProduct = await this.productRepository.createProductAsync(
         productData,
         tx,
       );
 
-      // Upload image with correct filename using the product ID
       if (image) {
         const filename = this.vercelBlobService.generateImageFilename(
           newProduct.id,
@@ -99,7 +97,6 @@ export class ProductService {
           image.mimetype,
         );
 
-        // Update product with image URL
         await this.productRepository.updateProductAsync(
           newProduct.id,
           { ...productData, imageUrl },

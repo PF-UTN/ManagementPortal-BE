@@ -1,7 +1,6 @@
 import { mockDeep } from 'jest-mock-extended';
 import { Readable } from 'stream';
 
-// Mock interface for VercelBlobService
 interface VercelBlobService {
   generateImageFilename(productId: number, originalName: string): string;
   uploadImage(
@@ -15,7 +14,6 @@ interface VercelBlobService {
 
 export const vercelBlobServiceMock = mockDeep<VercelBlobService>();
 
-// Helper function to create a mock image file
 export const createMockImageFile = (
   overrides: Partial<Express.Multer.File> = {},
 ): Express.Multer.File => ({
@@ -32,7 +30,6 @@ export const createMockImageFile = (
   ...overrides,
 });
 
-// Helper function to create a mock Vercel Blob response
 export const createMockBlobResponse = (
   url: string = 'https://blob.vercel-storage.com/test-image.jpg',
 ) => ({
@@ -43,7 +40,6 @@ export const createMockBlobResponse = (
   uploadedAt: new Date().toISOString(),
 });
 
-// Mock successful upload response
 export const mockSuccessfulUpload = (
   url: string = 'https://blob.vercel-storage.com/test-image.jpg',
 ) => {
@@ -51,26 +47,22 @@ export const mockSuccessfulUpload = (
   return url;
 };
 
-// Mock successful deletion
 export const mockSuccessfulDeletion = () => {
   vercelBlobServiceMock.deleteImage.mockResolvedValue(undefined);
 };
 
-// Mock upload failure
 export const mockUploadFailure = (
   error: Error = new Error('Upload failed'),
 ) => {
   vercelBlobServiceMock.uploadImage.mockRejectedValue(error);
 };
 
-// Mock deletion failure
 export const mockDeletionFailure = (
   error: Error = new Error('Deletion failed'),
 ) => {
   vercelBlobServiceMock.deleteImage.mockRejectedValue(error);
 };
 
-// Mock filename generation
 export const mockFilenameGeneration = (
   filename: string = 'products/123-1640995200000-test.jpg',
 ) => {
@@ -78,7 +70,6 @@ export const mockFilenameGeneration = (
   return filename;
 };
 
-// Mock image URL generation
 export const mockImageUrlGeneration = (
   url: string = 'https://blob.vercel-storage.com/test-image.jpg',
 ) => {
