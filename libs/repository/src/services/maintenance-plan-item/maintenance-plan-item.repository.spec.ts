@@ -206,4 +206,42 @@ describe('MaintenancePlanItemRepository', () => {
       expect(deletedMaintenancePlanItem).toEqual(maintenancePlanItem);
     });
   });
+
+  describe('existsByIdAndVehicleIdAsync', () => {
+    it('should return true if maintenance plan item exists', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      const vehicleId = maintenancePlanItem.vehicleId;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(maintenancePlanItem);
+
+      // Act
+      const exists = await repository.existsByIdAndVehicleIdAsync(
+        id,
+        vehicleId,
+      );
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if maintenance plan item does not exist', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      const vehicleId = maintenancePlanItem.vehicleId;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const exists = await repository.existsByIdAndVehicleIdAsync(
+        id,
+        vehicleId,
+      );
+
+      // Assert
+      expect(exists).toBe(false);
+    });
+  });
 });

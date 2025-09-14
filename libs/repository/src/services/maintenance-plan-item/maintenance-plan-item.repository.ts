@@ -82,4 +82,13 @@ export class MaintenancePlanItemRepository {
       where: { id },
     });
   }
+
+  async existsByIdAndVehicleIdAsync(id: number, vehicleId: number) {
+    const maintenancePlanItem =
+      await this.prisma.maintenancePlanItem.findUnique({
+        select: { id: true },
+        where: { id, vehicleId },
+      });
+    return !!maintenancePlanItem;
+  }
 }
