@@ -12,6 +12,7 @@ import {
   StreamableFile,
   UseInterceptors,
   UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -106,6 +107,16 @@ export class ProductController {
     @Body() productCreationDto: ProductCreationDto,
     @UploadedFile() image?: Express.Multer.File,
   ) {
+    if (
+      productCreationDto.stock.quantityAvailable < 0 ||
+      productCreationDto.stock.quantityOrdered < 0 ||
+      productCreationDto.stock.quantityReserved < 0
+    ) {
+      throw new BadRequestException(
+        'Stock quantities should be all bigger or equal to 0.',
+      );
+    }
+
     return this.commandBus.execute(
       new CreateProductCommand({ ...productCreationDto, image }),
     );
