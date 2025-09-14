@@ -162,7 +162,7 @@ describe('RepairService', () => {
     });
   });
 
-  describe('searchByTextAndVehicleIdAsync', () => {
+  describe('findByVehicleIdAsync', () => {
     it('should throw NotFoundException if vehicle does not exist', async () => {
       // Arrange
       const searchText = 'test';
