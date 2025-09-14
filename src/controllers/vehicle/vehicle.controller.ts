@@ -26,10 +26,12 @@ import {
   UpdateRepairDto,
   UpdateMaintenancePlanItemDto,
   MaintenanceItemCreationDto,
+  MaintenanceCreationDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
+import { CreateVehicleMaintenanceCommand } from './command/create-vehicle-maintenance.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
@@ -304,6 +306,23 @@ export class VehicleController {
   ) {
     return this.commandBus.execute(
       new CreateVehicleMaintenanceItemCommand(maintenanceItemCreationDto),
+    );
+  }
+
+  @Post(':id/maintenance')
+  @HttpCode(201)
+  @RequiredPermissions(PermissionCodes.Maintenance.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a maintenance',
+    description: 'Creates a new maintenance with the provided details.',
+  })
+  async createVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() maintenanceCreationDto: MaintenanceCreationDto,
+  ) {
+    return this.commandBus.execute(
+      new CreateVehicleMaintenanceCommand(id, maintenanceCreationDto),
     );
   }
 }

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 
 import { CreateVehicleMaintenanceItemCommandHandler } from './command/create-vehicle-maintenance-item.command.handler';
 import { CreateVehicleMaintenancePlanItemCommandHandler } from './command/create-vehicle-maintenance-plan-item.command.handler';
+import { CreateVehicleMaintenanceCommandHandler } from './command/create-vehicle-maintenance.command.handler';
 import { CreateVehicleRepairCommandHandler } from './command/create-vehicle-repair.command.handler';
 import { CreateVehicleCommandHandler } from './command/create-vehicle.command.handler';
 import { DeleteVehicleMaintenancePlanItemCommandHandler } from './command/delete-vehicle-maintenance-plan-item.command.handler';
@@ -40,6 +41,7 @@ const commandHandlers = [
   UpdateVehicleRepairCommandHandler,
   DeleteVehicleMaintenancePlanItemCommandHandler,
   CreateVehicleMaintenanceItemCommandHandler,
+  CreateVehicleMaintenanceCommandHandler,
 ];
 
 @Module({
