@@ -8,6 +8,7 @@ export class MaintenanceCreationDto {
     example: '1990-01-15',
     type: String,
     format: 'date',
+    required: true,
   })
   @IsNotEmpty()
   @Type(() => Date)
@@ -18,6 +19,7 @@ export class MaintenanceCreationDto {
     description:
       'Kilometers the vehicle had when the maintenance was performed',
     example: 10000,
+    required: true,
   })
   @IsNotEmpty()
   @IsNumber()
@@ -27,6 +29,7 @@ export class MaintenanceCreationDto {
   @ApiProperty({
     description: 'ID of the maintenance plan item that was performed',
     example: 1,
+    required: true,
   })
   @IsNotEmpty()
   @IsNumber()
@@ -35,6 +38,7 @@ export class MaintenanceCreationDto {
   @ApiProperty({
     description: 'ID of the supplier who performed the maintenance',
     example: 1,
+    required: true,
   })
   @IsNotEmpty()
   @IsNumber()
