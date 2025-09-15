@@ -32,7 +32,7 @@ export class MaintenanceItemRepository {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: {
-          id: 'asc',
+          description: 'asc',
         },
       }),
       this.prisma.maintenanceItem.count({
