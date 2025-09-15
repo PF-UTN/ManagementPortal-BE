@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
-import { MaintenanceCreationDto } from '@mp/common/dtos';
+import { MaintenanceCreationDto, UpdateMaintenanceDto } from '@mp/common/dtos';
 import {
   MaintenancePlanItemRepository,
   MaintenanceRepository,
@@ -72,9 +72,10 @@ export class MaintenanceService {
       );
     }
 
-    const existsServiceSupplier = await this.serviceSupplierRepository.existsAsync(
-      maintenanceCreationDto.serviceSupplierId,
-    );
+    const existsServiceSupplier =
+      await this.serviceSupplierRepository.existsAsync(
+        maintenanceCreationDto.serviceSupplierId,
+      );
 
     if (!existsServiceSupplier) {
       throw new NotFoundException(
@@ -84,6 +85,63 @@ export class MaintenanceService {
 
     return await this.maintenanceRepository.createMaintenanceAsync(
       maintenanceCreationDto,
+    );
+  }
+
+  async updateMaintenanceAsync(
+    maintenanceId: number,
+    updateMaintenanceDto: UpdateMaintenanceDto,
+  ) {
+    const maintenance =
+      await this.maintenanceRepository.findByIdAsync(maintenanceId);
+
+    if (!maintenance) {
+      throw new NotFoundException(
+        `Maintenance with id ${maintenanceId} does not exist.`,
+      );
+    }
+
+    const maintenancePlanItem =
+      await this.maintenancePlanItemRepository.findByIdAsync(
+        maintenance.maintenancePlanItemId,
+      );
+
+    if (!maintenancePlanItem) {
+      throw new NotFoundException(
+        `Maintenance plan item with id ${maintenance.maintenancePlanItemId} does not exist.`,
+      );
+    }
+
+    const vehicle = await this.vehicleRepository.findByIdAsync(
+      maintenancePlanItem.vehicleId,
+    );
+
+    if (!vehicle) {
+      throw new NotFoundException(
+        `Vehicle with id ${maintenancePlanItem.vehicleId} does not exist.`,
+      );
+    }
+
+    if (vehicle.kmTraveled > updateMaintenanceDto.kmPerformed) {
+      throw new BadRequestException(
+        `Maintenance mileage cannot be less than the vehicle's current mileage.`,
+      );
+    }
+
+    const existsServiceSupplier =
+      await this.serviceSupplierRepository.existsAsync(
+        updateMaintenanceDto.serviceSupplierId,
+      );
+
+    if (!existsServiceSupplier) {
+      throw new NotFoundException(
+        `Service supplier with id ${updateMaintenanceDto.serviceSupplierId} does not exist.`,
+      );
+    }
+
+    return await this.maintenanceRepository.updateMaintenanceAsync(
+      maintenanceId,
+      updateMaintenanceDto,
     );
   }
 }
