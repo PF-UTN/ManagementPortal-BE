@@ -244,4 +244,34 @@ describe('MaintenancePlanItemRepository', () => {
       expect(exists).toBe(false);
     });
   });
+
+  describe('findByIdAsync', () => {
+    it('should return a maintenance plan item if exists', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(maintenancePlanItem);
+
+      // Act
+      const foundMaintenancePlanItem = await repository.findByIdAsync(id);
+
+      // Assert
+      expect(foundMaintenancePlanItem).toBe(maintenancePlanItem);
+    });
+
+    it('should return null if maintenance plan item does not exist', async () => {
+      // Arrange
+      const id = maintenancePlanItem.id;
+      jest
+        .spyOn(prismaService.maintenancePlanItem, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const foundMaintenancePlanItem = await repository.findByIdAsync(id);
+
+      // Assert
+      expect(foundMaintenancePlanItem).toBe(null);
+    });
+  });
 });

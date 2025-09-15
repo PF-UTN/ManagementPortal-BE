@@ -91,4 +91,12 @@ export class MaintenancePlanItemRepository {
       });
     return !!maintenancePlanItem;
   }
+
+  async findByIdAsync(id: number) {
+    const maintenancePlanItem =
+      await this.prisma.maintenancePlanItem.findUnique({
+        where: { id },
+      });
+    return maintenancePlanItem;
+  }
 }
