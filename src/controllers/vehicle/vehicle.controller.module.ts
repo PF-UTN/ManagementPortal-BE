@@ -9,6 +9,7 @@ import { DeleteVehicleMaintenancePlanItemCommandHandler } from './command/delete
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
+import { UpdateVehicleMaintenanceCommandHandler } from './command/update-vehicle-maintenance.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
 import { GetVehicleByIdQueryHandler } from './query/get-vehicle-by-id.query.handler';
@@ -42,6 +43,7 @@ const commandHandlers = [
   DeleteVehicleMaintenancePlanItemCommandHandler,
   CreateVehicleMaintenanceItemCommandHandler,
   CreateVehicleMaintenanceCommandHandler,
+  UpdateVehicleMaintenanceCommandHandler,
 ];
 
 @Module({

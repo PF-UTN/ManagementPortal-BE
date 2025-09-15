@@ -27,6 +27,7 @@ import {
   UpdateMaintenancePlanItemDto,
   MaintenanceItemCreationDto,
   MaintenanceCreationDto,
+  UpdateMaintenanceDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
@@ -38,6 +39,7 @@ import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicl
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
+import { UpdateVehicleMaintenanceCommand } from './command/update-vehicle-maintenance.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
@@ -323,6 +325,27 @@ export class VehicleController {
   ) {
     return this.commandBus.execute(
       new CreateVehicleMaintenanceCommand(id, maintenanceCreationDto),
+    );
+  }
+
+  @Put('maintenance/:id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Maintenance.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an existing maintenance',
+    description: 'Update the maintenance with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the maintenance to update',
+  })
+  updateVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMaintenanceDto: UpdateMaintenanceDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateVehicleMaintenanceCommand(id, updateMaintenanceDto),
     );
   }
 }

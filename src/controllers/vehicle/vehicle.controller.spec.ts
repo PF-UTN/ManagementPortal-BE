@@ -14,6 +14,7 @@ import {
   UpdateRepairDto,
   MaintenanceItemCreationDto,
   MaintenanceCreationDto,
+  UpdateMaintenanceDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
@@ -25,6 +26,7 @@ import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicl
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
+import { UpdateVehicleMaintenanceCommand } from './command/update-vehicle-maintenance.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
@@ -383,6 +385,34 @@ describe('VehicleController', () => {
       await controller.createVehicleMaintenanceAsync(
         vehicleId,
         maintenanceCreationDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updateVehicleMaintenanceAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const maintenanceId = 1;
+
+      const updateMaintenanceDtoMock: UpdateMaintenanceDto = {
+        date: new Date('1960-01-01'),
+        kmPerformed: 25000,
+        serviceSupplierId: 1,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateVehicleMaintenanceCommand(
+        maintenanceId,
+        updateMaintenanceDtoMock,
+      );
+
+      // Act
+      await controller.updateVehicleMaintenanceAsync(
+        maintenanceId,
+        updateMaintenanceDtoMock,
       );
 
       // Assert
