@@ -5,6 +5,7 @@ import {
   IsNumber,
   IsString,
   MaxLength,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -27,6 +28,7 @@ export class SearchRegistrationRequestRequest {
     required: false,
   })
   @IsNumber()
+  @Min(1)
   page: number;
 
   @ApiProperty({
@@ -35,6 +37,7 @@ export class SearchRegistrationRequestRequest {
     required: false,
   })
   @IsNumber()
+  @Min(1)
   pageSize: number;
 
   @ApiProperty({
