@@ -248,4 +248,20 @@ describe('MaintenanceRepository', () => {
       expect(foundMaintenance).toBe(null);
     });
   });
+
+  describe('deleteMaintenanceAsync', () => {
+    it('should delete an existing maintenance', async () => {
+      // Arrange
+      const id = maintenance.id;
+      jest
+        .spyOn(prismaService.maintenance, 'delete')
+        .mockResolvedValueOnce(maintenance);
+
+      // Act
+      const deletedMaintenance = await repository.deleteMaintenanceAsync(id);
+
+      // Assert
+      expect(deletedMaintenance).toEqual(maintenance);
+    });
+  });
 });

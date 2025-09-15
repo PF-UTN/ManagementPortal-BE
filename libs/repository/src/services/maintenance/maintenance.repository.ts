@@ -94,4 +94,10 @@ export class MaintenanceRepository {
     });
     return maintenance;
   }
+
+  async deleteMaintenanceAsync(id: number) {
+    return this.prisma.maintenance.delete({
+      where: { id },
+    });
+  }
 }
