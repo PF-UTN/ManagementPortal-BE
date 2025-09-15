@@ -36,6 +36,7 @@ import { CreateVehicleMaintenanceCommand } from './command/create-vehicle-mainte
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
+import { DeleteVehicleMaintenanceCommand } from './command/delete-vehicle-maintenance.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
@@ -347,5 +348,21 @@ export class VehicleController {
     return this.commandBus.execute(
       new UpdateVehicleMaintenanceCommand(id, updateMaintenanceDto),
     );
+  }
+
+  @Delete('maintenance/:id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Maintenance.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a vehicle maintenance',
+    description: 'Delete the vehicle maintenance with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the vehicle maintenance to delete',
+  })
+  deleteVehicleMaintenanceAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new DeleteVehicleMaintenanceCommand(id));
   }
 }

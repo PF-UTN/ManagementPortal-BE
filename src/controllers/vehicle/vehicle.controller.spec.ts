@@ -23,6 +23,7 @@ import { CreateVehicleMaintenanceCommand } from './command/create-vehicle-mainte
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
+import { DeleteVehicleMaintenanceCommand } from './command/delete-vehicle-maintenance.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
@@ -414,6 +415,20 @@ describe('VehicleController', () => {
         maintenanceId,
         updateMaintenanceDtoMock,
       );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('deleteVehicleMaintenanceAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new DeleteVehicleMaintenanceCommand(1);
+
+      // Act
+      await controller.deleteVehicleMaintenanceAsync(1);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
