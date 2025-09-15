@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  StreamableFile,
 } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
@@ -26,9 +27,13 @@ import {
   UpdateRepairDto,
   UpdateMaintenancePlanItemDto,
   MaintenanceItemCreationDto,
+  SearchMaintenanceItemRequest,
+  UpdateMaintenanceItemDto,
+  DownloadVehicleRequest,
   MaintenanceCreationDto,
   UpdateMaintenanceDto,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
@@ -39,16 +44,19 @@ import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicl
 import { DeleteVehicleMaintenanceCommand } from './command/delete-vehicle-maintenance.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
+import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-maintenance-item.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
 import { UpdateVehicleMaintenanceCommand } from './command/update-vehicle-maintenance.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
+import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
+import { DownloadVehiclesQuery } from './query/download-vehicles-query';
 import { GetVehicleByIdQuery } from './query/get-vehicle-by-id.query';
+import { SearchMaintenanceItemQuery } from './query/search-maintenance-item-query';
 import { SearchMaintenancePlanItemQuery } from './query/search-maintenance-plan-item-query';
 import { SearchMaintenanceQuery } from './query/search-maintenance-query';
 import { SearchRepairQuery } from './query/search-repair-query';
 import { SearchVehicleQuery } from './query/search-vehicle-query';
-
 @Controller('vehicle')
 export class VehicleController {
   constructor(
@@ -80,6 +88,30 @@ export class VehicleController {
   })
   async searchAsync(@Body() searchVehicleRequest: SearchVehicleRequest) {
     return this.queryBus.execute(new SearchVehicleQuery(searchVehicleRequest));
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Vehicle.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download vehicles',
+    description: 'Download vehicles based on the provided search text.',
+  })
+  async downloadAsync(
+    @Body() downloadPurchaseOrderDto: DownloadVehicleRequest,
+  ): Promise<StreamableFile> {
+    const vehicles = await this.queryBus.execute(
+      new DownloadVehiclesQuery(downloadPurchaseOrderDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(vehicles);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Vehiculos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 
   @Delete(':id')
@@ -209,6 +241,21 @@ export class VehicleController {
     );
   }
 
+  @Post(':id/maintenance/download')
+  @RequiredPermissions(PermissionCodes.Maintenance.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download vehicles maintenance and repairs data',
+    description: 'Download vehicles maintenance and repairs data.',
+  })
+  async downloadVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StreamableFile> {
+    return await this.queryBus.execute(
+      new DownloadVehiclesMaintenanceQuery(id),
+    );
+  }
+
   @Post(':id/maintenance-plan-item/search')
   @HttpCode(200)
   @RequiredPermissions(PermissionCodes.Maintenance.READ)
@@ -309,6 +356,44 @@ export class VehicleController {
   ) {
     return this.commandBus.execute(
       new CreateVehicleMaintenanceItemCommand(maintenanceItemCreationDto),
+    );
+  }
+
+  @Post('maintenance-item/search')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.MaintenanceItem.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search maintenance items with search text',
+    description:
+      'Search for maintenance items based on the provided search text.',
+  })
+  async searchVehicleMaintenanceItemAsync(
+    @Body() searchMaintenanceItemRequest: SearchMaintenanceItemRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchMaintenanceItemQuery(searchMaintenanceItemRequest),
+    );
+  }
+
+  @Put('maintenance-item/:id')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.MaintenanceItem.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an existing maintenance item',
+    description: 'Update the maintenance item with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the maintenance item to update',
+  })
+  updateVehicleMaintenanceItemAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMaintenanceItemDto: UpdateMaintenanceItemDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateVehicleMaintenanceItemCommand(id, updateMaintenanceItemDto),
     );
   }
 

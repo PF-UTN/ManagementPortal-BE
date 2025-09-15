@@ -73,6 +73,19 @@ describe('MaintenanceService', () => {
     expect(service).toBeDefined();
   });
 
+  describe('findByVehicleIdAsync', () => {
+    it('should call findByVehicleIdAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const vehicleId = 1;
+
+      // Act
+      await service.findByVehicleIdAsync(vehicleId);
+
+      // Assert
+      expect(repository.findByVehicleIdAsync).toHaveBeenCalledWith(vehicleId);
+    });
+  });
+
   describe('searchByTextAndVehicleIdAsync', () => {
     it('should throw NotFoundException if vehicle does not exist', async () => {
       // Arrange

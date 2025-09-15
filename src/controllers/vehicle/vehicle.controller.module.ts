@@ -9,11 +9,15 @@ import { DeleteVehicleMaintenancePlanItemCommandHandler } from './command/delete
 import { DeleteVehicleMaintenanceCommandHandler } from './command/delete-vehicle-maintenance.command.handler';
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
+import { UpdateVehicleMaintenanceItemCommandHandler } from './command/update-vehicle-maintenance-item.command.handler';
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
 import { UpdateVehicleMaintenanceCommandHandler } from './command/update-vehicle-maintenance.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
+import { DownloadVehiclesMaintenanceQueryHandler } from './query/download-vehicles-maintenance.query.handler';
+import { DownloadVehiclesQueryHandler } from './query/download-vehicles.query.handler';
 import { GetVehicleByIdQueryHandler } from './query/get-vehicle-by-id.query.handler';
+import { SearchMaintenanceItemQueryHandler } from './query/search-maintenance-item-query.handler';
 import { SearchMaintenancePlanItemQueryHandler } from './query/search-maintenance-plan-item-query.handler';
 import { SearchMaintenanceQueryHandler } from './query/search-maintenance-query.handler';
 import { SearchRepairQueryHandler } from './query/search-repair-query.handler';
@@ -30,7 +34,10 @@ const queryHandlers = [
   SearchRepairQueryHandler,
   SearchMaintenanceQueryHandler,
   SearchMaintenancePlanItemQueryHandler,
+  SearchMaintenanceItemQueryHandler,
   GetVehicleByIdQueryHandler,
+  DownloadVehiclesMaintenanceQueryHandler,
+  DownloadVehiclesQueryHandler,
 ];
 const commandHandlers = [
   CreateVehicleCommandHandler,
@@ -43,6 +50,7 @@ const commandHandlers = [
   UpdateVehicleRepairCommandHandler,
   DeleteVehicleMaintenancePlanItemCommandHandler,
   CreateVehicleMaintenanceItemCommandHandler,
+  UpdateVehicleMaintenanceItemCommandHandler,
   CreateVehicleMaintenanceCommandHandler,
   UpdateVehicleMaintenanceCommandHandler,
   DeleteVehicleMaintenanceCommandHandler,

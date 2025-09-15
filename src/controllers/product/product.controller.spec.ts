@@ -12,7 +12,8 @@ import {
 import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 import {
   productCreationDtoMock,
-  productUpdateDtoMock,
+  productCreationDtoWithImageMock,
+  productUpdateDtoWithImageMock,
 } from '@mp/common/testing';
 
 import { AdjustProductStockCommand } from './command/adjust-product-stock.command';
@@ -145,16 +146,40 @@ describe('ProductController', () => {
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
     });
+
+    it('should call execute on the commandBus with image file', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateProductCommand(
+        productCreationDtoWithImageMock,
+      );
+
+      // Act
+      await controller.createProductAsync(
+        productCreationDtoWithImageMock,
+        productCreationDtoWithImageMock.image,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
   });
 
   describe('updateProductAsync', () => {
-    it('should call execute on the commandBus with correct parameters', async () => {
+    it('should call execute on the commandBus with image file', async () => {
       // Arrange
       const executeSpy = jest.spyOn(commandBus, 'execute');
-      const expectedCommand = new UpdateProductCommand(1, productUpdateDtoMock);
+      const expectedCommand = new UpdateProductCommand(
+        1,
+        productUpdateDtoWithImageMock,
+      );
 
       // Act
-      await controller.updateProductAsync(1, productUpdateDtoMock);
+      await controller.updateProductAsync(
+        1,
+        productUpdateDtoWithImageMock,
+        productUpdateDtoWithImageMock.image,
+      );
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);

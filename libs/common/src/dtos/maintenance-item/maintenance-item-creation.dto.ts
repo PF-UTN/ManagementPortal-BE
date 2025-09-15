@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDefined, IsString, MaxLength } from 'class-validator';
+import { IsDefined, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 
 export class MaintenanceItemCreationDto {
   @ApiProperty({
@@ -9,6 +9,7 @@ export class MaintenanceItemCreationDto {
   })
   @IsDefined()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(500)
   description: string;
 }

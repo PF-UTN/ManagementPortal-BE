@@ -19,6 +19,7 @@ import {
 } from '@mp/repository';
 
 import { SearchProductQuery } from '../../../controllers/product/command/search-product-query';
+import { VercelBlobService } from '../../../services/vercel-blob.service';
 import { ProductCategoryService } from '../product-category/product-category.service';
 import { SupplierService } from '../supplier/supplier.service';
 
@@ -30,6 +31,7 @@ export class ProductService {
     private readonly supplierService: SupplierService,
     private readonly stockRepository: StockRepository,
     private readonly unitOfWork: PrismaUnitOfWork,
+    private readonly vercelBlobService: VercelBlobService,
   ) {}
 
   async searchWithFiltersAsync(query: SearchProductQuery) {
@@ -76,12 +78,33 @@ export class ProductService {
     }
 
     return this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const { stock, ...productData } = productCreationDto;
+      const { stock, image, ...productData } = productCreationDto;
+      let imageUrl: string | undefined;
 
       const newProduct = await this.productRepository.createProductAsync(
         productData,
         tx,
       );
+
+      if (image) {
+        const filename = this.vercelBlobService.generateImageFilename(
+          newProduct.id,
+          image.originalname,
+        );
+        imageUrl = await this.vercelBlobService.uploadImage(
+          image.buffer,
+          filename,
+          image.mimetype,
+        );
+
+        await this.productRepository.updateProductAsync(
+          newProduct.id,
+          { ...productData, imageUrl },
+          tx,
+        );
+
+        newProduct.imageUrl = imageUrl;
+      }
 
       await this.stockRepository.createStockAsync(
         {
@@ -122,10 +145,32 @@ export class ProductService {
       );
     }
 
-    const updatedProduct = await this.productRepository.updateProductAsync(
-      id,
-      productUpdateDto,
-    );
+    const currentProduct =
+      await this.productRepository.findProductWithDetailsByIdAsync(id);
+    let imageUrl = currentProduct?.imageUrl;
+
+    if (productUpdateDto.image) {
+      if (imageUrl) {
+        await this.vercelBlobService.deleteImage(imageUrl);
+      }
+
+      const filename = this.vercelBlobService.generateImageFilename(
+        id,
+        productUpdateDto.image.originalname,
+      );
+      imageUrl = await this.vercelBlobService.uploadImage(
+        productUpdateDto.image.buffer,
+        filename,
+        productUpdateDto.image.mimetype,
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { image, ...productData } = productUpdateDto;
+    const updatedProduct = await this.productRepository.updateProductAsync(id, {
+      ...productData,
+      imageUrl: imageUrl ?? undefined,
+    });
 
     this.deleteProductFromRedisAsync(id);
 
@@ -177,6 +222,7 @@ export class ProductService {
       description: product.description,
       price: product.price.toNumber(),
       weight: product.weight.toNumber(),
+      imageUrl: product.imageUrl || undefined,
       stock: {
         quantityAvailable: product.stock?.quantityAvailable ?? 0,
         quantityReserved: product.stock?.quantityReserved ?? 0,
