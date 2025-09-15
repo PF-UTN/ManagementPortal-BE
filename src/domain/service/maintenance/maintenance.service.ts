@@ -144,4 +144,14 @@ export class MaintenanceService {
       updateMaintenanceDto,
     );
   }
+
+  async deleteMaintenanceAsync(id: number) {
+    const existsMaintenance = await this.maintenanceRepository.existsAsync(id);
+
+    if (!existsMaintenance) {
+      throw new NotFoundException(`Maintenance with id ${id} does not exist.`);
+    }
+
+    return await this.maintenanceRepository.deleteMaintenanceAsync(id);
+  }
 }

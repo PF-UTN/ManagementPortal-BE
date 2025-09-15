@@ -413,4 +413,33 @@ describe('MaintenanceService', () => {
       );
     });
   });
+
+  describe('deleteMaintenanceAsync', () => {
+    it('should throw NotFoundException if maintenance does not exist', async () => {
+      // Arrange
+      const maintenanceId = maintenance.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.deleteMaintenanceAsync(maintenanceId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.deleteMaintenanceAsync with the correct id', async () => {
+      // Arrange
+      const maintenanceId = maintenance.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+
+      // Act
+      await service.deleteMaintenanceAsync(maintenanceId);
+
+      // Assert
+      expect(repository.deleteMaintenanceAsync).toHaveBeenCalledWith(
+        maintenanceId,
+      );
+    });
+  });
 });
