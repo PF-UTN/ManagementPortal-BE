@@ -7,6 +7,7 @@ import {
   MaxLength,
   ValidateNested,
   IsOptional,
+  Min,
 } from 'class-validator';
 
 import { ProductSortDto } from './product-order.dto';
@@ -27,6 +28,7 @@ export class SearchProductRequest {
     description: 'The page number for pagination',
   })
   @IsNumber()
+  @Min(1)
   page: number;
 
   @ApiProperty({
@@ -34,6 +36,7 @@ export class SearchProductRequest {
     description: 'The number of items per page',
   })
   @IsNumber()
+  @Min(1)
   pageSize: number;
 
   @ApiProperty({
