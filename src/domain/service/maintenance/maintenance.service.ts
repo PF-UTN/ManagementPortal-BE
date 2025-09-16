@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { MaintenanceCreationDto, UpdateMaintenanceDto } from '@mp/common/dtos';
 import {
@@ -58,12 +54,6 @@ export class MaintenanceService {
       );
     }
 
-    if (vehicle.kmTraveled > maintenanceCreationDto.kmPerformed) {
-      throw new BadRequestException(
-        `Maintenance mileage cannot be less than the vehicle's current mileage.`,
-      );
-    }
-
     const existsMaintenancePlanItem =
       await this.maintenancePlanItemRepository.existsByIdAndVehicleIdAsync(
         maintenanceCreationDto.maintenancePlanItemId,
@@ -102,33 +92,6 @@ export class MaintenanceService {
     if (!maintenance) {
       throw new NotFoundException(
         `Maintenance with id ${maintenanceId} does not exist.`,
-      );
-    }
-
-    const maintenancePlanItem =
-      await this.maintenancePlanItemRepository.findByIdAsync(
-        maintenance.maintenancePlanItemId,
-      );
-
-    if (!maintenancePlanItem) {
-      throw new NotFoundException(
-        `Maintenance plan item with id ${maintenance.maintenancePlanItemId} does not exist.`,
-      );
-    }
-
-    const vehicle = await this.vehicleRepository.findByIdAsync(
-      maintenancePlanItem.vehicleId,
-    );
-
-    if (!vehicle) {
-      throw new NotFoundException(
-        `Vehicle with id ${maintenancePlanItem.vehicleId} does not exist.`,
-      );
-    }
-
-    if (vehicle.kmTraveled > updateMaintenanceDto.kmPerformed) {
-      throw new BadRequestException(
-        `Maintenance mileage cannot be less than the vehicle's current mileage.`,
       );
     }
 
