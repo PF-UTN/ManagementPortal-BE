@@ -17,17 +17,22 @@ import {
   SearchMaintenanceItemRequest,
   UpdateMaintenanceItemDto,
   DownloadVehicleRequest,
+  MaintenanceCreationDto,
+  UpdateMaintenanceDto,
 } from '@mp/common/dtos';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
+import { CreateVehicleMaintenanceCommand } from './command/create-vehicle-maintenance.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
+import { DeleteVehicleMaintenanceCommand } from './command/delete-vehicle-maintenance.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-maintenance-item.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
+import { UpdateVehicleMaintenanceCommand } from './command/update-vehicle-maintenance.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
@@ -475,6 +480,76 @@ describe('VehicleController', () => {
         1,
         updateMaintenanceItemDtoMock,
       );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('createVehicleMaintenanceAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const vehicleId = 1;
+      const maintenanceCreationDtoMock: MaintenanceCreationDto = {
+        date: new Date('1990-01-01'),
+        kmPerformed: 20000,
+        maintenancePlanItemId: 1,
+        serviceSupplierId: 1,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new CreateVehicleMaintenanceCommand(
+        vehicleId,
+        maintenanceCreationDtoMock,
+      );
+
+      // Act
+      await controller.createVehicleMaintenanceAsync(
+        vehicleId,
+        maintenanceCreationDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('updateVehicleMaintenanceAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const maintenanceId = 1;
+
+      const updateMaintenanceDtoMock: UpdateMaintenanceDto = {
+        date: new Date('1960-01-01'),
+        kmPerformed: 25000,
+        serviceSupplierId: 1,
+      };
+
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new UpdateVehicleMaintenanceCommand(
+        maintenanceId,
+        updateMaintenanceDtoMock,
+      );
+
+      // Act
+      await controller.updateVehicleMaintenanceAsync(
+        maintenanceId,
+        updateMaintenanceDtoMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('deleteVehicleMaintenanceAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new DeleteVehicleMaintenanceCommand(1);
+
+      // Act
+      await controller.deleteVehicleMaintenanceAsync(1);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);

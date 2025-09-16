@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { MaintenanceCreationDto, UpdateMaintenanceDto } from '@mp/common/dtos';
+
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -81,5 +83,39 @@ export class MaintenanceRepository {
     });
 
     return count > 0;
+  }
+
+  async createMaintenanceAsync(data: MaintenanceCreationDto) {
+    return this.prisma.maintenance.create({
+      data,
+    });
+  }
+
+  async updateMaintenanceAsync(id: number, data: UpdateMaintenanceDto) {
+    return this.prisma.maintenance.update({
+      where: { id },
+      data: { ...data },
+    });
+  }
+
+  async existsAsync(id: number): Promise<boolean> {
+    const maintenance = await this.prisma.maintenance.findUnique({
+      select: { id: true },
+      where: { id },
+    });
+    return !!maintenance;
+  }
+
+  async findByIdAsync(id: number) {
+    const maintenance = await this.prisma.maintenance.findUnique({
+      where: { id },
+    });
+    return maintenance;
+  }
+
+  async deleteMaintenanceAsync(id: number) {
+    return this.prisma.maintenance.delete({
+      where: { id },
+    });
   }
 }

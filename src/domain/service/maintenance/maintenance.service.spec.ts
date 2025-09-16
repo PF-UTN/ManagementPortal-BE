@@ -1,8 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Maintenance, Vehicle } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
+import { MaintenanceCreationDto, UpdateMaintenanceDto } from '@mp/common/dtos';
 import {
+  MaintenancePlanItemRepository,
   MaintenanceRepository,
   ServiceSupplierRepository,
   VehicleRepository,
@@ -15,6 +18,9 @@ describe('MaintenanceService', () => {
   let service: MaintenanceService;
   let repository: MaintenanceRepository;
   let vehicleRepository: VehicleRepository;
+  let serviceSupplierRepository: ServiceSupplierRepository;
+  let maintenancePlanItemRepository: MaintenancePlanItemRepository;
+  let maintenance: ReturnType<typeof mockDeep<Maintenance>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -32,13 +38,35 @@ describe('MaintenanceService', () => {
           provide: ServiceSupplierRepository,
           useValue: mockDeep(ServiceSupplierRepository),
         },
+        {
+          provide: MaintenancePlanItemRepository,
+          useValue: mockDeep(MaintenancePlanItemRepository),
+        },
+        {
+          provide: MaintenancePlanItemRepository,
+          useValue: mockDeep(MaintenancePlanItemRepository),
+        },
       ],
     }).compile();
 
     repository = module.get<MaintenanceRepository>(MaintenanceRepository);
     vehicleRepository = module.get<VehicleRepository>(VehicleRepository);
+    serviceSupplierRepository = module.get<ServiceSupplierRepository>(
+      ServiceSupplierRepository,
+    );
+    maintenancePlanItemRepository = module.get<MaintenancePlanItemRepository>(
+      MaintenancePlanItemRepository,
+    );
 
     service = module.get<MaintenanceService>(MaintenanceService);
+
+    maintenance = mockDeep<Maintenance>();
+
+    maintenance.id = 1;
+    maintenance.date = mockDeep<Date>();
+    maintenance.kmPerformed = 10000;
+    maintenance.maintenancePlanItemId = 1;
+    maintenance.serviceSupplierId = 1;
   });
 
   it('should be defined', () => {
@@ -104,6 +132,211 @@ describe('MaintenanceService', () => {
         query.page,
         query.pageSize,
         query.vehicleId,
+      );
+    });
+  });
+
+  describe('createMaintenanceAsync', () => {
+    it('should throw NotFoundException if vehicle does not exist', async () => {
+      // Arrange
+      const vehicleId = 1;
+      const maintenanceCreationMock: MaintenanceCreationDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        maintenancePlanItemId: maintenance.maintenancePlanItemId,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(vehicleRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.createMaintenanceAsync(vehicleId, maintenanceCreationMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if maintenance plan item does not exists or does not belong to the vehicle with the provided id', async () => {
+      // Arrange
+      const vehicleId = 1;
+      const maintenanceCreationMock: MaintenanceCreationDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        maintenancePlanItemId: maintenance.maintenancePlanItemId,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(vehicleRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(mockDeep<Vehicle>());
+      jest
+        .spyOn(maintenancePlanItemRepository, 'existsByIdAndVehicleIdAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createMaintenanceAsync(vehicleId, maintenanceCreationMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if service supplier does not exists', async () => {
+      // Arrange
+      const vehicleId = 1;
+      const maintenanceCreationMock: MaintenanceCreationDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        maintenancePlanItemId: maintenance.maintenancePlanItemId,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(vehicleRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(mockDeep<Vehicle>());
+      jest
+        .spyOn(maintenancePlanItemRepository, 'existsByIdAndVehicleIdAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.createMaintenanceAsync(vehicleId, maintenanceCreationMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.createMaintenanceAsync with the correct data', async () => {
+      // Arrange
+      const vehicleId = 1;
+      const maintenanceCreationMock: MaintenanceCreationDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        maintenancePlanItemId: maintenance.maintenancePlanItemId,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(vehicleRepository, 'findByIdAsync')
+        .mockResolvedValueOnce(mockDeep<Vehicle>());
+      jest
+        .spyOn(maintenancePlanItemRepository, 'existsByIdAndVehicleIdAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'createMaintenanceAsync')
+        .mockResolvedValueOnce(maintenance);
+
+      // Act
+      await service.createMaintenanceAsync(vehicleId, maintenanceCreationMock);
+
+      // Assert
+      expect(repository.createMaintenanceAsync).toHaveBeenCalledWith(
+        maintenanceCreationMock,
+      );
+    });
+  });
+
+  describe('updateMaintenanceAsync', () => {
+    it('should throw NotFoundException if maintenance does not exist', async () => {
+      // Arrange
+      const maintenanceId = 1;
+      const updateMaintenanceDtoMock: UpdateMaintenanceDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.updateMaintenanceAsync(maintenanceId, updateMaintenanceDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if service supplier does not exist', async () => {
+      // Arrange
+      const maintenanceId = 1;
+      const updateMaintenanceDtoMock: UpdateMaintenanceDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(maintenance);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.updateMaintenanceAsync(maintenanceId, updateMaintenanceDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.updateMaintenanceAsync with the correct data', async () => {
+      // Arrange
+      const maintenanceId = 1;
+      const updateMaintenanceDtoMock: UpdateMaintenanceDto = {
+        date: maintenance.date,
+        kmPerformed: maintenance.kmPerformed,
+        serviceSupplierId: maintenance.serviceSupplierId,
+      };
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(maintenance);
+      jest
+        .spyOn(serviceSupplierRepository, 'existsAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'updateMaintenanceAsync')
+        .mockResolvedValueOnce(maintenance);
+
+      // Act
+      await service.updateMaintenanceAsync(
+        maintenanceId,
+        updateMaintenanceDtoMock,
+      );
+
+      // Assert
+      expect(repository.updateMaintenanceAsync).toHaveBeenCalledWith(
+        maintenanceId,
+        updateMaintenanceDtoMock,
+      );
+    });
+  });
+
+  describe('deleteMaintenanceAsync', () => {
+    it('should throw NotFoundException if maintenance does not exist', async () => {
+      // Arrange
+      const maintenanceId = maintenance.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(false);
+
+      // Act & Assert
+      await expect(
+        service.deleteMaintenanceAsync(maintenanceId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.deleteMaintenanceAsync with the correct id', async () => {
+      // Arrange
+      const maintenanceId = maintenance.id;
+
+      jest.spyOn(repository, 'existsAsync').mockResolvedValueOnce(true);
+
+      // Act
+      await service.deleteMaintenanceAsync(maintenanceId);
+
+      // Assert
+      expect(repository.deleteMaintenanceAsync).toHaveBeenCalledWith(
+        maintenanceId,
       );
     });
   });
