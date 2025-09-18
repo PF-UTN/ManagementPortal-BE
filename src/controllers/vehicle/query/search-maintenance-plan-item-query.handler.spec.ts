@@ -84,6 +84,7 @@ describe('SearchMaintenancePlanItemQueryHandler', () => {
       const expectedResponse = new SearchMaintenancePlanItemResponse({
         total: expectedTotal,
         results: result.map((maintenancePlanItem) => ({
+          id: maintenancePlanItem.id,
           description: maintenancePlanItem.maintenanceItem.description,
           kmInterval: maintenancePlanItem.kmInterval,
           timeInterval: maintenancePlanItem.timeInterval,
