@@ -77,4 +77,10 @@ export const PermissionCodes = {
     UPDATE: 'maintenance-item:update',
     DELETE: 'maintenance-item:delete',
   },
+  Order: {
+    READ: 'order:read',
+    CREATE: 'order:create',
+    UPDATE: 'order:update',
+    DELETE: 'order:delete',
+  },
 };

@@ -19,3 +19,6 @@ export * from './stock-change/stock-change.repository';
 export * from './maintenance-item/maintenance-item.repository';
 export * from './maintenance-plan-item/maintenance-plan-item.repository';
 export * from './maintenance/maintenance.repository';
+export * from './order/order.repository';
+export * from './order-item/order-item.repository';
+export * from './payment-detail/payment-detail.repository';

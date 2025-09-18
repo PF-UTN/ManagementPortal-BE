@@ -1,0 +1,5 @@
+model DeliveryMethod {
+    id             Int             @id @default(autoincrement())
+    name           String          @unique @db.VarChar(40)
+    orders         Order[]
+}
