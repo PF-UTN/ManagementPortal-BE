@@ -94,6 +94,11 @@ export class ServiceSupplierRepository {
   async findByIdAsync(id: number): Promise<ServiceSupplier | null> {
     return this.prisma.serviceSupplier.findUnique({
       where: { id },
+      include: {
+        address: {
+          include: { town: true },
+        },
+      },
     });
   }
 }
