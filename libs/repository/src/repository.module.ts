@@ -22,6 +22,9 @@ import {
   MaintenanceItemRepository,
   MaintenancePlanItemRepository,
   MaintenanceRepository,
+  OrderRepository,
+  OrderItemRepository,
+  PaymentDetailRepository,
 } from './services';
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
@@ -51,6 +54,9 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     MaintenanceItemRepository,
     MaintenancePlanItemRepository,
     MaintenanceRepository,
+    OrderRepository,
+    OrderItemRepository,
+    PaymentDetailRepository,
   ],
   exports: [
     UserRepository,
@@ -75,6 +81,9 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     MaintenanceItemRepository,
     MaintenancePlanItemRepository,
     MaintenanceRepository,
+    OrderRepository,
+    OrderItemRepository,
+    PaymentDetailRepository,
   ],
 })
 export class RepositoryModule {}

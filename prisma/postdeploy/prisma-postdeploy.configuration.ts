@@ -10,6 +10,9 @@ import {
   stockChangeTypePostDeployAsync,
   purchaseOrderStatusPostDeployAsync,
 } from './table-population';
+import { deliveryMethodPostDeployAsync } from './table-population/delivery-method.postdeploy';
+import { orderStatusPostDeployAsync } from './table-population/order-status.postdeploy';
+import { paymentTypePostDeployAsync } from './table-population/payment-type.postdeploy';
 
 const prisma = new PrismaClient();
 
@@ -22,6 +25,9 @@ async function main() {
     taxCategoryPostDeployAsync(),
     stockChangeTypePostDeployAsync(),
     purchaseOrderStatusPostDeployAsync(),
+    orderStatusPostDeployAsync(),
+    deliveryMethodPostDeployAsync(),
+    paymentTypePostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);

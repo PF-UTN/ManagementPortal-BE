@@ -83,4 +83,10 @@ export const PermissionCodes = {
     UPDATE: 'service-supplier:update',
     DELETE: 'service-supplier:delete',
   },
+  Order: {
+    READ: 'order:read',
+    CREATE: 'order:create',
+    UPDATE: 'order:update',
+    DELETE: 'order:delete',
+  },
 };

@@ -1,6 +1,6 @@
 model PaymentType {
   id             Int             @id @default(autoincrement())
-  name           String          @unique
-  description    String?
+  name           String          @unique @db.VarChar(30)
+  description    String?         @db.VarChar(30)
   paymentDetails PaymentDetail[]
 }

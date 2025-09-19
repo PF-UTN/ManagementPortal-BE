@@ -24,3 +24,4 @@ export * from './address.mock';
 export * from './product.data.mock';
 export * from './cart.mock';
 export * from './vercel-blob.service.mock';
+export * from './order.mock';

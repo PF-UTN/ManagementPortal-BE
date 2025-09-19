@@ -17,3 +17,7 @@ export * from './maintenance-plan-item';
 export * from './maintenance';
 export * from './maintenance-item';
 export * from './service-supplier';
+export * from './order';
+export * from './order-item';
+export * from './payment-detail';
+export * from './delivery-method';

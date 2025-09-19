@@ -6,6 +6,7 @@ import { RedisModule } from '@mp/common/services';
 
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
 import { CartModule } from './controllers/cart/cart.module';
+import { OrderModule } from './controllers/order/order.controller.module';
 import { ProductModule } from './controllers/product/product.module';
 import { ProductCategoryModule } from './controllers/product-category/product-category.module';
 import { PurchaseOrderModule } from './controllers/purchase-order/purchase-order.controller.module';
@@ -33,6 +34,7 @@ import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
     RedisModule,
     CartModule,
     ServiceSupplierModule,
+    OrderModule,
   ],
   controllers: [],
   providers: [],
