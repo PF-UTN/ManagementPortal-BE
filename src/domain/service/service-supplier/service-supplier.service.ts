@@ -59,7 +59,7 @@ export class ServiceSupplierService {
           );
         }
 
-        const updatedAddress = await this.addressRepository.updateAddressAsync(
+        const updateAddressTask = this.addressRepository.updateAddressAsync(
           foundServiceSupplier.addressId,
           address,
           tx,
@@ -67,14 +67,22 @@ export class ServiceSupplierService {
 
         const serviceSupplierData: ServiceSupplierCreationDataDto = {
           ...serviceSupplierCreationData,
-          addressId: updatedAddress.id,
+          addressId: foundServiceSupplier.addressId,
         };
 
-        return this.serviceSupplierRepository.updateServiceSupplierAsync(
-          foundServiceSupplier.id,
-          serviceSupplierData,
-          tx,
-        );
+        const updateServiceSupplierTask =
+          this.serviceSupplierRepository.updateServiceSupplierAsync(
+            foundServiceSupplier.id,
+            serviceSupplierData,
+            tx,
+          );
+
+        const [, updatedServiceSupplier] = await Promise.all([
+          updateAddressTask,
+          updateServiceSupplierTask,
+        ]);
+
+        return updatedServiceSupplier;
       }
 
       if (existsEmail) {
