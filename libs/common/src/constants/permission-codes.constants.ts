@@ -77,4 +77,10 @@ export const PermissionCodes = {
     UPDATE: 'maintenance-item:update',
     DELETE: 'maintenance-item:delete',
   },
+  ServiceSupplier: {
+    READ: 'service-supplier:read',
+    CREATE: 'service-supplier:create',
+    UPDATE: 'service-supplier:update',
+    DELETE: 'service-supplier:delete',
+  },
 };
