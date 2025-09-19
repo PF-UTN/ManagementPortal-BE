@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDefined, IsNumber, IsString, MaxLength } from 'class-validator';
+import { IsDefined, IsNumber, IsString, MaxLength, Min } from 'class-validator';
 
 export class SearchMaintenanceItemRequest {
   @ApiProperty({
@@ -18,6 +18,7 @@ export class SearchMaintenanceItemRequest {
     required: false,
   })
   @IsNumber()
+  @Min(1)
   page: number;
 
   @ApiProperty({
@@ -26,5 +27,6 @@ export class SearchMaintenanceItemRequest {
     required: false,
   })
   @IsNumber()
+  @Min(1)
   pageSize: number;
 }

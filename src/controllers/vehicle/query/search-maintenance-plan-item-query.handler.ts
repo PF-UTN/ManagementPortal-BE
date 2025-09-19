@@ -27,6 +27,7 @@ export class SearchMaintenancePlanItemQueryHandler
     const mappedResponse = data.map(
       (maintenancePlanItem): MaintenancePlanItemDetailDto => {
         return {
+          id: maintenancePlanItem.id,
           description: maintenancePlanItem.maintenanceItem.description,
           kmInterval: maintenancePlanItem.kmInterval,
           timeInterval: maintenancePlanItem.timeInterval,

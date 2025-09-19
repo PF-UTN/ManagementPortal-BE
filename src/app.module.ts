@@ -11,6 +11,7 @@ import { ProductModule } from './controllers/product/product.module';
 import { ProductCategoryModule } from './controllers/product-category/product-category.module';
 import { PurchaseOrderModule } from './controllers/purchase-order/purchase-order.controller.module';
 import { RegistrationRequestModule } from './controllers/registration-request/registration-request.module';
+import { ServiceSupplierModule } from './controllers/service-supplier/service-supplier.controller.module';
 import { SupplierModule } from './controllers/supplier/supplier.controller.module';
 import { TownModule } from './controllers/town/town.controller.module';
 import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
@@ -32,6 +33,7 @@ import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
     PurchaseOrderModule,
     RedisModule,
     CartModule,
+    ServiceSupplierModule,
     OrderModule,
   ],
   controllers: [],

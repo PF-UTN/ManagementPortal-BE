@@ -30,18 +30,23 @@ import {
   SearchMaintenanceItemRequest,
   UpdateMaintenanceItemDto,
   DownloadVehicleRequest,
+  MaintenanceCreationDto,
+  UpdateMaintenanceDto,
 } from '@mp/common/dtos';
 import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateVehicleMaintenanceItemCommand } from './command/create-vehicle-maintenance-item.command';
 import { CreateVehicleMaintenancePlanItemCommand } from './command/create-vehicle-maintenance-plan-item.command';
+import { CreateVehicleMaintenanceCommand } from './command/create-vehicle-maintenance.command';
 import { CreateVehicleRepairCommand } from './command/create-vehicle-repair.command';
 import { CreateVehicleCommand } from './command/create-vehicle.command';
 import { DeleteVehicleMaintenancePlanItemCommand } from './command/delete-vehicle-maintenance-plan-item.command';
+import { DeleteVehicleMaintenanceCommand } from './command/delete-vehicle-maintenance.command';
 import { DeleteVehicleRepairCommand } from './command/delete-vehicle-repair.command';
 import { DeleteVehicleCommand } from './command/delete-vehicle.command';
 import { UpdateVehicleMaintenanceItemCommand } from './command/update-vehicle-maintenance-item.command';
 import { UpdateVehicleMaintenancePlanItemCommand } from './command/update-vehicle-maintenance-plan-item.command';
+import { UpdateVehicleMaintenanceCommand } from './command/update-vehicle-maintenance.command';
 import { UpdateVehicleRepairCommand } from './command/update-vehicle-repair.command';
 import { UpdateVehicleCommand } from './command/update-vehicle.command';
 import { DownloadVehiclesMaintenanceQuery } from './query/download-vehicles-maintenance-query';
@@ -390,5 +395,59 @@ export class VehicleController {
     return this.commandBus.execute(
       new UpdateVehicleMaintenanceItemCommand(id, updateMaintenanceItemDto),
     );
+  }
+
+  @Post(':id/maintenance')
+  @HttpCode(201)
+  @RequiredPermissions(PermissionCodes.Maintenance.CREATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a maintenance',
+    description: 'Creates a new maintenance with the provided details.',
+  })
+  async createVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() maintenanceCreationDto: MaintenanceCreationDto,
+  ) {
+    return this.commandBus.execute(
+      new CreateVehicleMaintenanceCommand(id, maintenanceCreationDto),
+    );
+  }
+
+  @Put('maintenance/:id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Maintenance.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update an existing maintenance',
+    description: 'Update the maintenance with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the maintenance to update',
+  })
+  updateVehicleMaintenanceAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateMaintenanceDto: UpdateMaintenanceDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateVehicleMaintenanceCommand(id, updateMaintenanceDto),
+    );
+  }
+
+  @Delete('maintenance/:id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Maintenance.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete a vehicle maintenance',
+    description: 'Delete the vehicle maintenance with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the vehicle maintenance to delete',
+  })
+  deleteVehicleMaintenanceAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new DeleteVehicleMaintenanceCommand(id));
   }
 }

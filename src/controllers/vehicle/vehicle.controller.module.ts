@@ -2,13 +2,16 @@ import { Module } from '@nestjs/common';
 
 import { CreateVehicleMaintenanceItemCommandHandler } from './command/create-vehicle-maintenance-item.command.handler';
 import { CreateVehicleMaintenancePlanItemCommandHandler } from './command/create-vehicle-maintenance-plan-item.command.handler';
+import { CreateVehicleMaintenanceCommandHandler } from './command/create-vehicle-maintenance.command.handler';
 import { CreateVehicleRepairCommandHandler } from './command/create-vehicle-repair.command.handler';
 import { CreateVehicleCommandHandler } from './command/create-vehicle.command.handler';
 import { DeleteVehicleMaintenancePlanItemCommandHandler } from './command/delete-vehicle-maintenance-plan-item.command.handler';
+import { DeleteVehicleMaintenanceCommandHandler } from './command/delete-vehicle-maintenance.command.handler';
 import { DeleteVehicleRepairCommandHandler } from './command/delete-vehicle-repair.command.handler';
 import { DeleteVehicleCommandHandler } from './command/delete-vehicle.command.handler';
 import { UpdateVehicleMaintenanceItemCommandHandler } from './command/update-vehicle-maintenance-item.command.handler';
 import { UpdateVehicleMaintenancePlanItemCommandHandler } from './command/update-vehicle-maintenance-plan-item.command.handler';
+import { UpdateVehicleMaintenanceCommandHandler } from './command/update-vehicle-maintenance.command.handler';
 import { UpdateVehicleRepairCommandHandler } from './command/update-vehicle-repair.command.handler';
 import { UpdateVehicleCommandHandler } from './command/update-vehicle.command.handler';
 import { DownloadVehiclesMaintenanceQueryHandler } from './query/download-vehicles-maintenance.query.handler';
@@ -48,6 +51,9 @@ const commandHandlers = [
   DeleteVehicleMaintenancePlanItemCommandHandler,
   CreateVehicleMaintenanceItemCommandHandler,
   UpdateVehicleMaintenanceItemCommandHandler,
+  CreateVehicleMaintenanceCommandHandler,
+  UpdateVehicleMaintenanceCommandHandler,
+  DeleteVehicleMaintenanceCommandHandler,
 ];
 
 @Module({
