@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Order, Prisma } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
+import { OrderDirection, OrderField } from '@mp/common/constants';
+import { SearchOrderFromClientFiltersDto } from '@mp/common/dtos';
 import { orderDataMock } from '@mp/common/testing';
 
 import { OrderRepository } from './order.repository';
@@ -71,6 +74,111 @@ describe('OrderRepository', () => {
         data: { ...orderDataMock },
       });
       expect(result).toEqual(order);
+    });
+  });
+  describe('searchClientOrdersWithFiltersAsync', () => {
+    const clientId = 1;
+    const filters: SearchOrderFromClientFiltersDto = {
+      statusName: ['Pending', 'Cancelled'],
+      deliveryMethod: [1],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+    };
+    const page = 1;
+    const pageSize = 10;
+    const searchText = '1';
+    const orderBy = {
+      field: OrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    };
+    const mockData = [order];
+    const mockTotal = 1;
+
+    beforeEach(() => {
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValue(mockData);
+      jest.spyOn(prismaService.order, 'count').mockResolvedValue(mockTotal);
+    });
+
+    it('should call prisma.order.findMany with correct filters, pagination and order', async () => {
+      // Act
+      await repository.searchClientOrdersWithFiltersAsync(
+        clientId,
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              { clientId },
+              { orderStatus: { name: { in: filters.statusName } } },
+              { deliveryMethod: { id: { in: filters.deliveryMethod } } },
+              {
+                createdAt: {
+                  gte: filters.fromDate
+                    ? new Date(filters.fromDate)
+                    : undefined,
+                },
+              },
+              {
+                createdAt: {
+                  lte: filters.toDate
+                    ? endOfDay(parseISO(filters.toDate))
+                    : undefined,
+                },
+              },
+              {
+                OR: expect.arrayContaining([{ id: Number(searchText) }]),
+              },
+            ]),
+          }),
+          orderBy: { createdAt: 'desc' },
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('should call prisma.order.count with same filters', async () => {
+      // Act
+      await repository.searchClientOrdersWithFiltersAsync(
+        clientId,
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(prismaService.order.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.any(Object),
+        }),
+      );
+    });
+
+    it('should return data and total from prisma results', async () => {
+      // Act
+      const result = await repository.searchClientOrdersWithFiltersAsync(
+        clientId,
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(result).toEqual({
+        data: mockData,
+        total: mockTotal,
+      });
     });
   });
 });
