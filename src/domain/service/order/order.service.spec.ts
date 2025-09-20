@@ -5,6 +5,7 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { OrderStatusId } from '@mp/common/constants';
 import {
+  clientMock,
   mockOrderItem,
   mockPaymentDetail,
   orderCreationDtoMock,
@@ -22,6 +23,8 @@ import {
 } from '@mp/repository';
 
 import { OrderService } from './order.service';
+import { ClientService } from '../client/client.service';
+import { PaymentTypeService } from '../payment-type/payment-type.service';
 import { StockService } from '../stock/stock.service';
 
 describe('OrderService', () => {
@@ -33,6 +36,8 @@ describe('OrderService', () => {
   let stockService: StockService;
   let stockChangeRepository: StockChangeRepository;
   let unitOfWork: PrismaUnitOfWork;
+  let clientService: ClientService;
+  let paymentTypeService: PaymentTypeService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -54,6 +59,8 @@ describe('OrderService', () => {
           useValue: mockDeep(StockChangeRepository),
         },
         { provide: PrismaUnitOfWork, useValue: mockDeep(PrismaUnitOfWork) },
+        { provide: ClientService, useValue: mockDeep(ClientService) },
+        { provide: PaymentTypeService, useValue: mockDeep(PaymentTypeService) },
       ],
     }).compile();
 
@@ -69,15 +76,51 @@ describe('OrderService', () => {
       StockChangeRepository,
     );
     unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
+    clientService = module.get<ClientService>(ClientService);
+    paymentTypeService = module.get<PaymentTypeService>(PaymentTypeService);
   });
 
   describe('createOrderAsync', () => {
+    it('should throw NotFoundException if client does not exist', async () => {
+      // Arrange
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(null);
+      // Act & Assert
+      await expect(
+        service.createOrderAsync(orderCreationDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
+    it('should throw NotFoundException if payment type does not exist', async () => {
+      // Arrange
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.createOrderAsync(orderCreationDtoMock),
+      ).rejects.toThrow(NotFoundException);
+    });
     it('should throw if order status is not Pending', async () => {
       // Arrange
       const dto = {
         ...orderCreationDtoMock,
         orderStatusId: OrderStatusId.Shipped,
       };
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
 
       // Act & Assert
       await expect(service.createOrderAsync(dto)).rejects.toThrow(
@@ -88,6 +131,16 @@ describe('OrderService', () => {
     it('should throw BadRequestException if no products are provided', async () => {
       // Arrange
       const dto = { ...orderCreationDtoMock, orderItems: [] };
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
 
       // Act & Assert
       await expect(service.createOrderAsync(dto)).rejects.toThrow(
@@ -98,8 +151,18 @@ describe('OrderService', () => {
     it('should throw NotFoundException if products do not exist', async () => {
       // Arrange
       jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
         .spyOn(productRepository, 'existsManyAsync')
         .mockResolvedValueOnce(false);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
 
       // Act & Assert
       await expect(
@@ -109,6 +172,16 @@ describe('OrderService', () => {
 
     it('should throw NotFoundException if stock is missing', async () => {
       // Arrange
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
       jest
         .spyOn(productRepository, 'existsManyAsync')
         .mockResolvedValueOnce(true);
@@ -124,6 +197,16 @@ describe('OrderService', () => {
 
     it('should throw BadRequestException if stock is insufficient', async () => {
       // Arrange
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
       jest
         .spyOn(productRepository, 'existsManyAsync')
         .mockResolvedValueOnce(true);
@@ -148,6 +231,16 @@ describe('OrderService', () => {
       jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
         return cb(txMock);
       });
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
 
       jest
         .spyOn(stockService, 'findByProductIdAsync')
@@ -186,6 +279,16 @@ describe('OrderService', () => {
         paymentTypeId: orderCreationDtoMock.paymentDetail.paymentTypeId,
       };
       jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+      jest
         .spyOn(orderRepository, 'createOrderAsync')
         .mockResolvedValue(orderMock);
       jest
@@ -215,6 +318,16 @@ describe('OrderService', () => {
       jest
         .spyOn(orderRepository, 'createOrderAsync')
         .mockResolvedValue(orderMock);
+      jest
+        .spyOn(paymentTypeService, 'findPaymentTypeByIdAsync')
+        .mockResolvedValue({
+          id: 1,
+          name: 'Efectivo',
+          description: 'Pago en efectivo',
+        });
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
       jest
         .spyOn(paymentDetailRepository, 'createPaymentDetailAsync')
         .mockResolvedValue(mockPaymentDetail);
