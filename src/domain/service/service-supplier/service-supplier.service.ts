@@ -127,4 +127,20 @@ export class ServiceSupplierService {
 
     return serviceSupplier;
   }
+
+  async findByDocumentAsync(documentType: string, documentNumber: string) {
+    const foundServiceSupplier =
+      await this.serviceSupplierRepository.findByDocumentAsync(
+        documentType,
+        documentNumber,
+      );
+
+    if (!foundServiceSupplier) {
+      throw new NotFoundException(
+        `Service supplier with document type ${documentType} and number ${documentNumber} does not exist.`,
+      );
+    }
+
+    return foundServiceSupplier;
+  }
 }

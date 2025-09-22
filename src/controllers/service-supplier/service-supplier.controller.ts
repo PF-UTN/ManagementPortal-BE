@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
@@ -13,6 +14,7 @@ import { ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
+  SearchServiceSupplierByDocumentDto,
   SearchServiceSupplierRequest,
   ServiceSupplierCreationDto,
 } from '@mp/common/dtos';
@@ -20,6 +22,7 @@ import {
 import { CreateServiceSupplierCommand } from './command/create-service-supplier.command';
 import { GetServiceSupplierByIdQuery } from './query/get-service-supplier-by-id.query';
 import { SearchServiceSupplierQuery } from './query/search-service-supplier.query';
+import { ServiceSupplierByDocumentQuery } from './query/service-supplier-by-document.query';
 
 @Controller('service-supplier')
 export class ServiceSupplierController {
@@ -27,6 +30,24 @@ export class ServiceSupplierController {
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
   ) {}
+
+  @Get('/search')
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.ServiceSupplier.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search service supplier by document',
+    description:
+      'Find a service supplier using their document type and number.',
+  })
+  async getServiceSupplierByDocumentAsync(
+    @Query()
+    searchServiceSupplierByDocumentDto: SearchServiceSupplierByDocumentDto,
+  ) {
+    return this.queryBus.execute(
+      new ServiceSupplierByDocumentQuery(searchServiceSupplierByDocumentDto),
+    );
+  }
 
   @Get('/:id')
   @HttpCode(200)
