@@ -133,7 +133,17 @@ describe('OrderRepository', () => {
                 },
               },
               {
-                OR: expect.arrayContaining([{ id: Number(searchText) }]),
+                OR: expect.arrayContaining([
+                  {
+                    orderStatus: {
+                      name: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  { id: Number(searchText) },
+                ]),
               },
             ]),
           }),
@@ -143,7 +153,6 @@ describe('OrderRepository', () => {
         }),
       );
     });
-
     it('should call prisma.order.count with same filters', async () => {
       // Act
       await repository.searchClientOrdersWithFiltersAsync(

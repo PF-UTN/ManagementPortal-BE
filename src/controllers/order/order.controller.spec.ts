@@ -1,16 +1,21 @@
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { DeliveryMethodId, OrderStatusId } from '@mp/common/constants';
-import { OrderCreationDto } from '@mp/common/dtos';
+import {
+  OrderCreationDto,
+  SearchOrderFromClientRequest,
+} from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { OrderController } from './order.controller';
+import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 describe('OrderController', () => {
   let controller: OrderController;
   let commandBus: CommandBus;
+  let queryBus: QueryBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -20,11 +25,12 @@ describe('OrderController', () => {
           provide: CommandBus,
           useValue: mockDeep(CommandBus),
         },
+        { provide: QueryBus, useValue: mockDeep(QueryBus) },
       ],
     }).compile();
 
     commandBus = module.get<CommandBus>(CommandBus);
-
+    queryBus = module.get<QueryBus>(QueryBus);
     controller = module.get<OrderController>(OrderController);
   });
 
@@ -58,6 +64,35 @@ describe('OrderController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+  describe('searchOrdersFromClientAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const authorizationHeader = 'Bearer testtoken';
+      const searchOrderFromClientRequestMock: SearchOrderFromClientRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+        filters: {},
+        orderBy: undefined,
+      };
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('result');
+      const expectedQuery = new SearchOrderFromClientQuery(
+        searchOrderFromClientRequestMock,
+        authorizationHeader,
+      );
+
+      // Act
+      await controller.searchOrdersFromClientAsync(
+        authorizationHeader,
+        searchOrderFromClientRequestMock,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
 });

@@ -6,16 +6,18 @@ import { SearchOrderFromClientRequest } from './../../../../libs/common/src/dtos
 import { SearchOrderFromClientResponse } from './../../../../libs/common/src/dtos';
 
 export class SearchOrderFromClientQuery extends Query<SearchOrderFromClientResponse> {
-  authorizationHeader: string;
   searchText: string;
   page: number = 1;
   pageSize: number = 10;
   filters: SearchOrderFromClientFiltersDto;
   orderBy?: OrderSortDto;
 
-  constructor(request: SearchOrderFromClientRequest) {
+  constructor(
+    request: SearchOrderFromClientRequest,
+    public readonly authorizationHeader: string,
+  ) {
     super();
-    this.authorizationHeader = request.authorizationHeader;
+    this.authorizationHeader = authorizationHeader;
     this.searchText = request.searchText;
     this.page = request.page;
     this.pageSize = request.pageSize;

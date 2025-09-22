@@ -48,4 +48,35 @@ describe('ClientService', () => {
     expect(clientRepository.findClientByIdAsync).toHaveBeenCalledWith(999);
     expect(result).toBeNull();
   });
+  describe('findClientByUserIdAsync', () => {
+    it('should return client when found by userId', async () => {
+      // Arrange
+      jest
+        .spyOn(clientRepository, 'findClientByUserIdAsync')
+        .mockResolvedValue(clientMock);
+
+      // Act
+      const result = await service.findClientByUserIdAsync(clientMock.userId);
+
+      // Assert
+      expect(clientRepository.findClientByUserIdAsync).toHaveBeenCalledWith(
+        clientMock.userId,
+      );
+      expect(result).toEqual(clientMock);
+    });
+
+    it('should return null when client not found by userId', async () => {
+      // Arrange
+      jest
+        .spyOn(clientRepository, 'findClientByUserIdAsync')
+        .mockResolvedValue(null);
+      // Act
+      const result = await service.findClientByUserIdAsync(999);
+      // Assert
+      expect(clientRepository.findClientByUserIdAsync).toHaveBeenCalledWith(
+        999,
+      );
+      expect(result).toBeNull();
+    });
+  });
 });

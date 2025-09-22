@@ -14,13 +14,6 @@ import { SearchOrderFromClientFiltersDto } from './search-order-from-client-filt
 
 export class SearchOrderFromClientRequest {
   @ApiProperty({
-    example: 'Bearer your_jwt_token_here',
-    description: 'Authorization header containing the JWT token',
-  })
-  @IsString()
-  authorizationHeader: string;
-
-  @ApiProperty({
     example: 'search text',
     description: 'The text to search for',
   })

@@ -3,7 +3,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
-import { RequiredPermissions } from '@mp/common/decorators';
+import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
   OrderCreationDto,
   SearchOrderFromClientRequest,
@@ -31,9 +31,9 @@ export class OrderController {
     return this.commandBus.execute(new CreateOrderCommand(orderCreationDto));
   }
 
-  @Post('search')
-  @RequiredPermissions(PermissionCodes.Order.READ)
+  @Post('client/search')
   @ApiBearerAuth()
+  @Public()
   @ApiOperation({
     summary: 'Search orders from client',
     description:
@@ -43,9 +43,11 @@ export class OrderController {
     @Headers('Authorization') authorizationHeader: string,
     @Body() searchOrderFromClientRequest: SearchOrderFromClientRequest,
   ) {
-    searchOrderFromClientRequest.authorizationHeader = authorizationHeader;
     return this.queryBus.execute(
-      new SearchOrderFromClientQuery(searchOrderFromClientRequest),
+      new SearchOrderFromClientQuery(
+        searchOrderFromClientRequest,
+        authorizationHeader,
+      ),
     );
   }
 }

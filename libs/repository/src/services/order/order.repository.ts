@@ -65,11 +65,15 @@ export class OrderRepository {
               : {},
             {
               OR: [
-                isNaN(Number(searchText))
-                  ? {}
-                  : {
-                      id: Number(searchText),
+                {
+                  orderStatus: {
+                    name: {
+                      contains: searchText,
+                      mode: 'insensitive',
                     },
+                  },
+                },
+                isNaN(Number(searchText)) ? {} : { id: Number(searchText) },
               ],
             },
           ],
@@ -104,11 +108,15 @@ export class OrderRepository {
               : {},
             {
               OR: [
-                isNaN(Number(searchText))
-                  ? {}
-                  : {
-                      id: Number(searchText),
+                {
+                  orderStatus: {
+                    name: {
+                      contains: searchText,
+                      mode: 'insensitive',
                     },
+                  },
+                },
+                isNaN(Number(searchText)) ? {} : { id: Number(searchText) },
               ],
             },
           ],

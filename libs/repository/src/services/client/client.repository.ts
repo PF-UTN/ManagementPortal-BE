@@ -40,4 +40,11 @@ export class ClientRepository {
       include: { taxCategory: true, user: true, address: true },
     });
   }
+
+  async findClientByUserIdAsync(userId: number) {
+    return this.prisma.client.findUnique({
+      where: { userId },
+      include: { taxCategory: true, user: true, address: true },
+    });
+  }
 }
