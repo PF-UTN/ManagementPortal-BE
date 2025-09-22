@@ -7,9 +7,7 @@ export const clientMock = {
     firstName: 'Juan',
     lastName: 'Pérez',
     email: 'juan@mail.com',
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    password: 'test-password',
+    password: 'fake_password_for_test',
     phone: '123456789',
     documentType: 'DNI',
     documentNumber: '12345678',
