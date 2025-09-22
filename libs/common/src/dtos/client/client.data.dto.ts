@@ -1,5 +1,3 @@
-const MOCK_PASSWORD = 'test-password';
-
 export const clientMock = {
   id: 1,
   companyName: 'Test Company',
@@ -9,9 +7,11 @@ export const clientMock = {
     firstName: 'Juan',
     lastName: 'Pérez',
     email: 'juan@mail.com',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    password: 'test-password',
     phone: '123456789',
     documentType: 'DNI',
-    password: MOCK_PASSWORD,
     documentNumber: '12345678',
     birthdate: new Date('1990-01-01'),
     roleId: 2,
