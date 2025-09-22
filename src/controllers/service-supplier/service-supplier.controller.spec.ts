@@ -12,6 +12,7 @@ import {
 import { CreateServiceSupplierCommand } from './command/create-service-supplier.command';
 import { GetServiceSupplierByIdQuery } from './query/get-service-supplier-by-id.query';
 import { SearchServiceSupplierQuery } from './query/search-service-supplier.query';
+import { ServiceSupplierByDocumentQuery } from './query/service-supplier-by-document.query';
 import { ServiceSupplierController } from './service-supplier.controller';
 
 describe('ServiceSupplierController', () => {
@@ -109,6 +110,28 @@ describe('ServiceSupplierController', () => {
       expect(queryBus.execute).toHaveBeenCalledWith(
         new SearchServiceSupplierQuery(request),
       );
+    });
+  });
+
+  describe('getSupplierByDocumentAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const documentType = serviceSupplier.documentType;
+      const documentNumber = serviceSupplier.documentNumber;
+      const executeSpy = jest.spyOn(queryBus, 'execute');
+      const expectedQuery = new ServiceSupplierByDocumentQuery({
+        documentType,
+        documentNumber,
+      });
+
+      // Act
+      await controller.getServiceSupplierByDocumentAsync({
+        documentType,
+        documentNumber,
+      });
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
 });
