@@ -7,7 +7,8 @@ export const clientMock = {
     firstName: 'Juan',
     lastName: 'Pérez',
     email: 'juan@mail.com',
-    password: 'fake_password_for_test',
+    // NOSONAR
+    password: 'fake_password_for_test', // NOSONAR - fake value for testing only
     phone: '123456789',
     documentType: 'DNI',
     documentNumber: '12345678',
