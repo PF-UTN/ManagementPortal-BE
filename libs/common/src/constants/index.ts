@@ -16,3 +16,4 @@ export * from './tax-category.constant';
 export * from './user-document-types.constant';
 export * from './order-status.constant';
 export * from './delivery-methods.constants';
+export * from './payment-type.constants';

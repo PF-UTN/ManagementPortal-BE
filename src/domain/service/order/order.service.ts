@@ -9,6 +9,7 @@ import {
   StockChangedField,
   StockChangeTypeIds,
   OrderStatusId,
+  PaymentTypeEnum,
 } from '@mp/common/constants';
 import {
   StockChangeCreationDataDto,
@@ -27,6 +28,7 @@ import {
   OrderRepository,
 } from '@mp/repository';
 
+import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
 @Injectable()
@@ -39,10 +41,27 @@ export class OrderService {
     private readonly paymentDetailRepository: PaymentDetailRepository,
     private readonly stockService: StockService,
     private readonly stockChangeRepository: StockChangeRepository,
+    private readonly clientService: ClientService,
   ) {}
 
   async createOrderAsync(orderCreationDto: OrderCreationDto) {
     const { paymentDetail, orderItems, ...orderData } = orderCreationDto;
+
+    const client = await this.clientService.findClientByIdAsync(
+      orderData.clientId,
+    );
+    if (!client) {
+      throw new NotFoundException(
+        `Client with ID ${orderData.clientId} does not exist.`,
+      );
+    }
+
+    const paymentType = PaymentTypeEnum[paymentDetail.paymentTypeId];
+    if (!paymentType) {
+      throw new NotFoundException(
+        `PaymentType with ID ${paymentDetail.paymentTypeId} does not exist.`,
+      );
+    }
 
     if (orderData.orderStatusId !== OrderStatusId.Pending) {
       throw new Error(
