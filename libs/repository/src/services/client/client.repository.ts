@@ -33,4 +33,11 @@ export class ClientRepository {
       },
     });
   }
+
+  async findClientByIdAsync(clientId: number) {
+    return this.prisma.client.findUnique({
+      where: { id: clientId },
+      include: { taxCategory: true, user: true, address: true },
+    });
+  }
 }
