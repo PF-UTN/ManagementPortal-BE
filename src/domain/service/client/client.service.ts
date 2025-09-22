@@ -11,7 +11,6 @@ export class ClientService {
     return client;
   }
   async findClientByUserIdAsync(userId: number) {
-    const client = await this.clientRepository.findClientByUserIdAsync(userId);
-    return client;
+    return await this.clientRepository.findClientByUserIdAsync(userId);
   }
 }
