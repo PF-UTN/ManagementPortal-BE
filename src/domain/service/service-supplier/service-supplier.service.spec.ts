@@ -430,4 +430,56 @@ describe('ServiceSupplierService', () => {
       expect(result).toEqual(serviceSupplier);
     });
   });
+
+  describe('findByDocumentAsync', () => {
+    it('should call serviceSupplierRepository.findByDocumentAsync with the correct parameters', async () => {
+      // Arrange
+      const documentType = serviceSupplier.documentType;
+      const documentNumber = serviceSupplier.documentNumber;
+
+      jest
+        .spyOn(serviceSupplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(serviceSupplier);
+
+      // Act
+      await service.findByDocumentAsync(documentType, documentNumber);
+
+      // Assert
+      expect(
+        serviceSupplierRepository.findByDocumentAsync,
+      ).toHaveBeenCalledWith(documentType, documentNumber);
+    });
+
+    it('should return the service supplier founded by document', async () => {
+      // Arrange
+      const documentType = serviceSupplier.documentType;
+      const documentNumber = serviceSupplier.documentNumber;
+      jest
+        .spyOn(serviceSupplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(serviceSupplier);
+
+      // Act
+      const result = await service.findByDocumentAsync(
+        documentType,
+        documentNumber,
+      );
+
+      // Assert
+      expect(result).toEqual(serviceSupplier);
+    });
+
+    it('should throw NotFoundException if no service supplier is found', async () => {
+      // Arrange
+      const documentType = serviceSupplier.documentType;
+      const documentNumber = serviceSupplier.documentNumber;
+      jest
+        .spyOn(serviceSupplierRepository, 'findByDocumentAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.findByDocumentAsync(documentType, documentNumber),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
 });
