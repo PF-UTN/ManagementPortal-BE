@@ -7,7 +7,7 @@ export const clientMock = {
     firstName: 'Juan',
     lastName: 'Pérez',
     email: 'juan@mail.com',
-    password: 'hashed',
+    password: 'test-password',
     phone: '123456789',
     documentType: 'DNI',
     documentNumber: '12345678',
