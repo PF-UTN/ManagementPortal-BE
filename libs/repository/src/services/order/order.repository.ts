@@ -74,6 +74,10 @@ export class OrderRepository {
             },
           ],
         },
+        include: {
+          orderStatus: true,
+          orderItems: true,
+        },
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: prismaOrderBy,

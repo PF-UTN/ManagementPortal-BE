@@ -12,13 +12,13 @@ import {
 import { OrderSortDto } from './order-order.dto';
 import { SearchOrderFromClientFiltersDto } from './search-order-from-client-filters.dto';
 
-export class SearchOrderFromClientRequest {
+export class SearchOrderFromClientServiceDto {
   @ApiProperty({
-    example: 'Bearer your_jwt_token_here',
-    description: 'Authorization header containing the JWT token',
+    example: 1,
+    description: 'User ID extracted from JWT',
   })
-  @IsString()
-  authorizationHeader: string;
+  @IsNumber()
+  clientId: number;
 
   @ApiProperty({
     example: 'search text',
