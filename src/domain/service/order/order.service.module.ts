@@ -4,16 +4,10 @@ import { RepositoryModule } from '@mp/repository';
 
 import { OrderService } from './order.service';
 import { ClientServiceModule } from '../client/client.service.module';
-import { PaymentTypeServiceModule } from '../payment-type/payment-type.service.module';
 import { StockServiceModule } from '../stock/stock.service.module';
 
 @Module({
-  imports: [
-    RepositoryModule,
-    StockServiceModule,
-    ClientServiceModule,
-    PaymentTypeServiceModule,
-  ],
+  imports: [RepositoryModule, StockServiceModule, ClientServiceModule],
   providers: [OrderService],
   exports: [OrderService],
 })

@@ -25,7 +25,6 @@ import {
   OrderRepository,
   OrderItemRepository,
   PaymentDetailRepository,
-  PaymentTypeRepository,
 } from './services';
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
@@ -58,7 +57,6 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     OrderRepository,
     OrderItemRepository,
     PaymentDetailRepository,
-    PaymentTypeRepository,
   ],
   exports: [
     UserRepository,
@@ -86,7 +84,6 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     OrderRepository,
     OrderItemRepository,
     PaymentDetailRepository,
-    PaymentTypeRepository,
   ],
 })
 export class RepositoryModule {}
