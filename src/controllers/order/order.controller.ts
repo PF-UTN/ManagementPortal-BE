@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
@@ -22,5 +22,17 @@ export class OrderController {
   })
   createOrderAsync(@Body() orderCreationDto: OrderCreationDto) {
     return this.commandBus.execute(new CreateOrderCommand(orderCreationDto));
+  }
+
+  @Get()
+  @HttpCode(200)
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get order by ID',
+    description: 'Retrieve an order by its ID.',
+  })
+  findOrderByIdAsync() {
+    // Implementation for fetching order by ID would go here
   }
 }

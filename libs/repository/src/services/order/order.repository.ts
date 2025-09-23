@@ -12,4 +12,16 @@ export class OrderRepository {
     const client = tx ?? this.prisma;
     return client.order.create({ data });
   }
+  async findOrderByIdAsync(id: number) {
+    return this.prisma.order.findUnique({
+      where: { id },
+      include: {
+        orderItems: true,
+        orderStatus: true,
+        client: true,
+        deliveryMethod: true,
+        paymentDetail: true,
+      },
+    });
+  }
 }

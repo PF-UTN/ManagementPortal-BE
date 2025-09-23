@@ -298,4 +298,8 @@ export class OrderService {
       }
     }
   }
+
+  async findOrderByIdAsync(id: number) {
+    return await this.orderRepository.findOrderByIdAsync(id);
+  }
 }

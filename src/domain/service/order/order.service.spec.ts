@@ -9,6 +9,7 @@ import {
   mockOrderItem,
   mockPaymentDetail,
   orderCreationDtoMock,
+  orderFullMock,
   orderMock,
   stockMock,
   txMock,
@@ -448,6 +449,28 @@ describe('OrderService', () => {
       expect(
         stockChangeRepository.createManyStockChangeAsync,
       ).toHaveBeenCalled();
+    });
+  });
+  describe('findOrderByIdAsync', () => {
+    it('should call orderRepository.findOrderByIdAsync with the correct id', async () => {
+      // Arrange
+      const findSpy = jest.spyOn(orderRepository, 'findOrderByIdAsync');
+      const orderId = 1;
+      // Act
+      await service.findOrderByIdAsync(orderId);
+      // Assert
+      expect(findSpy).toHaveBeenCalledWith(orderId);
+    });
+    it('should return the order from orderRepository.findOrderByIdAsync', async () => {
+      // Arrange
+      jest
+        .spyOn(orderRepository, 'findOrderByIdAsync')
+        .mockResolvedValueOnce(orderFullMock);
+      const orderId = 1;
+      // Act
+      const result = await service.findOrderByIdAsync(orderId);
+      // Assert
+      expect(result).toEqual(orderFullMock);
     });
   });
 });
