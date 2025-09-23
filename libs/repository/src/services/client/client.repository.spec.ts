@@ -83,4 +83,23 @@ describe('ClientRepository', () => {
       expect(result).toEqual(newClientMock);
     });
   });
+  describe('findClientByUserIdAsync', () => {
+    it('should return the client with related entities by userId', async () => {
+      // Arrange
+      const userId = 1;
+      jest
+        .spyOn(prismaService.client, 'findUnique')
+        .mockResolvedValueOnce(newClientMock);
+
+      // Act
+      const result = await repository.findClientByUserIdAsync(userId);
+
+      // Assert
+      expect(prismaService.client.findUnique).toHaveBeenCalledWith({
+        where: { userId },
+        include: { taxCategory: true, user: true, address: true },
+      });
+      expect(result).toEqual(newClientMock);
+    });
+  });
 });

@@ -1,16 +1,23 @@
-import { Body, Controller, Get, HttpCode, Post } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { Body, Controller, HttpCode, Headers, Get, Post } from '@nestjs/common';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
-import { RequiredPermissions } from '@mp/common/decorators';
-import { OrderCreationDto } from '@mp/common/dtos';
+import { Public, RequiredPermissions } from '@mp/common/decorators';
+import {
+  OrderCreationDto,
+  SearchOrderFromClientRequest,
+} from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 @Controller('order')
 export class OrderController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
+  ) {}
 
   @Post()
   @HttpCode(201)
@@ -22,6 +29,26 @@ export class OrderController {
   })
   createOrderAsync(@Body() orderCreationDto: OrderCreationDto) {
     return this.commandBus.execute(new CreateOrderCommand(orderCreationDto));
+  }
+
+  @Post('client/search')
+  @ApiBearerAuth()
+  @Public()
+  @ApiOperation({
+    summary: 'Search orders from client',
+    description:
+      'Search for orders based on the provided filters, search text and client.',
+  })
+  async searchOrdersFromClientAsync(
+    @Headers('Authorization') authorizationHeader: string,
+    @Body() searchOrderFromClientRequest: SearchOrderFromClientRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchOrderFromClientQuery(
+        searchOrderFromClientRequest,
+        authorizationHeader,
+      ),
+    );
   }
 
   @Get()

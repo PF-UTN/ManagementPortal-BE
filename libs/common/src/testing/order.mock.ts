@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 import { DeliveryMethodId, OrderStatusId } from '../constants';
 import { OrderCreationDto } from '../dtos';
@@ -60,6 +61,35 @@ export const orderDataMock = {
   deliveryMethodId: DeliveryMethodId.HomeDelivery,
   paymentDetailId: 1,
   totalAmount: 150.75,
+};
+
+export const orderBigMock = {
+  id: 1,
+  clientId: 1,
+  orderStatusId: OrderStatusId.Pending,
+  deliveryMethodId: DeliveryMethodId.HomeDelivery,
+  paymentDetailId: 1,
+  totalAmount: new Decimal(100),
+  createdAt: new Date('2024-07-01T10:00:00Z'),
+  orderStatus: { id: OrderStatusId.Pending, name: 'Pending' },
+  orderItems: [
+    {
+      id: 1,
+      orderId: 1,
+      productId: 1,
+      unitPrice: new Decimal(50),
+      quantity: 2,
+      subtotalPrice: new Decimal(100),
+    },
+    {
+      id: 2,
+      orderId: 1,
+      productId: 2,
+      unitPrice: new Decimal(25),
+      quantity: 1,
+      subtotalPrice: new Decimal(25),
+    },
+  ],
 };
 export const orderFullMock = {
   id: 1,
