@@ -15,6 +15,7 @@ import {
   StockChangeCreationDataDto,
   StockDto,
   OrderCreationDto,
+  SearchOrderFromClientServiceDto,
 } from '@mp/common/dtos';
 import { calculateTotalAmount } from '@mp/common/helpers';
 import {
@@ -297,5 +298,18 @@ export class OrderService {
         break;
       }
     }
+  }
+
+  async searchClientOrdersWithFiltersAsync(
+    query: SearchOrderFromClientServiceDto,
+  ) {
+    return this.orderRepository.searchClientOrdersWithFiltersAsync(
+      query.clientId,
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
   }
 }
