@@ -5,4 +5,5 @@ export enum OrderStatusId {
   Delivered = 4,
   Cancelled = 5,
   Returned = 6,
+  Prepared = 7,
 }

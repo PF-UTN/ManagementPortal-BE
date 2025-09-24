@@ -10,6 +10,7 @@ export const orderStatusPostDeployAsync = async () => {
     { id: 4, name: 'Delivered' },
     { id: 5, name: 'Cancelled' },
     { id: 6, name: 'Returned' },
+    { id: 7, name: 'Prepared' },
   ];
 
   await mergeTableData('OrderStatus', sourceData);

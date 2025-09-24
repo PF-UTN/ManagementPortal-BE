@@ -101,10 +101,11 @@ describe('OrderService', () => {
         }),
       ).rejects.toThrow(NotFoundException);
     });
-    it('should throw if order status is not Pending', async () => {
+    it('should throw if Home Delivery and order status is not Pending', async () => {
       // Arrange
       const dto = {
         ...orderCreationDtoMock,
+        deliveryMethodId: 2,
         orderStatusId: OrderStatusId.Shipped,
       };
       jest
@@ -113,7 +114,24 @@ describe('OrderService', () => {
 
       // Act & Assert
       await expect(service.createOrderAsync(dto)).rejects.toThrow(
-        'Invalid order status. Only PENDING orders can be created.',
+        'Invalid order status. Only PENDING orders can be created with Home Delivery method.',
+      );
+    });
+
+    it('should throw if PickUp At Store and order status is not InPreparation', async () => {
+      // Arrange
+      const dto = {
+        ...orderCreationDtoMock,
+        deliveryMethodId: 1,
+        orderStatusId: OrderStatusId.Pending,
+      };
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+
+      // Act & Assert
+      await expect(service.createOrderAsync(dto)).rejects.toThrow(
+        'Invalid order status. Only IN_PREPARATION orders can be created with PickUp At Store delivery method.',
       );
     });
 

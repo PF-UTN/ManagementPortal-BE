@@ -10,6 +10,7 @@ import {
   StockChangeTypeIds,
   OrderStatusId,
   PaymentTypeEnum,
+  DeliveryMethodId,
 } from '@mp/common/constants';
 import {
   StockChangeCreationDataDto,
@@ -63,10 +64,21 @@ export class OrderService {
         `PaymentType with ID ${paymentDetail.paymentTypeId} does not exist.`,
       );
     }
-
-    if (orderData.orderStatusId !== OrderStatusId.Pending) {
+    if (
+      orderData.deliveryMethodId === DeliveryMethodId.HomeDelivery &&
+      orderData.orderStatusId !== OrderStatusId.Pending
+    ) {
       throw new Error(
-        'Invalid order status. Only PENDING orders can be created.',
+        'Invalid order status. Only PENDING orders can be created with Home Delivery method.',
+      );
+    }
+
+    if (
+      orderData.deliveryMethodId === DeliveryMethodId.PickUpAtStore &&
+      orderData.orderStatusId !== OrderStatusId.InPreparation
+    ) {
+      throw new Error(
+        'Invalid order status. Only IN_PREPARATION orders can be created with PickUp At Store delivery method.',
       );
     }
 
