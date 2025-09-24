@@ -217,9 +217,17 @@ describe('OrderRepository', () => {
         include: {
           orderItems: true,
           orderStatus: true,
-          client: true,
+          client: {
+            include: {
+              user: true,
+              address: true,
+              taxCategory: true,
+            },
+          },
           deliveryMethod: true,
-          paymentDetail: true,
+          paymentDetail: {
+            include: { paymentType: true },
+          },
         },
       });
     });

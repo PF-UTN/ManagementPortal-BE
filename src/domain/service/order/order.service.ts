@@ -16,6 +16,8 @@ import {
   StockDto,
   OrderCreationDto,
   SearchOrderFromClientServiceDto,
+  OrderDetailsDto,
+  OrderDetailsToClientDto,
 } from '@mp/common/dtos';
 import { calculateTotalAmount } from '@mp/common/helpers';
 import {
@@ -31,7 +33,10 @@ import {
 
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
-
+import {
+  OrderItemDataDto,
+  OrderItemDataToClientDto,
+} from './../../../../libs/common/src/dtos';
 @Injectable()
 export class OrderService {
   constructor(
@@ -314,6 +319,131 @@ export class OrderService {
   }
 
   async findOrderByIdAsync(id: number) {
-    return await this.orderRepository.findOrderByIdAsync(id);
+    const order = await this.orderRepository.findOrderByIdAsync(id);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} does not exist.`);
+    }
+
+    const items = await this.orderItemRepository.findByOrderIdAsync(order.id);
+
+    const itemsDto: OrderItemDataDto[] = items.map((item) => ({
+      id: item.id,
+      product: {
+        name: item.product.name,
+        description: item.product.description,
+        price: Number(item.product.price),
+        enabled: item.product.enabled,
+        weight: Number(item.product.weight),
+        category: {
+          name: item.product.category.name,
+        },
+        stock: {
+          quantityAvailable: item.product.stock?.quantityAvailable ?? 0,
+          quantityOrdered: item.product.stock?.quantityOrdered ?? 0,
+          quantityReserved: item.product.stock?.quantityReserved ?? 0,
+        },
+        supplier: {
+          businessName: item.product.supplier.businessName,
+          email: item.product.supplier.email,
+          phone: item.product.supplier.phone,
+        },
+      },
+      unitPrice: Number(item.unitPrice),
+      quantity: item.quantity,
+      subtotalPrice: Number(item.subtotalPrice),
+      orderId: item.orderId,
+    }));
+
+    const orderDto: OrderDetailsDto = {
+      id: order.id,
+      client: {
+        companyName: order.client.companyName,
+        user: {
+          firstName: order.client.user.firstName,
+          lastName: order.client.user.lastName,
+          email: order.client.user.email,
+          phone: order.client.user.phone,
+        },
+        address: {
+          street: order.client.address.street,
+          streetNumber: order.client.address.streetNumber,
+        },
+        taxCategory: {
+          name: order.client.taxCategory.name,
+          description: order.client.taxCategory.description ?? '',
+        },
+      },
+      deliveryMethodName: order.deliveryMethod.name,
+      orderStatus: {
+        name: order.orderStatus.name,
+      },
+      paymentDetail: {
+        paymentType: {
+          name: order.paymentDetail.paymentType.name,
+        },
+      },
+      orderItems: itemsDto,
+      totalAmount: Number(order.totalAmount),
+      createdAt: order.createdAt,
+    };
+    return orderDto;
+  }
+
+  async findOrderByIdToClientAsync(id: number) {
+    const order = await this.orderRepository.findOrderByIdAsync(id);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} does not exist.`);
+    }
+
+    const items = await this.orderItemRepository.findByOrderIdAsync(order.id);
+
+    const itemsDto: OrderItemDataToClientDto[] = items.map((item) => ({
+      product: {
+        name: item.product.name,
+        description: item.product.description,
+        price: Number(item.product.price),
+        weight: Number(item.product.weight),
+        category: {
+          name: item.product.category.name,
+        },
+      },
+      unitPrice: Number(item.unitPrice),
+      quantity: item.quantity,
+      subtotalPrice: Number(item.subtotalPrice),
+    }));
+
+    const orderDto: OrderDetailsToClientDto = {
+      id: order.id,
+      client: {
+        companyName: order.client.companyName,
+        user: {
+          firstName: order.client.user.firstName,
+          lastName: order.client.user.lastName,
+          email: order.client.user.email,
+          phone: order.client.user.phone,
+        },
+        address: {
+          street: order.client.address.street,
+          streetNumber: order.client.address.streetNumber,
+        },
+        taxCategory: {
+          name: order.client.taxCategory.name,
+          description: order.client.taxCategory.description ?? '',
+        },
+      },
+      deliveryMethodName: order.deliveryMethod.name,
+      orderStatus: {
+        name: order.orderStatus.name,
+      },
+      paymentDetail: {
+        paymentType: {
+          name: order.paymentDetail.paymentType.name,
+        },
+      },
+      orderItems: itemsDto,
+      totalAmount: Number(order.totalAmount),
+      createdAt: order.createdAt,
+    };
+    return orderDto;
   }
 }

@@ -91,15 +91,72 @@ export const orderBigMock = {
     },
   ],
 };
+
+export const orderItemMock = {
+  id: 1,
+  productId: 1,
+  orderId: 1,
+  product: {
+    id: 1,
+    name: 'Producto 1',
+    description: 'Descripción producto 1',
+    price: 100,
+    enabled: true,
+    weight: 2.5,
+    category: {
+      name: 'Categoría A',
+    },
+    stock: {
+      id: 1,
+      quantityAvailable: 50,
+      quantityOrdered: 10,
+      quantityReserved: 5,
+    },
+    supplier: {
+      id: 1,
+      businessName: 'Proveedor S.A.',
+      email: 'proveedor@mail.com',
+      phone: '123456789',
+    },
+  },
+  unitPrice: new Decimal(100),
+  quantity: 2,
+  subtotalPrice: new Decimal(200),
+};
 export const orderFullMock = {
   id: 1,
   clientId: 1,
   client: {
     id: 1,
-    userId: 1,
-    addressId: 1,
     companyName: 'Test Company',
+    userId: 1,
     taxCategoryId: 1,
+    addressId: 1,
+    user: {
+      id: 1,
+      firstName: 'Juan',
+      lastName: 'Perez',
+      email: 'juan@mail.com',
+      password: 'hashed',
+      phone: '123456789',
+      documentType: 'DNI',
+      documentNumber: '12345678',
+      birthdate: new Date('1990-01-01'),
+      roleId: 2,
+      accountLockedUntil: null,
+      failedLoginAttempts: 0,
+    },
+    taxCategory: {
+      id: 1,
+      name: 'Responsable Inscripto',
+      description: null,
+    },
+    address: {
+      id: 1,
+      townId: 1,
+      street: 'Calle Falsa',
+      streetNumber: 123,
+    },
   },
   orderStatusId: OrderStatusId.Pending,
   orderStatus: {
@@ -126,19 +183,5 @@ export const orderFullMock = {
     description: 'Entrega a domicilio',
   },
   createdAt: new Date(),
-  orderItems: [
-    {
-      id: 1,
-      orderId: 1,
-      productId: 1,
-      quantity: 10,
-      unitPrice: new Prisma.Decimal(10.5),
-      subtotalPrice: new Prisma.Decimal(105.0),
-      product: {
-        id: 1,
-        name: 'Producto 1',
-        description: 'Descripción producto 1',
-      },
-    },
-  ],
+  orderItems: [orderItemMock],
 };
