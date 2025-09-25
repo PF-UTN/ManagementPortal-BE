@@ -64,8 +64,8 @@ export class OrderController {
 
   @Get(':id')
   @HttpCode(200)
-  // @ApiBearerAuth()
-  // @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Order.READ)
   @Public()
   @ApiOperation({
     summary: 'Get order by ID',
@@ -81,8 +81,8 @@ export class OrderController {
 
   @Get('/client/:id')
   @HttpCode(200)
-  // @ApiBearerAuth()
-  // @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Order.READ)
   @Public()
   @ApiOperation({
     summary: 'Get order by ID to Client',
