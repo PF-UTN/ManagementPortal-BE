@@ -28,6 +28,7 @@ export const orderMock = {
   paymentDetailId: 1,
   totalAmount: new Prisma.Decimal(105.0),
   createdAt: new Date(),
+  shipmentId: null
 };
 
 export const stockMock = {
@@ -72,6 +73,7 @@ export const orderBigMock = {
   totalAmount: new Decimal(100),
   createdAt: new Date('2024-07-01T10:00:00Z'),
   orderStatus: { id: OrderStatusId.Pending, name: 'Pending' },
+  shipmentId: null,
   orderItems: [
     {
       id: 1,
