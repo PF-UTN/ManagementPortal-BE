@@ -125,4 +125,17 @@ export class OrderRepository {
     ]);
     return { data, total };
   }
+
+  getByIdAsync(orderId: number) {
+    return this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+  }
 }

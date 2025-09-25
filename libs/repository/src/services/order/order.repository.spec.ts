@@ -190,4 +190,47 @@ describe('OrderRepository', () => {
       });
     });
   });
+
+  describe('getByIdAsync', () => {
+    it('should call prisma.order.findUnique with correct id and include orderItems with product', async () => {
+      // Arrange
+      const orderId = 1;
+      const expectedOrder = mockDeep<
+        Prisma.OrderGetPayload<{
+          include: { orderItems: { include: { product: true } } };
+        }>
+      >();
+      jest
+        .spyOn(prismaService.order, 'findUnique')
+        .mockResolvedValue(expectedOrder);
+
+      // Act
+      const result = await repository.getByIdAsync(orderId);
+
+      // Assert
+      expect(prismaService.order.findUnique).toHaveBeenCalledWith({
+        where: { id: orderId },
+        include: {
+          orderItems: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      });
+      expect(result).toBe(expectedOrder);
+    });
+
+    it('should return null if no order is found', async () => {
+      // Arrange
+      const orderId = 999;
+      jest.spyOn(prismaService.order, 'findUnique').mockResolvedValue(null);
+
+      // Act
+      const result = await repository.getByIdAsync(orderId);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
 });

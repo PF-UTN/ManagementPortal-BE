@@ -1,4 +1,13 @@
-import { Body, Controller, HttpCode, Headers, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Headers,
+  Post,
+  Get,
+  ParseIntPipe,
+  Param,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
@@ -10,6 +19,7 @@ import {
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 @Controller('order')
@@ -48,6 +58,22 @@ export class OrderController {
         searchOrderFromClientRequest,
         authorizationHeader,
       ),
+    );
+  }
+
+  @Get('checkout/:orderId/:shipmentMethodId')
+  @ApiBearerAuth()
+  @Public()
+  @ApiOperation({
+    summary: 'Get order ready for checkout',
+    description: 'Process an order for checkout.',
+  })
+  async checkoutAsync(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Param('shipmentMethodId', ParseIntPipe) shipmentMethodId: number,
+  ) {
+    return this.queryBus.execute(
+      new CheckoutOrderQuery(orderId, shipmentMethodId),
     );
   }
 }

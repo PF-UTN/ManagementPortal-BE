@@ -312,4 +312,8 @@ export class OrderService {
       query.orderBy,
     );
   }
+
+  getOrderByIdAsync(orderId: number) {
+    return this.orderRepository.getByIdAsync(orderId);
+  }
 }

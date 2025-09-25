@@ -10,6 +10,7 @@ import {
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { OrderController } from './order.controller';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 describe('OrderController', () => {
@@ -93,6 +94,24 @@ describe('OrderController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+  describe('checkoutAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const orderId = 123;
+      const shipmentMethodId = 2;
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('checkoutResult');
+      const expectedQuery = new CheckoutOrderQuery(orderId, shipmentMethodId);
+
+      // Act
+      const result = await controller.checkoutAsync(orderId, shipmentMethodId);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+      expect(result).toBe('checkoutResult');
     });
   });
 });
