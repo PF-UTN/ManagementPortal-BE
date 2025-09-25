@@ -14,4 +14,13 @@ export class OrderItemRepository {
     const client = tx ?? this.prisma;
     return client.orderItem.createMany({ data });
   }
+
+  async findByOrderIdAsync(orderId: number) {
+    return this.prisma.orderItem.findMany({
+      where: { orderId: orderId },
+      include: {
+        product: { include: { category: true, supplier: true, stock: true } },
+      },
+    });
+  }
 }

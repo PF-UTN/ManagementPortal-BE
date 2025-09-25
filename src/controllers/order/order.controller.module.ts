@@ -5,10 +5,16 @@ import { ClientServiceModule } from './../../domain/service/client/client.servic
 import { OrderServiceModule } from './../../domain/service/order/order.service.module';
 import { CreateOrderCommandHandler } from './command/create-order.command.handler';
 import { OrderController } from './order.controller';
+import { GetOrderByIdToClientQueryHandler } from './query/get-order-by-id-to-client.query.handler';
+import { GetOrderByIdQueryHandler } from './query/get-order-by-id.query.handler';
 import { SearchOrderFromClientQueryHandler } from './query/search-order.query.handler';
 
 const commandHandlers = [CreateOrderCommandHandler];
-const queryHandlers = [SearchOrderFromClientQueryHandler];
+const queryHandlers = [
+  SearchOrderFromClientQueryHandler,
+  GetOrderByIdQueryHandler,
+  GetOrderByIdToClientQueryHandler,
+];
 @Module({
   imports: [
     OrderServiceModule,
