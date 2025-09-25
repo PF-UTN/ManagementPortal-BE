@@ -20,4 +20,6 @@ export * from './service-supplier';
 export * from './order';
 export * from './order-item';
 export * from './payment-detail';
+export * from './order-status';
+export * from './payment-type';
 export * from './delivery-method';

@@ -4,6 +4,6 @@ export const orderStatusTranslations: Record<string, string> = {
   Prepared: 'Preparado',
   Shipped: 'Enviado',
   Delivered: 'Entregado',
-  Canceled: 'Cancelado',
+  Cancelled: 'Cancelado',
   Returned: 'Devuelto',
 };

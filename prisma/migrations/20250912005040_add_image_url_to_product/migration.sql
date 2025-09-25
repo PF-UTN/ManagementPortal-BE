@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "Product" ADD COLUMN     "imageUrl" VARCHAR(255);
+ALTER TABLE "Product" ADD COLUMN     "imageUrl" VARCHAR(500);
