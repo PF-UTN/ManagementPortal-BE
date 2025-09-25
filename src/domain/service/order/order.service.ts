@@ -29,6 +29,7 @@ import {
   OrderRepository,
 } from '@mp/repository';
 
+import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
@@ -305,6 +306,16 @@ export class OrderService {
   ) {
     return this.orderRepository.searchClientOrdersWithFiltersAsync(
       query.clientId,
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
+  }
+
+  async searchWithFiltersAsync(query: SearchOrderQuery) {
+    return this.orderRepository.searchWithFiltersAsync(
       query.page,
       query.pageSize,
       query.searchText,
