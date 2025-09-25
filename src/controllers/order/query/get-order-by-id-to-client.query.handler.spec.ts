@@ -2,14 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
 import { OrderDetailsToClientDto } from '@mp/common/dtos';
+import { clientMock } from '@mp/common/testing';
 
+import { AuthenticationService } from './../../../domain/service/authentication/authentication.service';
+import { ClientService } from './../../../domain/service/client/client.service';
 import { OrderService } from './../../../domain/service/order/order.service';
-import { GetOrderByIdToClientQuery } from './get-order-by-id-to-client.query';
+import { GetOrderByIdForClientQuery } from './get-order-by-id-to-client.query';
 import { GetOrderByIdToClientQueryHandler } from './get-order-by-id-to-client.query.handler';
 
 describe('GetOrderByIdToClientQueryHandler', () => {
   let handler: GetOrderByIdToClientQueryHandler;
   let orderService: OrderService;
+  let authenticationService: AuthenticationService;
+  let clientService: ClientService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -19,9 +24,20 @@ describe('GetOrderByIdToClientQueryHandler', () => {
           provide: OrderService,
           useValue: mockDeep<OrderService>(),
         },
+        {
+          provide: AuthenticationService,
+          useValue: mockDeep<AuthenticationService>(),
+        },
+        {
+          provide: ClientService,
+          useValue: mockDeep<ClientService>(),
+        },
       ],
     }).compile();
-
+    clientService = module.get<ClientService>(ClientService);
+    authenticationService = module.get<AuthenticationService>(
+      AuthenticationService,
+    );
     orderService = module.get<OrderService>(OrderService);
     handler = module.get<GetOrderByIdToClientQueryHandler>(
       GetOrderByIdToClientQueryHandler,
@@ -33,10 +49,13 @@ describe('GetOrderByIdToClientQueryHandler', () => {
   });
 
   describe('execute', () => {
-    it('should call findOrderByIdAsync on the service', async () => {
-      // Arrange
-      const query = new GetOrderByIdToClientQuery(1);
+    const token = 'testtoken';
+    const authorizationHeader = `Bearer ${token}`;
+    const payloadMock = { sub: 1 };
 
+    it('should call findOrderByIdForClientAsync on the service', async () => {
+      // Arrange
+      const query = new GetOrderByIdForClientQuery(1, authorizationHeader);
       const orderDetailsToClientDtoMock: OrderDetailsToClientDto = {
         id: 1,
         client: {
@@ -69,26 +88,36 @@ describe('GetOrderByIdToClientQueryHandler', () => {
         totalAmount: 100,
         createdAt: new Date(),
       };
+      jest
+        .spyOn(authenticationService, 'decodeTokenAsync')
+        .mockResolvedValue(payloadMock);
 
       jest
-        .spyOn(orderService, 'findOrderByIdToClientAsync')
+        .spyOn(clientService, 'findClientByUserIdAsync')
+        .mockResolvedValue(clientMock);
+
+      jest
+        .spyOn(orderService, 'findOrderByIdForClientAsync')
         .mockResolvedValueOnce(orderDetailsToClientDtoMock);
 
-      const findOrderByIdToClientAsyncSpy = jest.spyOn(
+      const findOrderByIdForClientAsyncSpy = jest.spyOn(
         orderService,
-        'findOrderByIdToClientAsync',
+        'findOrderByIdForClientAsync',
       );
 
       // Act
       await handler.execute(query);
 
       // Assert
-      expect(findOrderByIdToClientAsyncSpy).toHaveBeenCalledWith(1);
+      expect(findOrderByIdForClientAsyncSpy).toHaveBeenCalledWith(
+        1,
+        clientMock.id,
+      );
     });
 
     it('should return order details for given id', async () => {
       // Arrange
-      const query = new GetOrderByIdToClientQuery(1);
+      const query = new GetOrderByIdForClientQuery(1, authorizationHeader);
 
       const orderDetailsDtoMock: OrderDetailsToClientDto = {
         id: 1,
@@ -122,9 +151,14 @@ describe('GetOrderByIdToClientQueryHandler', () => {
         totalAmount: 100,
         createdAt: new Date(),
       };
-
       jest
-        .spyOn(orderService, 'findOrderByIdToClientAsync')
+        .spyOn(authenticationService, 'decodeTokenAsync')
+        .mockResolvedValue(payloadMock);
+      jest
+        .spyOn(clientService, 'findClientByUserIdAsync')
+        .mockResolvedValue(clientMock);
+      jest
+        .spyOn(orderService, 'findOrderByIdForClientAsync')
         .mockResolvedValueOnce(orderDetailsDtoMock);
 
       // Act

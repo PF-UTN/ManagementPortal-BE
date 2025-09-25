@@ -19,6 +19,7 @@ import {
   OrderDetailsDto,
   OrderDetailsToClientDto,
 } from '@mp/common/dtos';
+import { OrderItemDataDto, OrderItemDataToClientDto } from '@mp/common/dtos';
 import { calculateTotalAmount } from '@mp/common/helpers';
 import {
   PrismaUnitOfWork,
@@ -33,10 +34,7 @@ import {
 
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
-import {
-  OrderItemDataDto,
-  OrderItemDataToClientDto,
-} from './../../../../libs/common/src/dtos';
+
 @Injectable()
 export class OrderService {
   constructor(
@@ -389,10 +387,16 @@ export class OrderService {
     return orderDto;
   }
 
-  async findOrderByIdToClientAsync(id: number) {
+  async findOrderByIdForClientAsync(id: number, clientId: number) {
     const order = await this.orderRepository.findOrderByIdAsync(id);
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} does not exist.`);
+    }
+
+    if (order.clientId !== clientId) {
+      throw new NotFoundException(
+        `Order with ID ${id} does not exist for this client.`,
+      );
     }
 
     const items = await this.orderItemRepository.findByOrderIdAsync(order.id);

@@ -19,7 +19,7 @@ import {
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
-import { GetOrderByIdToClientQuery } from './query/get-order-by-id-to-client.query';
+import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
 
@@ -93,7 +93,12 @@ export class OrderController {
     name: 'id',
     description: 'ID of the order to retrieve',
   })
-  getOrderByIdToClientAsync(@Param('id', ParseIntPipe) id: number) {
-    return this.queryBus.execute(new GetOrderByIdToClientQuery(id));
+  getOrderByIdToClientAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return this.queryBus.execute(
+      new GetOrderByIdForClientQuery(id, authorizationHeader),
+    );
   }
 }

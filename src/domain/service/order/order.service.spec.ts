@@ -648,9 +648,10 @@ describe('OrderService', () => {
     });
   });
 
-  describe('findOrderByIdToClientAsync', () => {
+  describe('findOrderByIdForClientAsync', () => {
     it('should throw NotFoundException if order does not exist', async () => {
       // Arrange
+
       const id = 999;
       jest
         .spyOn(orderRepository, 'findOrderByIdAsync')
@@ -661,7 +662,120 @@ describe('OrderService', () => {
         NotFoundException,
       );
     });
+    it('should throw NotFoundException if order does not exist for this client', async () => {
+      // Arrange
+      const orderItemsMock = [
+        {
+          id: 1,
+          orderId: 1,
+          productId: 1,
+          unitPrice: new Prisma.Decimal(10.0),
+          quantity: 5,
+          subtotalPrice: new Prisma.Decimal(50.0),
+          product: {
+            id: 1,
+            name: 'Test Product',
+            description: 'Producto de prueba',
+            price: new Prisma.Decimal(10.0),
+            enabled: true,
+            weight: new Prisma.Decimal(1.5),
+            imageUrl: 'https://test.com/image.jpg',
+            categoryId: 1,
+            supplierId: 1,
+            deletedAt: null,
+            category: {
+              id: 1,
+              name: 'Test Category',
+              description: 'Categoría de prueba',
+            },
+            supplier: {
+              id: 1,
+              addressId: 1,
+              email: 'proveedor@test.com',
+              phone: '123456789',
+              documentType: 'CUIT',
+              documentNumber: '20123456789',
+              businessName: 'Proveedor S.A.',
+            },
+            stock: {
+              id: 1,
+              productId: 1,
+              quantityOrdered: 10,
+              quantityAvailable: 100,
+              quantityReserved: 5,
+            },
+          },
+        },
+      ];
+      const orderMock = {
+        id: 1,
+        clientId: 1,
+        orderStatusId: 1,
+        paymentDetailId: 1,
+        deliveryMethodId: 1,
+        client: {
+          id: 1,
+          companyName: 'Test Company',
+          user: {
+            id: 1,
+            firstName: 'Juan',
+            lastName: 'Perez',
+            email: 'juan@mail.com',
+            password: 'test-password',
+            phone: '123456789',
+            documentType: 'DNI',
+            documentNumber: '12345678',
+            birthdate: new Date('1990-01-01'),
+            roleId: 2,
+            accountLockedUntil: null,
+            failedLoginAttempts: 0,
+          },
+          address: {
+            id: 1,
+            street: 'Calle Falsa',
+            streetNumber: 123,
+            townId: 1,
+          },
+          taxCategory: {
+            id: 1,
+            name: 'Responsable Inscripto',
+            description: '',
+          },
+          userId: 1,
+          taxCategoryId: 1,
+          addressId: 1,
+        },
+        deliveryMethod: {
+          id: 1,
+          name: 'Delivery',
+          description: 'Envío a domicilio',
+        },
+        orderStatus: {
+          id: 1,
+          name: 'Pending',
+        },
+        paymentDetail: {
+          paymentType: {
+            id: 1,
+            name: 'Efectivo',
+            description: null,
+          },
+          id: 1,
+          paymentTypeId: 1,
+        },
+        orderItems: orderItemsMock,
+        totalAmount: new Prisma.Decimal(105),
+        createdAt: new Date(),
+      };
+      jest
+        .spyOn(orderRepository, 'findOrderByIdAsync')
+        .mockResolvedValueOnce(orderMock);
 
+      // Act & Assert
+      await expect(service.findOrderByIdForClientAsync(1, 123)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
     it('should return order details with items', async () => {
       // Arrange
       const orderItemsMock = [
@@ -826,7 +940,10 @@ describe('OrderService', () => {
         .mockResolvedValueOnce(orderItemsMock);
 
       // Act
-      const result = await service.findOrderByIdToClientAsync(1);
+      const result = await service.findOrderByIdForClientAsync(
+        1,
+        orderMock.clientId,
+      );
 
       // Assert
       expect(result).toEqual(orderDetailsDtoMock);
