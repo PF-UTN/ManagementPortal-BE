@@ -28,7 +28,7 @@ export const orderMock = {
   paymentDetailId: 1,
   totalAmount: new Prisma.Decimal(105.0),
   createdAt: new Date(),
-  shipmentId: null
+  shipmentId: null,
 };
 
 export const stockMock = {
@@ -128,6 +128,7 @@ export const orderItemMock = {
 export const orderFullMock = {
   id: 1,
   clientId: 1,
+  shipmentId: 1,
   client: {
     id: 1,
     companyName: 'Test Company',
