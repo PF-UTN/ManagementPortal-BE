@@ -1,0 +1,16 @@
+model Shipment {
+    id          Int       @id @default(autoincrement())
+    date        DateTime  @db.Date
+    estimatedKm Decimal?  @db.Decimal(10, 2)
+    finishedAt  DateTime?
+    effectiveKm Decimal?  @db.Decimal(10, 2)
+    routeLink   String?   @db.VarChar(500)
+
+    vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+    vehicleId Int
+
+    status   ShipmentStatus @relation(fields: [statusId], references: [id])
+    statusId Int
+
+    orders Order[]
+}
