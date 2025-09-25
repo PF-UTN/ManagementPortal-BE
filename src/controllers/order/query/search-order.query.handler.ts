@@ -1,63 +1,32 @@
-import { NotFoundException } from '@nestjs/common';
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
 import { orderStatusTranslations } from '@mp/common/constants';
-import {
-  SearchOrderFromClientResponse,
-  SearchOrderFromClientServiceDto,
-} from '@mp/common/dtos';
+import { SearchOrderReturnDataDto, SearchOrderResponse } from '@mp/common/dtos';
 
-import { OrderDto } from './../../../../libs/common/src/dtos/order/order.dto';
-import { AuthenticationService } from './../../../domain/service/authentication/authentication.service';
-import { ClientService } from './../../../domain/service/client/client.service';
-import { OrderService } from './../../../domain/service/order/order.service';
-import { SearchOrderFromClientQuery } from './search-order.query';
+import { SearchOrderQuery } from './search-order.query';
+import { OrderService } from '../../../../src/domain/service/order/order.service';
 
-@QueryHandler(SearchOrderFromClientQuery)
-export class SearchOrderFromClientQueryHandler
-  implements IQueryHandler<SearchOrderFromClientQuery>
+@QueryHandler(SearchOrderQuery)
+export class SearchOrderQueryHandler
+  implements IQueryHandler<SearchOrderQuery>
 {
-  constructor(
-    private readonly orderService: OrderService,
-    private readonly authenticationService: AuthenticationService,
-    private readonly clientService: ClientService,
-  ) {}
+  constructor(private readonly orderService: OrderService) {}
 
-  async execute(
-    query: SearchOrderFromClientQuery,
-  ): Promise<SearchOrderFromClientResponse> {
-    const token = query.authorizationHeader.split(' ')[1];
-    const payload = await this.authenticationService.decodeTokenAsync(token);
-    const userId = payload.sub;
-
-    const client = await this.clientService.findClientByUserIdAsync(userId);
-    if (!client) {
-      throw new NotFoundException('Client associated with user not found');
-    }
-    const queryToService: SearchOrderFromClientServiceDto = {
-      clientId: client.id,
-      searchText: query.searchText,
-      page: query.page,
-      pageSize: query.pageSize,
-      filters: query.filters,
-      orderBy: query.orderBy,
-    };
+  async execute(query: SearchOrderQuery): Promise<SearchOrderResponse> {
     const { data, total } =
-      await this.orderService.searchClientOrdersWithFiltersAsync(
-        queryToService,
-      );
+      await this.orderService.searchWithFiltersAsync(query);
 
-    const mappedResponse = data.map((order): OrderDto => {
+    const mappedResponse = data.map((order): SearchOrderReturnDataDto => {
       return {
         id: order.id,
-        orderStatusName: orderStatusTranslations[order.orderStatus.name],
+        clientName: order.client.companyName,
+        orderStatus: orderStatusTranslations[order.orderStatus.name],
         createdAt: order.createdAt,
         totalAmount: order.totalAmount.toNumber(),
-        productsCount: order.orderItems.length,
       };
     });
 
-    return new SearchOrderFromClientResponse({
+    return new SearchOrderResponse({
       total,
       results: mappedResponse,
     });

@@ -1,23 +1,21 @@
 import { Query } from '@nestjs/cqrs';
 
-import { OrderSortDto, SearchOrderFromClientFiltersDto } from '@mp/common/dtos';
+import {
+  SearchOrderFiltersDto,
+  SearchOrderRequest,
+  SearchOrderResponse,
+  OrderSortDto,
+} from '@mp/common/dtos';
 
-import { SearchOrderFromClientRequest } from './../../../../libs/common/src/dtos';
-import { SearchOrderFromClientResponse } from './../../../../libs/common/src/dtos';
-
-export class SearchOrderFromClientQuery extends Query<SearchOrderFromClientResponse> {
+export class SearchOrderQuery extends Query<SearchOrderResponse> {
   searchText: string;
   page: number = 1;
   pageSize: number = 10;
-  filters: SearchOrderFromClientFiltersDto;
+  filters: SearchOrderFiltersDto;
   orderBy?: OrderSortDto;
 
-  constructor(
-    request: SearchOrderFromClientRequest,
-    public readonly authorizationHeader: string,
-  ) {
+  constructor(request: SearchOrderRequest) {
     super();
-    this.authorizationHeader = authorizationHeader;
     this.searchText = request.searchText;
     this.page = request.page;
     this.pageSize = request.pageSize;

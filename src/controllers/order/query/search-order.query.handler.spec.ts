@@ -1,220 +1,138 @@
-import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { clientMock, SearchOrderFromClientResponse } from '@mp/common/dtos';
-import { orderBigMock } from '@mp/common/testing';
+import {
+  OrderDirection,
+  OrderField,
+  orderStatusTranslations,
+} from '@mp/common/constants';
+import { SearchOrderResponse } from '@mp/common/dtos';
 
-import { AuthenticationService } from './../../../domain/service/authentication/authentication.service';
-import { ClientService } from './../../../domain/service/client/client.service';
-import { OrderService } from './../../../domain/service/order/order.service';
-import { SearchOrderFromClientQuery } from './search-order.query';
-import { SearchOrderFromClientQueryHandler } from './search-order.query.handler';
-
+import { SearchOrderQuery } from './search-order.query';
+import { SearchOrderQueryHandler } from './search-order.query.handler';
+import { OrderService } from '../../../domain/service/order/order.service';
 describe('SearchOrderQueryHandler', () => {
-  let handler: SearchOrderFromClientQueryHandler;
+  let handler: SearchOrderQueryHandler;
   let orderService: OrderService;
-  let authenticationService: AuthenticationService;
-  let clientService: ClientService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        SearchOrderFromClientQueryHandler,
-        { provide: OrderService, useValue: mockDeep<OrderService>() },
+        SearchOrderQueryHandler,
         {
-          provide: AuthenticationService,
-          useValue: mockDeep<AuthenticationService>(),
+          provide: OrderService,
+          useValue: mockDeep(OrderService),
         },
-        { provide: ClientService, useValue: mockDeep<ClientService>() },
       ],
     }).compile();
 
-    handler = module.get<SearchOrderFromClientQueryHandler>(
-      SearchOrderFromClientQueryHandler,
-    );
+    handler = module.get<SearchOrderQueryHandler>(SearchOrderQueryHandler);
     orderService = module.get<OrderService>(OrderService);
-    authenticationService = module.get<AuthenticationService>(
-      AuthenticationService,
-    );
-    clientService = module.get<ClientService>(ClientService);
   });
 
-  describe('execute', () => {
-    const token = 'testtoken';
-    const authorizationHeader = `Bearer ${token}`;
-    const payloadMock = { sub: 1 };
+  it('should be defined', () => {
+    expect(handler).toBeDefined();
+  });
 
-    const request = {
+  it('should call searchWithFiltersAsync on the service with correct parameters', async () => {
+    //Arrange
+    const query = new SearchOrderQuery({
       searchText: 'test',
       page: 1,
       pageSize: 10,
-      filters: {},
-      orderBy: undefined,
-    };
-
-    let query: SearchOrderFromClientQuery;
-
-    beforeEach(() => {
-      query = new SearchOrderFromClientQuery(request, authorizationHeader);
+      filters: {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2025-01-01',
+        toCreatedAtDate: '2025-12-31',
+      },
+      orderBy: {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      },
     });
 
-    it('should call authenticationService.decodeTokenAsync with the token extracted from authorizationHeader', async () => {
-      // Arrange
-      const decodeSpy = jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
+    jest
+      .spyOn(orderService, 'searchWithFiltersAsync')
+      .mockResolvedValue({ data: [], total: 0 });
 
-      // Act
-      await handler.execute(query);
+    //Act
+    await handler.execute(query);
 
-      // Assert
-      expect(decodeSpy).toHaveBeenCalledWith(token);
+    //Assert
+    expect(orderService.searchWithFiltersAsync).toHaveBeenCalledWith(query);
+  });
+
+  it('should map the response correctly', async () => {
+    //Arrange
+    const query = new SearchOrderQuery({
+      searchText: 'test',
+      page: 1,
+      pageSize: 10,
+      filters: {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2025-01-01',
+        toCreatedAtDate: '2025-12-31',
+      },
+      orderBy: {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      },
     });
 
-    it('should call clientService.findClientByUserIdAsync with the userId from payload', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      const clientSpy = jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
-
-      // Act
-      await handler.execute(query);
-
-      // Assert
-      expect(clientSpy).toHaveBeenCalledWith(payloadMock.sub);
-    });
-
-    it('should call orderService.searchClientOrdersWithFiltersAsync with correct params', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      const orderSpy = jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
-
-      // Act
-      await handler.execute(query);
-
-      // Assert
-      expect(orderSpy).toHaveBeenCalledWith({
-        clientId: clientMock.id,
-        searchText: query.searchText,
-        page: query.page,
-        pageSize: query.pageSize,
-        filters: query.filters,
-        orderBy: query.orderBy,
-      });
-    });
-
-    it('should return instance of SearchOrderFromClientResponse', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
-
-      // Act
-      const result = await handler.execute(query);
-
-      // Assert
-      expect(result).toBeInstanceOf(SearchOrderFromClientResponse);
-    });
-
-    it('should return correct total in response', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
-
-      // Act
-      const result = await handler.execute(query);
-
-      // Assert
-      expect(result.total).toBe(1);
-    });
-
-    it('should map order to correct dto', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(clientMock);
-      jest
-        .spyOn(orderService, 'searchClientOrdersWithFiltersAsync')
-        .mockResolvedValue({
-          data: [orderBigMock],
-          total: 1,
-        });
-
-      // Act
-      const result = await handler.execute(query);
-
-      // Assert
-      expect(result.results[0]).toMatchObject({
+    const result: Prisma.OrderGetPayload<{
+      include: {
+        client: {
+          select: {
+            id: true;
+            companyName: true;
+          };
+        };
+        orderStatus: {
+          select: {
+            name: true;
+          };
+        };
+      };
+    }>[] = [
+      {
         id: 1,
-        orderStatusName: expect.any(String),
-        createdAt: expect.any(Date),
-        totalAmount: 100,
-        productsCount: 2,
-      });
+        orderStatusId: 4,
+        totalAmount: new Prisma.Decimal(1000),
+        createdAt: new Date('2023-09-01'),
+        clientId: 1,
+        paymentDetailId: 1,
+        deliveryMethodId: 1,
+        client: {
+          id: 1,
+          companyName: 'Test Client',
+        },
+        orderStatus: {
+          name: 'Pending',
+        },
+      },
+    ];
+
+    const expectedTotal = 20;
+
+    const expectedResponse = new SearchOrderResponse({
+      total: expectedTotal,
+      results: result.map((order) => ({
+        id: order.id,
+        clientName: order.client.companyName,
+        orderStatus: orderStatusTranslations[order.orderStatus.name],
+        createdAt: order.createdAt,
+        totalAmount: order.totalAmount.toNumber(),
+      })),
     });
 
-    it('should throw NotFoundException if client does not exist', async () => {
-      // Arrange
-      jest
-        .spyOn(authenticationService, 'decodeTokenAsync')
-        .mockResolvedValue(payloadMock);
-      jest
-        .spyOn(clientService, 'findClientByUserIdAsync')
-        .mockResolvedValue(null);
+    jest
+      .spyOn(orderService, 'searchWithFiltersAsync')
+      .mockResolvedValue({ data: result, total: expectedTotal });
 
-      // Act & Assert
-      await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
-    });
+    //Act
+    const response = await handler.execute(query);
+    //Assert
+    expect(response).toEqual(expectedResponse);
   });
 });
