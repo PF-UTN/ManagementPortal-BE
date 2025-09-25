@@ -516,6 +516,7 @@ describe('OrderService', () => {
         orderStatusId: 1,
         paymentDetailId: 1,
         deliveryMethodId: 1,
+        shipmentId: 1,
         client: {
           id: 1,
           companyName: 'Test Company',
@@ -713,6 +714,7 @@ describe('OrderService', () => {
         orderStatusId: 1,
         paymentDetailId: 1,
         deliveryMethodId: 1,
+        shipmentId: 1,
         client: {
           id: 1,
           companyName: 'Test Company',
@@ -828,6 +830,7 @@ describe('OrderService', () => {
         orderStatusId: 1,
         paymentDetailId: 1,
         deliveryMethodId: 1,
+        shipmentId: 1,
         client: {
           id: 1,
           companyName: 'Test Company',
