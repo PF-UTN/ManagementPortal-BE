@@ -7,10 +7,12 @@ import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
   OrderCreationDto,
   SearchOrderFromClientRequest,
+  SearchOrderRequest,
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
-import { SearchOrderFromClientQuery } from './query/search-order.query';
+import { SearchOrderFromClientQuery } from './query/search-order-from-client.query';
+import { SearchOrderQuery } from './query/search-order.query';
 
 @Controller('order')
 export class OrderController {
@@ -49,5 +51,17 @@ export class OrderController {
         authorizationHeader,
       ),
     );
+  }
+
+  @Post('search')
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search orders',
+    description:
+      'Search for orders based on the provided filters and search text.',
+  })
+  async searchOrdersAsync(@Body() searchOrderRequestDto: SearchOrderRequest) {
+    return this.queryBus.execute(new SearchOrderQuery(searchOrderRequestDto));
   }
 }

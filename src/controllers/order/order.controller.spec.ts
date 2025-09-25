@@ -2,15 +2,22 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { DeliveryMethodId, OrderStatusId } from '@mp/common/constants';
+import {
+  DeliveryMethodId,
+  OrderDirection,
+  OrderField,
+  OrderStatusId,
+} from '@mp/common/constants';
 import {
   OrderCreationDto,
   SearchOrderFromClientRequest,
+  SearchOrderRequest,
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { OrderController } from './order.controller';
-import { SearchOrderFromClientQuery } from './query/search-order.query';
+import { SearchOrderFromClientQuery } from './query/search-order-from-client.query';
+import { SearchOrderQuery } from './query/search-order.query';
 
 describe('OrderController', () => {
   let controller: OrderController;
@@ -38,7 +45,7 @@ describe('OrderController', () => {
     expect(controller).toBeDefined();
   });
 
-  describe('createPurchaseOrderAsync', () => {
+  describe('createOrderAsync', () => {
     it('should call execute on the commandBus with correct parameters', async () => {
       // Arrange
       const orderCreationDtoMock: OrderCreationDto = {
@@ -93,6 +100,32 @@ describe('OrderController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+
+  describe('searchOrdersAsync', () => {
+    it('should call queryBus.execute with SearchOrderQuery and correct params', async () => {
+      // Arrange
+      const request: SearchOrderRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+        filters: {
+          statusName: ['Pending'],
+          fromCreatedAtDate: '2025-01-01',
+          toCreatedAtDate: '2025-12-31',
+        },
+        orderBy: {
+          field: OrderField.CREATED_AT,
+          direction: OrderDirection.ASC,
+        },
+      };
+      // Act
+      await controller.searchOrdersAsync(request);
+      // Assert
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchOrderQuery(request),
+      );
     });
   });
 });
