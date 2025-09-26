@@ -337,4 +337,83 @@ describe('OrderRepository', () => {
       });
     });
   });
+
+  describe('downloadWithFiltersAsync', () => {
+    const filters = {
+      statusName: ['Pending'],
+      fromCreatedAtDate: '2023-01-01',
+      toCreatedAtDate: '2023-12-31',
+    };
+
+    const searchText = 'Test Client';
+
+    const orderBy = {
+      field: OrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    };
+
+    const mockData = [order];
+
+    beforeEach(() => {
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValue(mockData);
+    });
+
+    it('should call prisma.order.findMany with correct filters and order', async () => {
+      // Act
+      await repository.downloadWithFiltersAsync(searchText, filters, orderBy);
+
+      // Assert
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: [
+              filters.statusName?.length
+                ? { orderStatus: { name: { in: filters.statusName } } }
+                : {},
+              filters.fromCreatedAtDate
+                ? { createdAt: { gte: new Date(filters.fromCreatedAtDate) } }
+                : {},
+              filters.toCreatedAtDate
+                ? {
+                    createdAt: {
+                      lte: endOfDay(parseISO(filters.toCreatedAtDate)),
+                    },
+                  }
+                : {},
+              {
+                OR: [
+                  {
+                    client: {
+                      companyName: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : {
+                        id: Number(searchText),
+                      },
+                ],
+              },
+            ],
+          }),
+          orderBy: { createdAt: 'desc' },
+        }),
+      );
+    });
+
+    it('should return data from prisma results', async () => {
+      // Act
+      const result = await repository.downloadWithFiltersAsync(
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(result).toEqual(mockData);
+    });
+  });
 });
