@@ -1,16 +1,26 @@
-import { Body, Controller, HttpCode, Headers, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Headers,
+  Post,
+  StreamableFile,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
+  DownloadOrderRequest,
   OrderCreationDto,
   SearchOrderFromClientRequest,
   SearchOrderRequest,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { DownloadOrderQuery } from './query/download-order.query';
 import { SearchOrderFromClientQuery } from './query/search-order-from-client.query';
 import { SearchOrderQuery } from './query/search-order.query';
 
@@ -63,5 +73,30 @@ export class OrderController {
   })
   async searchOrdersAsync(@Body() searchOrderRequestDto: SearchOrderRequest) {
     return this.queryBus.execute(new SearchOrderQuery(searchOrderRequestDto));
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download purchase orders',
+    description:
+      'Download purchase orders based on the provided filters and search text.',
+  })
+  async downloadOrdersAsync(
+    @Body() downloadOrderDto: DownloadOrderRequest,
+  ): Promise<StreamableFile> {
+    const purchaseOrders = await this.queryBus.execute(
+      new DownloadOrderQuery(downloadOrderDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(purchaseOrders);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Pedidos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 }
