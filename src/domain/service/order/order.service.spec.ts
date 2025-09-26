@@ -28,6 +28,7 @@ import {
 } from '@mp/repository';
 
 import { OrderService } from './order.service';
+import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
 import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
@@ -487,6 +488,37 @@ describe('OrderService', () => {
       expect(orderRepository.searchWithFiltersAsync).toHaveBeenCalledWith(
         query.page,
         query.pageSize,
+        query.searchText,
+        query.filters,
+        query.orderBy,
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchOrderFiltersDto = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2025-01-01',
+        toCreatedAtDate: '2025-12-31',
+      };
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      };
+      const query = new DownloadOrderQuery({
+        searchText,
+        filters,
+        orderBy,
+      });
+
+      // Act
+      await service.downloadWithFiltersAsync(query);
+
+      // Assert
+      expect(orderRepository.downloadWithFiltersAsync).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
         query.orderBy,
