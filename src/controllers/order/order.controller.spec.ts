@@ -11,6 +11,8 @@ import {
 import { CreateOrderCommand } from './command/create-order.command';
 import { OrderController } from './order.controller';
 import { CheckoutOrderQuery } from './query/checkout-order.query';
+import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
+import { GetOrderByIdQuery } from './query/get-order-by-id.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 describe('OrderController', () => {
@@ -96,18 +98,63 @@ describe('OrderController', () => {
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
+
+  describe('getOrderByIdAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const orderId = 1;
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('result');
+      const expectedQuery = new GetOrderByIdQuery(orderId);
+
+      // Act
+      await controller.getOrderByIdAsync(orderId);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+
+  describe('getOrderByIdToClientAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const orderId = 1;
+      const authorizationHeader = 'Bearer testtoken';
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('result');
+      const expectedQuery = new GetOrderByIdForClientQuery(
+        orderId,
+        authorizationHeader,
+      );
+
+      // Act
+      await controller.getOrderByIdToClientAsync(orderId, authorizationHeader);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+
   describe('checkoutAsync', () => {
     it('should call execute on the queryBus with correct parameters', async () => {
       // Arrange
       const orderId = 123;
-      const shipmentMethodId = 2;
+      const authorizationHeader = 'Bearer testtoken';
       const executeSpy = jest
         .spyOn(queryBus, 'execute')
         .mockResolvedValue('checkoutResult');
-      const expectedQuery = new CheckoutOrderQuery(orderId, shipmentMethodId);
+      const expectedQuery = new CheckoutOrderQuery(
+        orderId,
+        authorizationHeader,
+      );
 
       // Act
-      const result = await controller.checkoutAsync(orderId, shipmentMethodId);
+      const result = await controller.checkoutAsync(
+        orderId,
+        authorizationHeader,
+      );
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);

@@ -3,13 +3,13 @@ import {
   Controller,
   HttpCode,
   Headers,
-  Post,
   Get,
-  ParseIntPipe,
+  Post,
   Param,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
-import { ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { Public, RequiredPermissions } from '@mp/common/decorators';
@@ -20,6 +20,8 @@ import {
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { CheckoutOrderQuery } from './query/checkout-order.query';
+import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
+import { GetOrderByIdQuery } from './query/get-order-by-id.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
 
 @Controller('order')
@@ -61,7 +63,47 @@ export class OrderController {
     );
   }
 
-  @Get('checkout/:orderId/:shipmentMethodId')
+  @Get(':id')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @Public()
+  @ApiOperation({
+    summary: 'Get order by ID',
+    description: 'Retrieve an order with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the order to retrieve',
+  })
+  getOrderByIdAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.queryBus.execute(new GetOrderByIdQuery(id));
+  }
+
+  @Get('/client/:id')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @Public()
+  @ApiOperation({
+    summary: 'Get order by ID to Client',
+    description:
+      'Retrieve an order with the provided ID with client-specific details.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the order to retrieve',
+  })
+  getOrderByIdToClientAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return this.queryBus.execute(
+      new GetOrderByIdForClientQuery(id, authorizationHeader),
+    );
+  }
+
+  @Get('checkout/:orderId')
   @ApiBearerAuth()
   @Public()
   @ApiOperation({
@@ -70,10 +112,10 @@ export class OrderController {
   })
   async checkoutAsync(
     @Param('orderId', ParseIntPipe) orderId: number,
-    @Param('shipmentMethodId', ParseIntPipe) shipmentMethodId: number,
+    @Headers('Authorization') authorizationHeader: string,
   ) {
     return this.queryBus.execute(
-      new CheckoutOrderQuery(orderId, shipmentMethodId),
+      new CheckoutOrderQuery(orderId, authorizationHeader),
     );
   }
 }

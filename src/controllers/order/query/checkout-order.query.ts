@@ -4,7 +4,7 @@ import { PreferenceResponse } from 'mercadopago/dist/clients/preference/commonTy
 export class CheckoutOrderQuery extends Query<PreferenceResponse> {
   constructor(
     public orderId: number,
-    public shipmentMethodId: number,
+    public authorizationHeader: string,
   ) {
     super();
   }

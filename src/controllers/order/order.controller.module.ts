@@ -8,12 +8,16 @@ import { OrderServiceModule } from './../../domain/service/order/order.service.m
 import { CreateOrderCommandHandler } from './command/create-order.command.handler';
 import { OrderController } from './order.controller';
 import { CheckoutOrderQueryHandler } from './query/checkout-order.query.handler';
+import { GetOrderByIdToClientQueryHandler } from './query/get-order-by-id-to-client.query.handler';
+import { GetOrderByIdQueryHandler } from './query/get-order-by-id.query.handler';
 import { SearchOrderFromClientQueryHandler } from './query/search-order.query.handler';
 
 const commandHandlers = [CreateOrderCommandHandler];
 const queryHandlers = [
   SearchOrderFromClientQueryHandler,
   CheckoutOrderQueryHandler,
+  GetOrderByIdQueryHandler,
+  GetOrderByIdToClientQueryHandler,
 ];
 @Module({
   imports: [

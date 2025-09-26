@@ -1,7 +1,5 @@
-import { NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Prisma, Product } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 import { PreferenceResponse } from 'mercadopago/dist/clients/preference/commonTypes';
 
@@ -9,6 +7,10 @@ import { MercadoPagoService } from '@mp/common/services';
 
 import { CheckoutOrderQuery } from './checkout-order.query';
 import { CheckoutOrderQueryHandler } from './checkout-order.query.handler';
+import { DeliveryMethodId } from '../../../../libs/common/src/constants';
+import { clientMock } from '../../../../libs/common/src/testing';
+import { AuthenticationService } from '../../../domain/service/authentication/authentication.service';
+import { ClientService } from '../../../domain/service/client/client.service';
 import { OrderService } from '../../../domain/service/order/order.service';
 
 describe('CheckoutOrderQueryHandler', () => {
@@ -16,17 +18,27 @@ describe('CheckoutOrderQueryHandler', () => {
   let orderService: OrderService;
   let mercadoPagoService: MercadoPagoService;
   let configService: ConfigService;
+  let authenticationService: AuthenticationService;
+  let clientService: ClientService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         CheckoutOrderQueryHandler,
-        { provide: OrderService, useValue: { getOrderByIdAsync: jest.fn() } },
+        {
+          provide: OrderService,
+          useValue: { findOrderByIdForClientAsync: jest.fn() },
+        },
         {
           provide: MercadoPagoService,
           useValue: { createPreference: jest.fn() },
         },
         { provide: ConfigService, useValue: { get: jest.fn() } },
+        {
+          provide: AuthenticationService,
+          useValue: mockDeep<AuthenticationService>(),
+        },
+        { provide: ClientService, useValue: mockDeep<ClientService>() },
       ],
     }).compile();
 
@@ -34,57 +46,84 @@ describe('CheckoutOrderQueryHandler', () => {
     orderService = module.get<OrderService>(OrderService);
     mercadoPagoService = module.get<MercadoPagoService>(MercadoPagoService);
     configService = module.get<ConfigService>(ConfigService);
-  });
-
-  it('should throw NotFoundException if order is not found', async () => {
-    // Arrange
-    const query = new CheckoutOrderQuery(1, 2);
-    jest.spyOn(orderService, 'getOrderByIdAsync').mockResolvedValueOnce(null);
-
-    // Act & Assert
-    await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
+    authenticationService = module.get<AuthenticationService>(
+      AuthenticationService,
+    );
+    clientService = module.get<ClientService>(ClientService);
   });
 
   it('should call MercadoPagoService.createPreference with correct parameters and return checkout', async () => {
     // Arrange
-    const query = new CheckoutOrderQuery(1, 2);
-    const order = mockDeep<
-      Prisma.OrderGetPayload<{
-        include: { orderItems: { include: { product: true } } };
-      }>
-    >();
+    const query = new CheckoutOrderQuery(1, 'Bearer token');
+    const payloadMock = { sub: 5 };
 
-    const priceMock = mockDeep<Prisma.Decimal>();
-    priceMock.toNumber.mockReturnValue(100);
+    jest
+      .spyOn(authenticationService, 'decodeTokenAsync')
+      .mockResolvedValue(payloadMock);
+    jest
+      .spyOn(clientService, 'findClientByUserIdAsync')
+      .mockResolvedValue(clientMock);
 
-    const unitPriceMock = mockDeep<Prisma.Decimal>();
-    unitPriceMock.toNumber.mockReturnValue(100);
-
-    order.orderItems = [
-      {
-        id: 10,
-        productId: 20,
-        orderId: 1,
-        unitPrice: unitPriceMock,
-        quantity: 2,
-        subtotalPrice: mockDeep<Prisma.Decimal>(),
-        product: mockDeep<Product>({
-          name: 'Product A',
-          description: 'Desc',
-          imageUrl: 'img.jpg',
-          enabled: true,
-          weight: mockDeep<Prisma.Decimal>(),
-          categoryId: 1,
-          supplierId: 1,
-          deletedAt: null,
-          id: 20,
-        }),
+    const orderDetailsToClientDtoMock = {
+      id: 1,
+      client: {
+        companyName: 'Test Company',
+        user: {
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          phone: '123456789',
+        },
+        address: {
+          street: 'Calle Falsa',
+          streetNumber: 123,
+        },
+        taxCategory: {
+          name: 'Responsable Inscripto',
+          description: '',
+        },
       },
-    ];
-    order.orderItems[0].product.price = priceMock;
+      deliveryMethodName: 'Delivery',
+      deliveryMethodId: DeliveryMethodId.HomeDelivery,
+      orderStatus: {
+        name: 'Pending',
+      },
+      paymentDetail: {
+        paymentType: {
+          name: 'Efectivo',
+        },
+      },
+      orderItems: [
+        {
+          id: 10,
+          productId: 20,
+          orderId: 1,
+          unitPrice: 100,
+          quantity: 2,
+          subtotalPrice: 200,
+          product: {
+            name: 'Product A',
+            description: 'Desc',
+            imageUrl: 'img.jpg',
+            enabled: true,
+            weight: 1,
+            categoryId: 1,
+            supplierId: 1,
+            deletedAt: null,
+            id: 20,
+            price: 100,
+            category: { name: 'Electronics' },
+          },
+        },
+      ],
+      totalAmount: 100,
+      createdAt: new Date(),
+    };
 
     const checkoutResult = mockDeep<PreferenceResponse>({ id: 'pref_123' });
-    jest.spyOn(orderService, 'getOrderByIdAsync').mockResolvedValueOnce(order);
+    jest
+      .spyOn(orderService, 'findOrderByIdForClientAsync')
+      .mockResolvedValueOnce(orderDetailsToClientDtoMock);
     jest.spyOn(configService, 'get').mockReturnValue('http://frontend');
     jest
       .spyOn(mercadoPagoService, 'createPreference')
@@ -94,7 +133,13 @@ describe('CheckoutOrderQueryHandler', () => {
     const result = await handler.execute(query);
 
     // Assert
-    expect(orderService.getOrderByIdAsync).toHaveBeenCalledWith(query.orderId);
+    expect(authenticationService.decodeTokenAsync).toHaveBeenCalledWith(
+      'token',
+    );
+    expect(orderService.findOrderByIdForClientAsync).toHaveBeenCalledWith(
+      query.orderId,
+      payloadMock.sub,
+    );
     expect(mercadoPagoService.createPreference).toHaveBeenCalledWith({
       body: {
         items: [
@@ -119,43 +164,78 @@ describe('CheckoutOrderQueryHandler', () => {
     expect(result).toBe(checkoutResult);
   });
 
-  it('should set shipments cost to 0 if shipmentMethodId is 0', async () => {
+  it('should set shipments cost to 0 if DeliveryMethodId.PickUpAtStore', async () => {
     // Arrange
-    const query = new CheckoutOrderQuery(1, 0);
-    const order = mockDeep<
-      Prisma.OrderGetPayload<{
-        include: { orderItems: { include: { product: true } } };
-      }>
-    >();
+    const query = new CheckoutOrderQuery(1, 'Bearer token');
+    const payloadMock = { sub: 5 };
 
-    const priceMock = mockDeep<Prisma.Decimal>();
-    priceMock.toNumber.mockReturnValue(50);
+    jest
+      .spyOn(authenticationService, 'decodeTokenAsync')
+      .mockResolvedValue(payloadMock);
+    jest
+      .spyOn(clientService, 'findClientByUserIdAsync')
+      .mockResolvedValue(clientMock);
 
-    order.orderItems = [
-      {
-        id: 11,
-        productId: 22,
-        orderId: 1,
-        unitPrice: mockDeep<Prisma.Decimal>(),
-        quantity: 1,
-        subtotalPrice: mockDeep<Prisma.Decimal>(),
-        product: mockDeep<Product>({
-          name: 'Product B',
-          description: 'Desc B',
-          imageUrl: null,
-          enabled: true,
-          weight: mockDeep<Prisma.Decimal>(),
-          categoryId: 1,
-          supplierId: 1,
-          deletedAt: null,
-          id: 22,
-        }),
+    const orderDetailsToClientDtoMock = {
+      id: payloadMock.sub,
+      client: {
+        companyName: 'Test Company',
+        user: {
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          phone: '123456789',
+        },
+        address: {
+          street: 'Calle Falsa',
+          streetNumber: 123,
+        },
+        taxCategory: {
+          name: 'Responsable Inscripto',
+          description: '',
+        },
       },
-    ];
-    order.orderItems[0].product.price = priceMock;
+      deliveryMethodName: 'Delivery',
+      deliveryMethodId: DeliveryMethodId.PickUpAtStore,
+      orderStatus: {
+        name: 'Pending',
+      },
+      paymentDetail: {
+        paymentType: {
+          name: 'Efectivo',
+        },
+      },
+      orderItems: [
+        {
+          id: 10,
+          productId: 20,
+          orderId: 1,
+          unitPrice: 100,
+          quantity: 2,
+          subtotalPrice: 200,
+          product: {
+            name: 'Product A',
+            description: 'Desc',
+            imageUrl: 'img.jpg',
+            enabled: true,
+            weight: 1,
+            categoryId: 1,
+            supplierId: 1,
+            deletedAt: null,
+            id: 20,
+            price: 100,
+            category: { name: 'Electronics' },
+          },
+        },
+      ],
+      totalAmount: 100,
+      createdAt: new Date(),
+    };
 
     const checkoutResult = mockDeep<PreferenceResponse>({ id: 'pref_456' });
-    jest.spyOn(orderService, 'getOrderByIdAsync').mockResolvedValueOnce(order);
+    jest
+      .spyOn(orderService, 'findOrderByIdForClientAsync')
+      .mockResolvedValueOnce(orderDetailsToClientDtoMock);
     jest.spyOn(configService, 'get').mockReturnValue('http://frontend');
     jest
       .spyOn(mercadoPagoService, 'createPreference')
@@ -165,6 +245,13 @@ describe('CheckoutOrderQueryHandler', () => {
     const result = await handler.execute(query);
 
     // Assert
+    expect(authenticationService.decodeTokenAsync).toHaveBeenCalledWith(
+      'token',
+    );
+    expect(orderService.findOrderByIdForClientAsync).toHaveBeenCalledWith(
+      query.orderId,
+      payloadMock.sub,
+    );
     expect(mercadoPagoService.createPreference).toHaveBeenCalledWith(
       expect.objectContaining({
         body: expect.objectContaining({
