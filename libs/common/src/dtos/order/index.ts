@@ -9,3 +9,5 @@ export * from './search-order-return-data.dto';
 export * from './search-order-filters.dto';
 export * from './search-order-request.dto';
 export * from './search-order-response.dto';
+export * from './download-order-request.dto';
+export * from './download-order.dto';
