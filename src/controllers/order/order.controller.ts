@@ -19,6 +19,7 @@ import {
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
 import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
@@ -99,6 +100,22 @@ export class OrderController {
   ) {
     return this.queryBus.execute(
       new GetOrderByIdForClientQuery(id, authorizationHeader),
+    );
+  }
+
+  @Get('checkout/:orderId')
+  @ApiBearerAuth()
+  @Public()
+  @ApiOperation({
+    summary: 'Get order ready for checkout',
+    description: 'Process an order for checkout.',
+  })
+  async checkoutAsync(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return this.queryBus.execute(
+      new CheckoutOrderQuery(orderId, authorizationHeader),
     );
   }
 }

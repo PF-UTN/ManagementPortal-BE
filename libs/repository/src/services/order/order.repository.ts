@@ -125,11 +125,16 @@ export class OrderRepository {
     ]);
     return { data, total };
   }
+
   async findOrderByIdAsync(id: number) {
     return this.prisma.order.findUnique({
       where: { id },
       include: {
-        orderItems: true,
+        orderItems: {
+          include: {
+            product: true,
+          },
+        },
         orderStatus: true,
         client: {
           include: { user: true, address: true, taxCategory: true },

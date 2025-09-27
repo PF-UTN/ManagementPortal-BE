@@ -76,6 +76,7 @@ describe('GetOrderByIdToClientQueryHandler', () => {
           },
         },
         deliveryMethodName: 'Delivery',
+        deliveryMethodId: 1,
         orderStatus: {
           name: 'Pending',
         },
@@ -139,6 +140,7 @@ describe('GetOrderByIdToClientQueryHandler', () => {
           },
         },
         deliveryMethodName: 'Delivery',
+        deliveryMethodId: 1,
         orderStatus: {
           name: 'Pending',
         },
