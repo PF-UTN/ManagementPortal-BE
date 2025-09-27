@@ -20,9 +20,9 @@ export const billReport = async (
     content: [
       {
         columns: [
-          { width: '*', text: '' },
+          { image: 'logo', width: 80, alignment: 'left' },
           {
-            width: 80,
+            width: 'auto',
             table: {
               body: [
                 [
@@ -42,15 +42,10 @@ export const billReport = async (
               hLineColor: () => '#65558f',
               vLineColor: () => '#65558f',
             },
+            alignment: 'center',
           },
-          { width: '*', text: '' },
-        ],
-        margin: [0, 0, 0, 10],
-      },
-      {
-        columns: [
-          { image: 'logo', width: 120 },
           {
+            width: '*',
             text: [
               {
                 text: `FACTURA #${bill.billId}\n`,
@@ -79,8 +74,9 @@ export const billReport = async (
             alignment: 'right',
           },
         ],
+        columnGap: 150,
+        margin: [0, 0, 0, 20],
       },
-
       {
         columns: [
           {
@@ -111,12 +107,8 @@ export const billReport = async (
                 bold: true,
               },
               {
-                text: bill.clientAddress,
+                text: `${bill.clientAddress}\n`,
               },
-            ],
-          },
-          {
-            text: [
               {
                 text: 'Tipo de pago: ',
                 bold: true,
@@ -125,7 +117,6 @@ export const billReport = async (
                 text: `${bill.paymentType}\n`,
               },
             ],
-            alignment: 'right',
           },
         ],
         columnGap: 20,
