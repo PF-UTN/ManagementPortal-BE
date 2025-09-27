@@ -9,7 +9,7 @@ export class MercadoPagoService {
   private readonly preference: Preference;
 
   constructor(private readonly config: ConfigService) {
-    const accessToken = config.get<string>('MP_TEST_ACCESS_TOKEN');
+    const accessToken = config.get<string>('MP_ACCESS_TOKEN');
 
     if (!accessToken) {
       throw new Error('MercadoPago access token is not configured.');
