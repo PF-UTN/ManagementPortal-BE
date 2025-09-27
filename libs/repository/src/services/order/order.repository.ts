@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 
-import { OrderDirection, OrderField } from '@mp/common/constants';
+import {
+  OrderDirection,
+  OrderField,
+  OrderStatusId,
+} from '@mp/common/constants';
 
 import {
   OrderDataDto,
@@ -136,6 +140,56 @@ export class OrderRepository {
         },
         deliveryMethod: true,
         paymentDetail: { include: { paymentType: true } },
+      },
+    });
+  }
+
+  async existsManyPendingAsync(ids: number[]): Promise<boolean> {
+    const orders = await this.prisma.order.findMany({
+      select: { id: true },
+      where: {
+        AND: [{ id: { in: ids } }, { orderStatusId: OrderStatusId.Pending }],
+      },
+    });
+    return orders.length === ids.length;
+  }
+
+  async updateManyOrderStatusAsync(
+    ids: number[],
+    newStatus: OrderStatusId,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number> {
+    const client = tx ?? this.prisma;
+
+    const result = await client.order.updateMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+      data: {
+        orderStatusId: newStatus,
+      },
+    });
+
+    return result.count;
+  }
+
+  async findOrdersByShipmentIdAsync(shipmentId: number) {
+    return this.prisma.order.findMany({
+      where: {
+        shipmentId,
+      },
+      include: {
+        client: {
+          include: {
+            user: {
+              select: {
+                email: true,
+              },
+            },
+          },
+        },
       },
     });
   }
