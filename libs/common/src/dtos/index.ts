@@ -23,3 +23,5 @@ export * from './payment-detail';
 export * from './order-status';
 export * from './payment-type';
 export * from './delivery-method';
+export * from './bill';
+export * from './bill-item';

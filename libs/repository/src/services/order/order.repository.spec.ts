@@ -232,4 +232,82 @@ describe('OrderRepository', () => {
       });
     });
   });
+  describe('updateOrderAsync', () => {
+    const orderId = 1;
+    const updateData: Prisma.OrderUpdateInput = {
+      orderStatus: { connect: { id: 2 } },
+    };
+    const updatedOrder: Order = {
+      id: orderId,
+      clientId: 1,
+      orderStatusId: 2,
+      paymentDetailId: 1,
+      deliveryMethodId: 1,
+      shipmentId: null,
+      totalAmount: new Prisma.Decimal(100),
+      createdAt: new Date(),
+    };
+
+    it('should update the order with the provided data (without tx)', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.order, 'update')
+        .mockResolvedValueOnce(updatedOrder);
+
+      // Act
+      const result = await repository.updateOrderAsync(orderId, updateData);
+
+      // Assert
+      expect(result).toEqual(updatedOrder);
+    });
+
+    it('should call prisma.order.update with correct arguments (without tx)', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.order, 'update')
+        .mockResolvedValueOnce(updatedOrder);
+
+      // Act
+      await repository.updateOrderAsync(orderId, updateData);
+
+      // Assert
+      expect(prismaService.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: updateData,
+      });
+    });
+
+    it('should use tx.order.update when tx is provided', async () => {
+      // Arrange
+      const txMock = {
+        order: { update: jest.fn().mockResolvedValue(updatedOrder) },
+      } as unknown as Prisma.TransactionClient;
+
+      // Act
+      await repository.updateOrderAsync(orderId, updateData, txMock);
+
+      // Assert
+      expect(txMock.order.update).toHaveBeenCalledWith({
+        where: { id: orderId },
+        data: updateData,
+      });
+    });
+
+    it('should return the updated order when tx is provided', async () => {
+      // Arrange
+      const txMock = {
+        order: { update: jest.fn().mockResolvedValue(updatedOrder) },
+      } as unknown as Prisma.TransactionClient;
+
+      // Act
+      const result = await repository.updateOrderAsync(
+        orderId,
+        updateData,
+        txMock,
+      );
+
+      // Assert
+      expect(result).toEqual(updatedOrder);
+    });
+  });
 });

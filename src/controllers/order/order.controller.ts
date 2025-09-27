@@ -7,6 +7,7 @@ import {
   Post,
   Param,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
@@ -16,9 +17,11 @@ import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
   OrderCreationDto,
   SearchOrderFromClientRequest,
+  UpdateOrderStatusRequestDto,
 } from '@mp/common/dtos';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { UpdateOrderStatusCommand } from './command/update-order-status.command';
 import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
 import { SearchOrderFromClientQuery } from './query/search-order.query';
@@ -99,6 +102,27 @@ export class OrderController {
   ) {
     return this.queryBus.execute(
       new GetOrderByIdForClientQuery(id, authorizationHeader),
+    );
+  }
+
+  @Patch(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Order.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update status of an order',
+    description: 'Update the status of an order with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the order to update',
+  })
+  updateOrderStatusAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() orderStatusUpdateDto: UpdateOrderStatusRequestDto,
+  ) {
+    return this.commandBus.execute(
+      new UpdateOrderStatusCommand(id, orderStatusUpdateDto),
     );
   }
 }

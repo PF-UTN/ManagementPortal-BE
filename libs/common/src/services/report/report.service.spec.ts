@@ -1,14 +1,22 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { PurchaseOrderReportGenerationDataDto } from '@mp/common/dtos';
+import {
+  BillReportGenerationDataDto,
+  PurchaseOrderReportGenerationDataDto,
+} from '@mp/common/dtos';
 
 import { ReportService } from './report.service';
 import { PrinterService } from '../printer/printer.service';
+import { billReport } from './document/bill.report';
 import { purchaseOrderReport } from './document/purchase-order.report';
 
 jest.mock('./document/purchase-order.report', () => ({
   purchaseOrderReport: jest.fn(),
+}));
+
+jest.mock('./document/bill.report', () => ({
+  billReport: jest.fn(),
 }));
 
 describe('ReportService', () => {
@@ -62,6 +70,39 @@ describe('ReportService', () => {
 
       // Act
       await service.generatePurchaseOrderReport(purchaseOrderDto);
+
+      // Assert
+      expect(printerService.createPdf).toHaveBeenCalledWith(docDefinition);
+    });
+  });
+  describe('generateBillReport', () => {
+    it('should call billReport with correct arguments', async () => {
+      // Arrange
+      const billDto = {} as BillReportGenerationDataDto;
+      const docDefinition = { some: 'definition' };
+      const pdfDoc = { pdf: 'doc' };
+
+      (billReport as jest.Mock).mockReturnValue(docDefinition);
+      (printerService.createPdf as jest.Mock).mockResolvedValue(pdfDoc);
+
+      // Act
+      await service.generateBillReport(billDto);
+
+      // Assert
+      expect(billReport).toHaveBeenCalledWith(billDto);
+    });
+
+    it('should call printer.createPdf with correct arguments', async () => {
+      // Arrange
+      const billDto = {} as BillReportGenerationDataDto;
+      const docDefinition = { some: 'definition' };
+      const pdfDoc = { pdf: 'doc' };
+
+      (billReport as jest.Mock).mockReturnValue(docDefinition);
+      (printerService.createPdf as jest.Mock).mockResolvedValue(pdfDoc);
+
+      // Act
+      await service.generateBillReport(billDto);
 
       // Assert
       expect(printerService.createPdf).toHaveBeenCalledWith(docDefinition);

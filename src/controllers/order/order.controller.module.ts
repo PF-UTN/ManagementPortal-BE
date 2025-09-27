@@ -4,12 +4,16 @@ import { AuthenticationServiceModule } from './../../domain/service/authenticati
 import { ClientServiceModule } from './../../domain/service/client/client.service.module';
 import { OrderServiceModule } from './../../domain/service/order/order.service.module';
 import { CreateOrderCommandHandler } from './command/create-order.command.handler';
+import { UpdateOrderStatusCommandHandler } from './command/update-order-status.command.handler';
 import { OrderController } from './order.controller';
 import { GetOrderByIdToClientQueryHandler } from './query/get-order-by-id-to-client.query.handler';
 import { GetOrderByIdQueryHandler } from './query/get-order-by-id.query.handler';
 import { SearchOrderFromClientQueryHandler } from './query/search-order.query.handler';
 
-const commandHandlers = [CreateOrderCommandHandler];
+const commandHandlers = [
+  CreateOrderCommandHandler,
+  UpdateOrderStatusCommandHandler,
+];
 const queryHandlers = [
   SearchOrderFromClientQueryHandler,
   GetOrderByIdQueryHandler,
