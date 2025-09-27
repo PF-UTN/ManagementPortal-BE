@@ -237,8 +237,8 @@ describe('OrderRepository', () => {
     });
   });
 
-  describe('existsManyPendingAsync', () => {
-    it('should return true if all orders exist with Pending status', async () => {
+  describe('existsManyPendingUnassignedAsync', () => {
+    it('should return true if all orders exist with Pending status and are unassigned', async () => {
       // Arrange
       const orderIds = [1, 2, 3];
       jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([
@@ -248,13 +248,14 @@ describe('OrderRepository', () => {
       ]);
 
       // Act
-      const exists = await repository.existsManyPendingAsync(orderIds);
+      const exists =
+        await repository.existsManyPendingUnassignedAsync(orderIds);
 
       // Assert
       expect(exists).toBe(true);
     });
 
-    it('should return false if not all orders exist with Pending status', async () => {
+    it('should return false if not all orders exist with Pending status and are unassigned', async () => {
       // Arrange
       const orderIds = [1, 2, 3];
       jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([
@@ -263,7 +264,8 @@ describe('OrderRepository', () => {
       ]);
 
       // Act
-      const exists = await repository.existsManyPendingAsync(orderIds);
+      const exists =
+        await repository.existsManyPendingUnassignedAsync(orderIds);
       // Assert
       expect(exists).toBe(false);
     });

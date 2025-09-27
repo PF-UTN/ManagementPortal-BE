@@ -32,13 +32,14 @@ export class ShipmentService {
       );
     }
 
-    const ordersExist = await this.orderRepository.existsManyPendingAsync(
-      shipmentCreationDto.orderIds,
-    );
+    const ordersExist =
+      await this.orderRepository.existsManyPendingUnassignedAsync(
+        shipmentCreationDto.orderIds,
+      );
 
     if (!ordersExist) {
       throw new NotFoundException(
-        `One or more orders do not exist or their status is not Pending.`,
+        `One or more orders do not exist, are not Pending, or are already assigned to a shipment.`,
       );
     }
 

@@ -98,7 +98,7 @@ describe('ShipmentService', () => {
 
       jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
       jest
-        .spyOn(orderRepository, 'existsManyPendingAsync')
+        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
         .mockResolvedValueOnce(false);
 
       // Act & Assert
@@ -117,7 +117,7 @@ describe('ShipmentService', () => {
 
       jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
       jest
-        .spyOn(orderRepository, 'existsManyPendingAsync')
+        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
         .mockResolvedValueOnce(true);
       jest
         .spyOn(repository, 'createShipmentAsync')
@@ -159,7 +159,7 @@ describe('ShipmentService', () => {
 
       jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
       jest
-        .spyOn(orderRepository, 'existsManyPendingAsync')
+        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
         .mockResolvedValueOnce(true);
       jest
         .spyOn(repository, 'createShipmentAsync')

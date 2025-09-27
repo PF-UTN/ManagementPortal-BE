@@ -144,11 +144,15 @@ export class OrderRepository {
     });
   }
 
-  async existsManyPendingAsync(ids: number[]): Promise<boolean> {
+  async existsManyPendingUnassignedAsync(ids: number[]): Promise<boolean> {
     const orders = await this.prisma.order.findMany({
       select: { id: true },
       where: {
-        AND: [{ id: { in: ids } }, { orderStatusId: OrderStatusId.Pending }],
+        AND: [
+          { id: { in: ids } },
+          { orderStatusId: OrderStatusId.Pending },
+          { shipmentId: null },
+        ],
       },
     });
     return orders.length === ids.length;
