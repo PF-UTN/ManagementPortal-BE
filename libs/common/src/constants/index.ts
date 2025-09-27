@@ -19,3 +19,4 @@ export * from './delivery-methods.constants';
 export * from './payment-type.constants';
 export * from './order-order-field.constants';
 export * from './order-status-traslations.constant';
+export * from './shipment-status.constant';

@@ -89,4 +89,10 @@ export const PermissionCodes = {
     UPDATE: 'order:update',
     DELETE: 'order:delete',
   },
+  Shipment: {
+    READ: 'shipment:read',
+    CREATE: 'shipment:create',
+    UPDATE: 'shipment:update',
+    DELETE: 'shipment:delete',
+  },
 };
