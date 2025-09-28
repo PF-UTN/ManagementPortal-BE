@@ -5,7 +5,7 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { OrderDirection, OrderField } from '@mp/common/constants';
 import { SearchOrderFromClientFiltersDto } from '@mp/common/dtos';
-import { orderDataMock } from '@mp/common/testing';
+import { orderDataMock, orderFullMock } from '@mp/common/testing';
 
 import { OrderRepository } from './order.repository';
 import { PrismaService } from '../prisma.service';
@@ -187,6 +187,48 @@ describe('OrderRepository', () => {
       expect(result).toEqual({
         data: mockData,
         total: mockTotal,
+      });
+    });
+  });
+  describe('findOrderByIdAsync', () => {
+    it('should find an order by id', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.order, 'findUnique')
+        .mockResolvedValueOnce(orderFullMock);
+      const orderId = 1;
+      // Act
+      const result = await repository.findOrderByIdAsync(orderId);
+
+      // Assert
+      expect(result).toEqual(orderFullMock);
+    });
+    it('should call prisma.order.findUnique with correct id', async () => {
+      // Arrange
+      jest
+        .spyOn(prismaService.order, 'findUnique')
+        .mockResolvedValueOnce(orderFullMock);
+      const orderId = 1;
+      // Act
+      await repository.findOrderByIdAsync(orderId);
+      // Assert
+      expect(prismaService.order.findUnique).toHaveBeenCalledWith({
+        where: { id: orderId },
+        include: {
+          orderItems: true,
+          orderStatus: true,
+          client: {
+            include: {
+              user: true,
+              address: true,
+              taxCategory: true,
+            },
+          },
+          deliveryMethod: true,
+          paymentDetail: {
+            include: { paymentType: true },
+          },
+        },
       });
     });
   });

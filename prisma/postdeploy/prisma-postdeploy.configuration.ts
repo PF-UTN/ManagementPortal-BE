@@ -9,6 +9,7 @@ import {
   taxCategoryPostDeployAsync,
   stockChangeTypePostDeployAsync,
   purchaseOrderStatusPostDeployAsync,
+  shipmentStatusPostDeployAsync,
 } from './table-population';
 import { deliveryMethodPostDeployAsync } from './table-population/delivery-method.postdeploy';
 import { orderStatusPostDeployAsync } from './table-population/order-status.postdeploy';
@@ -28,6 +29,7 @@ async function main() {
     orderStatusPostDeployAsync(),
     deliveryMethodPostDeployAsync(),
     paymentTypePostDeployAsync(),
+    shipmentStatusPostDeployAsync(),
   ]);
 
   await Promise.all([rolePermissionPostDeployAsync()]);

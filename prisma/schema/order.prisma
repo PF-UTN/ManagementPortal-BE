@@ -10,5 +10,8 @@ model Order {
   deliveryMethodId Int
   deliveryMethod   DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
   createdAt        DateTime       @default(now())
+  bill             Bill?
   orderItems       OrderItem[]
+  shipment         Shipment?      @relation(fields: [shipmentId], references: [id])
+  shipmentId       Int?
 }

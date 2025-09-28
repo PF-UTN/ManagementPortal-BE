@@ -4,7 +4,7 @@ import { orderStatusTranslations } from '@mp/common/constants';
 import { SearchOrderReturnDataDto, SearchOrderResponse } from '@mp/common/dtos';
 
 import { SearchOrderQuery } from './search-order.query';
-import { OrderService } from '../../../../src/domain/service/order/order.service';
+import { OrderService } from '../../../domain/service/order/order.service';
 
 @QueryHandler(SearchOrderQuery)
 export class SearchOrderQueryHandler

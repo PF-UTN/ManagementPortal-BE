@@ -2,8 +2,8 @@ import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { clientMock, SearchOrderFromClientResponse } from '@mp/common/dtos';
-import { orderBigMock } from '@mp/common/testing';
+import { SearchOrderFromClientResponse } from '@mp/common/dtos';
+import { clientMock, orderBigMock } from '@mp/common/testing';
 
 import { SearchOrderFromClientQuery } from './search-order-from-client.query';
 import { SearchOrderFromClientQueryHandler } from './search-order-from-client.query.handler';
