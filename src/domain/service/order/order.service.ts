@@ -32,6 +32,8 @@ import {
   OrderRepository,
 } from '@mp/repository';
 
+import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
+import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
@@ -451,5 +453,23 @@ export class OrderService {
       createdAt: order.createdAt,
     };
     return orderDto;
+  }
+
+  async searchWithFiltersAsync(query: SearchOrderQuery) {
+    return this.orderRepository.searchWithFiltersAsync(
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
+  }
+
+  async downloadWithFiltersAsync(query: DownloadOrderQuery) {
+    return this.orderRepository.downloadWithFiltersAsync(
+      query.searchText,
+      query.filters,
+      query.orderBy,
+    );
   }
 }

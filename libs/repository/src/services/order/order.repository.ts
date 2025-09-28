@@ -6,6 +6,7 @@ import { OrderDirection, OrderField } from '@mp/common/constants';
 
 import {
   OrderDataDto,
+  SearchOrderFiltersDto,
   SearchOrderFromClientFiltersDto,
 } from './../../../../../libs/common/src/dtos';
 import { PrismaService } from './../prisma.service';
@@ -143,5 +144,191 @@ export class OrderRepository {
         paymentDetail: { include: { paymentType: true } },
       },
     });
+  }
+
+  async searchWithFiltersAsync(
+    page: number,
+    pageSize: number,
+    searchText: string,
+    filters: SearchOrderFiltersDto,
+    orderBy: {
+      field: OrderField;
+      direction: OrderDirection.ASC | OrderDirection.DESC;
+    } = {
+      field: OrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    },
+  ) {
+    const prismaOrderBy =
+      orderBy &&
+      [OrderField.CREATED_AT].includes(orderBy.field) &&
+      [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
+        ? { [orderBy.field]: orderBy.direction }
+        : { createdAt: 'desc' as const };
+
+    const [data, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where: {
+          AND: [
+            filters.statusName?.length
+              ? { orderStatus: { name: { in: filters.statusName } } }
+              : {},
+            filters.fromCreatedAtDate
+              ? { createdAt: { gte: new Date(filters.fromCreatedAtDate) } }
+              : {},
+            filters.toCreatedAtDate
+              ? {
+                  createdAt: {
+                    lte: endOfDay(parseISO(filters.toCreatedAtDate)),
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  client: {
+                    companyName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
+              ],
+            },
+          ],
+        },
+        include: {
+          client: {
+            select: {
+              id: true,
+              companyName: true,
+            },
+          },
+          orderStatus: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: prismaOrderBy,
+      }),
+      this.prisma.order.count({
+        where: {
+          AND: [
+            filters.statusName?.length
+              ? { orderStatus: { name: { in: filters.statusName } } }
+              : {},
+            filters.fromCreatedAtDate
+              ? { createdAt: { gte: new Date(filters.fromCreatedAtDate) } }
+              : {},
+            filters.toCreatedAtDate
+              ? {
+                  createdAt: {
+                    lte: endOfDay(parseISO(filters.toCreatedAtDate)),
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  client: {
+                    companyName: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
+              ],
+            },
+          ],
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchOrderFiltersDto,
+    orderBy: {
+      field: OrderField;
+      direction: OrderDirection.ASC | OrderDirection.DESC;
+    } = {
+      field: OrderField.CREATED_AT,
+      direction: OrderDirection.DESC,
+    },
+  ) {
+    const prismaOrderBy =
+      orderBy &&
+      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(
+        orderBy.field,
+      ) &&
+      [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
+        ? { [orderBy.field]: orderBy.direction }
+        : { createdAt: 'desc' as const };
+
+    const data = await this.prisma.order.findMany({
+      where: {
+        AND: [
+          filters.statusName?.length
+            ? { orderStatus: { name: { in: filters.statusName } } }
+            : {},
+          filters.fromCreatedAtDate
+            ? { createdAt: { gte: new Date(filters.fromCreatedAtDate) } }
+            : {},
+          filters.toCreatedAtDate
+            ? {
+                createdAt: {
+                  lte: endOfDay(parseISO(filters.toCreatedAtDate)),
+                },
+              }
+            : {},
+          {
+            OR: [
+              {
+                client: {
+                  companyName: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              isNaN(Number(searchText))
+                ? {}
+                : {
+                    id: Number(searchText),
+                  },
+            ],
+          },
+        ],
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            companyName: true,
+          },
+        },
+        orderStatus: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: prismaOrderBy,
+    });
+    return data;
   }
 }

@@ -1,6 +1,6 @@
 export const orderStatusTranslations: Record<string, string> = {
   Pending: 'Pendiente',
-  InPreparation: 'En Preparación',
+  InPreparation: 'En preparación',
   Shipped: 'Enviado',
   Delivered: 'Entregado',
   Cancelled: 'Cancelado',
