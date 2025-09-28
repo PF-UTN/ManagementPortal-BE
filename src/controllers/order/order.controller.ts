@@ -7,6 +7,7 @@ import {
   Post,
   Param,
   ParseIntPipe,
+  StreamableFile,
   Patch,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
@@ -15,16 +16,22 @@ import { ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { Public, RequiredPermissions } from '@mp/common/decorators';
 import {
+  DownloadOrderRequest,
   OrderCreationDto,
   SearchOrderFromClientRequest,
+  SearchOrderRequest,
   UpdateOrderStatusRequestDto,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { UpdateOrderStatusCommand } from './command/update-order-status.command';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
+import { DownloadOrderQuery } from './query/download-order.query';
 import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
-import { SearchOrderFromClientQuery } from './query/search-order.query';
+import { SearchOrderFromClientQuery } from './query/search-order-from-client.query';
+import { SearchOrderQuery } from './query/search-order.query';
 
 @Controller('order')
 export class OrderController {
@@ -102,6 +109,59 @@ export class OrderController {
   ) {
     return this.queryBus.execute(
       new GetOrderByIdForClientQuery(id, authorizationHeader),
+    );
+  }
+
+  @Post('search')
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search orders',
+    description:
+      'Search for orders based on the provided filters and search text.',
+  })
+  async searchOrdersAsync(@Body() searchOrderRequestDto: SearchOrderRequest) {
+    return this.queryBus.execute(new SearchOrderQuery(searchOrderRequestDto));
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Order.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download purchase orders',
+    description:
+      'Download purchase orders based on the provided filters and search text.',
+  })
+  async downloadOrdersAsync(
+    @Body() downloadOrderDto: DownloadOrderRequest,
+  ): Promise<StreamableFile> {
+    const purchaseOrders = await this.queryBus.execute(
+      new DownloadOrderQuery(downloadOrderDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(purchaseOrders);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Pedidos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
+  }
+
+  @Get('checkout/:orderId')
+  @ApiBearerAuth()
+  @Public()
+  @ApiOperation({
+    summary: 'Get order ready for checkout',
+    description: 'Process an order for checkout.',
+  })
+  async checkoutAsync(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return this.queryBus.execute(
+      new CheckoutOrderQuery(orderId, authorizationHeader),
     );
   }
 
