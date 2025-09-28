@@ -5,4 +5,5 @@ export class TokenPayload extends PartiallyInitializable<TokenPayload> {
   sub: number;
   role: string;
   permissions: string[];
+  userName: string;
 }

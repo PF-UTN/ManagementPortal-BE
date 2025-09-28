@@ -83,6 +83,7 @@ export class AuthenticationService {
       permissions: user.role.rolePermissions.map(
         (rolePermission) => rolePermission.permission.name,
       ),
+      userName: user.firstName + ' ' + user.lastName,
     } as TokenPayload;
 
     return await this.jwtService.signAsync(payload);
