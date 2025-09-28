@@ -3,7 +3,11 @@ import { Order, Prisma } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderDirection, OrderField } from '@mp/common/constants';
+import {
+  OrderDirection,
+  OrderField,
+  OrderStatusId,
+} from '@mp/common/constants';
 import { SearchOrderFromClientFiltersDto } from '@mp/common/dtos';
 import { orderDataMock, orderFullMock } from '@mp/common/testing';
 
@@ -459,6 +463,112 @@ describe('OrderRepository', () => {
 
       // Assert
       expect(result).toEqual(mockData);
+    });
+  });
+
+  describe('existsManyPendingUnassignedAsync', () => {
+    it('should return true if all orders exist with Pending status and are unassigned', async () => {
+      // Arrange
+      const orderIds = [1, 2, 3];
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([
+        { ...order, id: 1 },
+        { ...order, id: 2 },
+        { ...order, id: 3 },
+      ]);
+
+      // Act
+      const exists =
+        await repository.existsManyPendingUnassignedAsync(orderIds);
+
+      // Assert
+      expect(exists).toBe(true);
+    });
+
+    it('should return false if not all orders exist with Pending status and are unassigned', async () => {
+      // Arrange
+      const orderIds = [1, 2, 3];
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([
+        { ...order, id: 1 },
+        { ...order, id: 2 },
+      ]);
+
+      // Act
+      const exists =
+        await repository.existsManyPendingUnassignedAsync(orderIds);
+      // Assert
+      expect(exists).toBe(false);
+    });
+  });
+
+  describe('updateManyOrderStatusAsync', () => {
+    it('should update order statuses with the provided data', async () => {
+      // Arrange
+      const orderIds: number[] = [1, 2, 3];
+      const newStatus = OrderStatusId.InPreparation;
+      jest
+        .spyOn(prismaService.order, 'updateMany')
+        .mockResolvedValueOnce({ count: 3 } as Prisma.BatchPayload);
+
+      // Act
+      const result = await repository.updateManyOrderStatusAsync(
+        orderIds,
+        newStatus,
+      );
+
+      // Assert
+      expect(result).toEqual(3);
+    });
+
+    it('should call prisma.order.updateMany with correct data', async () => {
+      // Arrange
+      const orderIds: number[] = [1, 2, 3];
+      const newStatus = OrderStatusId.InPreparation;
+      jest
+        .spyOn(prismaService.order, 'updateMany')
+        .mockResolvedValueOnce({ count: 3 } as Prisma.BatchPayload);
+
+      // Act
+      await repository.updateManyOrderStatusAsync(orderIds, newStatus);
+
+      // Assert
+      expect(prismaService.order.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: {
+            in: orderIds,
+          },
+        },
+        data: {
+          orderStatusId: newStatus,
+        },
+      });
+    });
+  });
+
+  describe('findOrdersByShipmentIdAsync', () => {
+    it('should return orders with the provided shipment id', async () => {
+      // Arrange
+      const shipmentId = 1;
+      jest
+        .spyOn(prismaService.order, 'findMany')
+        .mockResolvedValueOnce([order]);
+
+      // Act
+      const result = await repository.findOrdersByShipmentIdAsync(shipmentId);
+
+      // Assert
+      expect(result).toEqual([order]);
+    });
+
+    it('should return empty array if no orders found', async () => {
+      // Arrange
+      const shipmentId = 1;
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([]);
+
+      // Act
+      const result = await repository.findOrdersByShipmentIdAsync(shipmentId);
+
+      // Assert
+      expect(result).toEqual([]);
     });
   });
 });
