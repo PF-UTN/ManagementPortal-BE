@@ -28,6 +28,7 @@ export class OrderItemDataDto {
 }
 
 export class OrderItemDataToClientDto {
+  id: number;
   unitPrice: number;
   quantity: number;
   subtotalPrice: number;
