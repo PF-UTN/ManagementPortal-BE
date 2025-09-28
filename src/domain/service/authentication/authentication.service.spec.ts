@@ -169,6 +169,8 @@ describe('AuthenticationService', () => {
       });
 
       user.role.rolePermissions = [mockRolePermission1, mockRolePermission2];
+      user.lastName = 'Doe';
+      user.firstName = 'John';
 
       jest.spyOn(userService, 'findByEmailAsync').mockResolvedValueOnce(user);
       const signInSpy = jest
@@ -189,6 +191,7 @@ describe('AuthenticationService', () => {
         sub: 1,
         permissions: expectedPermissions,
         role: roleName,
+        userName: 'John Doe',
       });
     });
   });
