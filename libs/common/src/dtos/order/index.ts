@@ -6,6 +6,7 @@ export * from './order-sort.dto';
 export * from './search-order-from-client-request.dto';
 export * from './search-order-from-client-service.dto';
 export * from './order-detail.dto';
+export * from './update-order-status-request.dto';
 export * from './search-order-return-data.dto';
 export * from './search-order-filters.dto';
 export * from './search-order-request.dto';

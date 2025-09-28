@@ -1,8 +1,10 @@
 export const orderStatusTranslations: Record<string, string> = {
   Pending: 'Pendiente',
   InPreparation: 'En preparación',
+  Prepared: 'Preparado',
   Shipped: 'Enviado',
-  Delivered: 'Entregado',
+  Finished: 'Finalizado',
   Cancelled: 'Cancelado',
-  Returned: 'Devuelto',
+  PaymentPending: 'Pago pendiente',
+  PaymentRejected: 'Pago rechazado',
 };

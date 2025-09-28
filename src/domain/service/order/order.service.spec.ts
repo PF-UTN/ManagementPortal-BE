@@ -1,14 +1,19 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 import { mockDeep } from 'jest-mock-extended';
+import { PassThrough } from 'stream';
 
 import {
   OrderDirection,
   OrderField,
+  DeliveryMethodId,
   OrderStatusId,
+  PaymentTypeEnum,
 } from '@mp/common/constants';
 import { SearchOrderFiltersDto } from '@mp/common/dtos';
+import { MailingService, ReportService } from '@mp/common/services';
 import {
   clientMock,
   mockOrderItem,
@@ -19,6 +24,8 @@ import {
   txMock,
 } from '@mp/common/testing';
 import {
+  BillItemRepository,
+  BillRepository,
   OrderItemRepository,
   OrderRepository,
   PaymentDetailRepository,
@@ -43,6 +50,10 @@ describe('OrderService', () => {
   let stockChangeRepository: StockChangeRepository;
   let unitOfWork: PrismaUnitOfWork;
   let clientService: ClientService;
+  let reportService: ReportService;
+  let mailingService: MailingService;
+  let billRepository: BillRepository;
+  let billItemRepository: BillItemRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -65,6 +76,10 @@ describe('OrderService', () => {
         },
         { provide: PrismaUnitOfWork, useValue: mockDeep(PrismaUnitOfWork) },
         { provide: ClientService, useValue: mockDeep(ClientService) },
+        { provide: ReportService, useValue: mockDeep(ReportService) },
+        { provide: MailingService, useValue: mockDeep(MailingService) },
+        { provide: BillRepository, useValue: mockDeep(BillRepository) },
+        { provide: BillItemRepository, useValue: mockDeep(BillItemRepository) },
       ],
     }).compile();
 
@@ -81,6 +96,10 @@ describe('OrderService', () => {
     );
     unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
     clientService = module.get<ClientService>(ClientService);
+    reportService = module.get<ReportService>(ReportService);
+    mailingService = module.get<MailingService>(MailingService);
+    billRepository = module.get<BillRepository>(BillRepository);
+    billItemRepository = module.get<BillItemRepository>(BillItemRepository);
   });
 
   describe('createOrderAsync', () => {
@@ -108,25 +127,71 @@ describe('OrderService', () => {
         }),
       ).rejects.toThrow(NotFoundException);
     });
-    it('should throw if order status is not Pending', async () => {
-      // Arrange
+    it('should throw BadRequestException if UponDelivery + HomeDelivery + status !== Pending', async () => {
       const dto = {
         ...orderCreationDtoMock,
+        paymentDetail: {
+          ...mockPaymentDetail,
+          paymentTypeId: PaymentTypeEnum.UponDelivery,
+        },
+        deliveryMethodId: DeliveryMethodId.HomeDelivery,
         orderStatusId: OrderStatusId.Shipped,
       };
+
       jest
         .spyOn(clientService, 'findClientByIdAsync')
         .mockResolvedValueOnce(clientMock);
 
-      // Act & Assert
       await expect(service.createOrderAsync(dto)).rejects.toThrow(
-        'Invalid order status. Only PENDING orders can be created.',
+        BadRequestException,
+      );
+    });
+    it('should throw BadRequestException if CreditDebitCard + status !== PaymentPending', async () => {
+      const dto = {
+        ...orderCreationDtoMock,
+        paymentDetail: {
+          ...mockPaymentDetail,
+          paymentTypeId: PaymentTypeEnum.CreditDebitCard,
+        },
+        orderStatusId: OrderStatusId.Pending, // Distinto de PaymentPending
+      };
+
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+
+      await expect(service.createOrderAsync(dto)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw BadRequestException if UponDelivery + PickUpAtStore + status !== InPreparation', async () => {
+      const dto = {
+        ...orderCreationDtoMock,
+        paymentDetail: {
+          ...mockPaymentDetail,
+          paymentTypeId: PaymentTypeEnum.UponDelivery,
+        },
+        deliveryMethodId: DeliveryMethodId.PickUpAtStore,
+        orderStatusId: OrderStatusId.Pending, // Distinto de InPreparation
+      };
+
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValueOnce(clientMock);
+
+      await expect(service.createOrderAsync(dto)).rejects.toThrow(
+        BadRequestException,
       );
     });
 
     it('should throw BadRequestException if no products are provided', async () => {
       // Arrange
-      const dto = { ...orderCreationDtoMock, orderItems: [] };
+      const dto = {
+        ...orderCreationDtoMock,
+        orderStatusId: OrderStatusId.PaymentPending,
+        orderItems: [],
+      };
       jest
         .spyOn(clientService, 'findClientByIdAsync')
         .mockResolvedValueOnce(clientMock);
@@ -148,7 +213,10 @@ describe('OrderService', () => {
 
       // Act & Assert
       await expect(
-        service.createOrderAsync(orderCreationDtoMock),
+        service.createOrderAsync({
+          ...orderCreationDtoMock,
+          orderStatusId: OrderStatusId.PaymentPending,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -166,7 +234,10 @@ describe('OrderService', () => {
 
       // Act & Assert
       await expect(
-        service.createOrderAsync(orderCreationDtoMock),
+        service.createOrderAsync({
+          ...orderCreationDtoMock,
+          orderStatusId: OrderStatusId.PaymentPending,
+        }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -184,7 +255,10 @@ describe('OrderService', () => {
 
       // Act & Assert
       await expect(
-        service.createOrderAsync(orderCreationDtoMock),
+        service.createOrderAsync({
+          ...orderCreationDtoMock,
+          orderStatusId: OrderStatusId.PaymentPending,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -206,19 +280,23 @@ describe('OrderService', () => {
       jest
         .spyOn(stockService, 'findByProductIdAsync')
         .mockResolvedValue({ ...stockMock, quantityAvailable: 20 });
-
-      jest
-        .spyOn(orderRepository, 'createOrderAsync')
-        .mockResolvedValueOnce(orderMock);
       jest
         .spyOn(paymentDetailRepository, 'createPaymentDetailAsync')
         .mockResolvedValue({
           id: 1,
           paymentTypeId: orderCreationDtoMock.paymentDetail.paymentTypeId,
         });
+      jest.spyOn(orderRepository, 'createOrderAsync').mockResolvedValueOnce({
+        ...orderMock,
+        orderStatusId: OrderStatusId.PaymentPending,
+        paymentDetailId: 1,
+      });
 
       // Act
-      await service.createOrderAsync(orderCreationDtoMock);
+      await service.createOrderAsync({
+        ...orderCreationDtoMock,
+        orderStatusId: OrderStatusId.PaymentPending,
+      });
 
       // Assert
       expect(unitOfWork.execute).toHaveBeenCalled();
@@ -253,7 +331,10 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service.createOrderAsync(orderCreationDtoMock);
+      await service.createOrderAsync({
+        ...orderCreationDtoMock,
+        orderStatusId: OrderStatusId.PaymentPending,
+      });
 
       // Assert
       expect(unitOfWork.execute).toHaveBeenCalled();
@@ -288,10 +369,194 @@ describe('OrderService', () => {
       );
 
       // Act
-      await service.createOrderAsync(orderCreationDtoMock);
+      await service.createOrderAsync({
+        ...orderCreationDtoMock,
+        orderStatusId: OrderStatusId.PaymentPending,
+      });
 
       // Assert
       expect(createManySpy).toHaveBeenCalledWith(mockOrderItem, txMock);
+    });
+  });
+  describe('updateOrderStatusAsync', () => {
+    const orderItemsMock = [
+      {
+        id: 1,
+        orderId: 1,
+        productId: 1,
+        unitPrice: new Prisma.Decimal(10.0),
+        quantity: 5,
+        subtotalPrice: new Prisma.Decimal(50.0),
+        product: {
+          id: 1,
+          name: 'Test Product',
+          description: 'Producto de prueba',
+          price: new Prisma.Decimal(10.0),
+          enabled: true,
+          weight: new Prisma.Decimal(1.5),
+          imageUrl: 'https://test.com/image.jpg',
+          categoryId: 1,
+          supplierId: 1,
+          deletedAt: null,
+          category: {
+            id: 1,
+            name: 'Test Category',
+            description: 'Categoría de prueba',
+          },
+          supplier: {
+            id: 1,
+            addressId: 1,
+            email: 'proveedor@test.com',
+            phone: '123456789',
+            documentType: 'CUIT',
+            documentNumber: '20123456789',
+            businessName: 'Proveedor S.A.',
+          },
+          stock: {
+            id: 1,
+            productId: 1,
+            quantityOrdered: 10,
+            quantityAvailable: 100,
+            quantityReserved: 5,
+          },
+        },
+      },
+    ];
+
+    const orderMock = {
+      id: 1,
+      clientId: 1,
+      orderStatusId: OrderStatusId.InPreparation,
+      paymentDetailId: 1,
+      deliveryMethodId: 1,
+      shipmentId: 1,
+      client: {
+        id: 1,
+        companyName: 'Test Company',
+        user: {
+          id: 1,
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          password: 'test-password',
+          phone: '123456789',
+          documentType: 'DNI',
+          documentNumber: '12345678',
+          birthdate: new Date('1990-01-01'),
+          roleId: 2,
+          accountLockedUntil: null,
+          failedLoginAttempts: 0,
+        },
+        address: {
+          id: 1,
+          street: 'Calle Falsa',
+          streetNumber: 123,
+          townId: 1,
+        },
+        taxCategory: {
+          id: 1,
+          name: 'Responsable Inscripto',
+          description: '',
+        },
+        userId: 1,
+        taxCategoryId: 1,
+        addressId: 1,
+      },
+      deliveryMethod: {
+        id: 1,
+        name: 'Delivery',
+        description: 'Envío a domicilio',
+      },
+      orderStatus: {
+        id: 1,
+        name: 'Pending',
+      },
+      paymentDetail: {
+        paymentType: {
+          id: 1,
+          name: 'Efectivo',
+          description: null,
+        },
+        id: 1,
+        paymentTypeId: 1,
+      },
+      orderItems: orderItemsMock,
+      totalAmount: new Prisma.Decimal(105),
+      createdAt: new Date(),
+    };
+
+    it('should throw NotFoundException if order does not exist', async () => {
+      jest
+        .spyOn(orderRepository, 'findOrderByIdAsync')
+        .mockResolvedValueOnce(null);
+
+      await expect(
+        service.updateOrderStatusAsync(999, OrderStatusId.Prepared),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if transition is invalid', async () => {
+      jest.spyOn(orderRepository, 'findOrderByIdAsync').mockResolvedValueOnce({
+        ...orderMock,
+        orderStatusId: OrderStatusId.Pending,
+      });
+
+      await expect(
+        service.updateOrderStatusAsync(orderMock.id, OrderStatusId.Finished),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should update order status and create bill when status is Finished', async () => {
+      // Arrange
+      const bill = {
+        id: 1,
+        beforeTaxPrice: new Decimal(100),
+        totalPrice: new Decimal(121),
+        orderId: orderMock.id,
+      };
+
+      jest.spyOn(orderRepository, 'findOrderByIdAsync').mockResolvedValueOnce({
+        ...orderMock,
+        orderStatusId: OrderStatusId.Shipped,
+      });
+      jest
+        .spyOn(orderItemRepository, 'findByOrderIdAsync')
+        .mockResolvedValueOnce(orderItemsMock);
+      jest.spyOn(orderRepository, 'updateOrderAsync').mockResolvedValueOnce({
+        ...orderMock,
+        orderStatusId: OrderStatusId.Finished,
+      });
+
+      jest
+        .spyOn(unitOfWork, 'execute')
+        .mockImplementation(async (cb) => cb(txMock));
+      jest.spyOn(billRepository, 'createBillAsync').mockResolvedValueOnce(bill);
+      jest.spyOn(billItemRepository, 'createManyBillItemAsync');
+      jest
+        .spyOn(service, 'sendBillByEmailAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.updateOrderStatusAsync(
+        orderMock.id,
+        OrderStatusId.Finished,
+      );
+
+      // Assert
+      expect(orderRepository.updateOrderAsync).toHaveBeenCalledWith(
+        orderMock.id,
+        { orderStatus: { connect: { id: OrderStatusId.Finished } } },
+      );
+      expect(billRepository.createBillAsync).toHaveBeenCalledWith(
+        {
+          beforeTaxPrice: orderMock.totalAmount,
+          totalPrice: orderMock.totalAmount,
+          orderId: orderMock.id,
+        },
+        txMock,
+      );
+      expect(billItemRepository.createManyBillItemAsync).toHaveBeenCalled();
+      expect(service.sendBillByEmailAsync).toHaveBeenCalled();
     });
   });
   describe('validateOrderItemsAsync', () => {
@@ -358,12 +623,45 @@ describe('OrderService', () => {
   });
 
   describe('manageStockChanges', () => {
-    // const orderItemsMock = [{ ...mockOrderItem, productId: 1, quantity: 5 }];
-
     beforeEach(() => {
       jest.clearAllMocks();
     });
 
+    it('should throw NotFoundException if stock is missing for a product in Pending', async () => {
+      // Arrange
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValueOnce(null);
+      // Act & Assert
+      await expect(
+        service['manageStockChanges'](
+          orderMock,
+          [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+          null,
+          OrderStatusId.Pending,
+          txMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
+    it('should not update stock or create stock changes when status is Shipped', async () => {
+      // Arrange
+      const updateSpy = jest.spyOn(stockService, 'updateStockByProductIdAsync');
+      const changeSpy = jest.spyOn(
+        stockChangeRepository,
+        'createManyStockChangeAsync',
+      );
+      // Act
+      await service['manageStockChanges'](
+        orderMock,
+        [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+        null,
+        OrderStatusId.Shipped,
+        txMock,
+      );
+      // Assert
+      expect(updateSpy).not.toHaveBeenCalled();
+      expect(changeSpy).not.toHaveBeenCalled();
+    });
     it('should call updateStockByProductIdAsync and createManyStockChangeAsync when status is Pending', async () => {
       // Arrange
       jest
@@ -380,6 +678,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+        null, // oldStatus
         OrderStatusId.Pending,
         txMock,
       );
@@ -411,6 +710,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 10 }],
+        null, // oldStatus
         OrderStatusId.Cancelled,
         txMock,
       );
@@ -426,7 +726,7 @@ describe('OrderService', () => {
       ).toHaveBeenCalled();
     });
 
-    it('should call updateStockByProductIdAsync and createManyStockChangeAsync when status is Delivered', async () => {
+    it('should call updateStockByProductIdAsync and createManyStockChangeAsync when status is finished', async () => {
       // Arrange
       jest
         .spyOn(stockService, 'findByProductIdAsync')
@@ -442,7 +742,8 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
-        OrderStatusId.Delivered,
+        null,
+        OrderStatusId.Finished,
         txMock,
       );
 
@@ -454,6 +755,105 @@ describe('OrderService', () => {
       );
       expect(
         stockChangeRepository.createManyStockChangeAsync,
+      ).toHaveBeenCalled();
+    });
+    it('should update stock and create stock changes when new status is InPreparation, oldStatus is PaymentPending and payment is CreditDebitCard', async () => {
+      // Arrange
+      const order = {
+        ...orderMock,
+        paymentDetailId: PaymentTypeEnum.CreditDebitCard,
+        id: 1,
+      };
+      const orderItems = [{ productId: 1, quantity: 2 }];
+      const tx = txMock;
+
+      jest
+        .spyOn(service['stockService'], 'findByProductIdAsync')
+        .mockResolvedValue(stockMock);
+      jest
+        .spyOn(service['stockService'], 'updateStockByProductIdAsync')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(service['stockChangeRepository'], 'createManyStockChangeAsync')
+        .mockResolvedValue(undefined);
+
+      // Act
+      await service['manageStockChanges'](
+        order,
+        orderItems,
+        OrderStatusId.PaymentPending,
+        OrderStatusId.InPreparation,
+        tx,
+      );
+
+      // Assert
+      expect(service['stockService'].findByProductIdAsync).toHaveBeenCalledWith(
+        1,
+        tx,
+      );
+      expect(
+        service['stockService'].updateStockByProductIdAsync,
+      ).toHaveBeenCalledWith(
+        1,
+        {
+          quantityAvailable: stockMock.quantityAvailable - 2,
+          quantityOrdered: stockMock.quantityOrdered,
+          quantityReserved: stockMock.quantityReserved + 2,
+        },
+        tx,
+      );
+      expect(
+        service['stockChangeRepository'].createManyStockChangeAsync,
+      ).toHaveBeenCalled();
+    });
+
+    it('should update stock and create stock changes when new status is InPreparation, oldStatus is null and payment is UponDelivery', async () => {
+      // Arrange
+      const order = {
+        ...orderMock,
+        paymentDetailId: PaymentTypeEnum.UponDelivery,
+        id: 1,
+      };
+      const orderItems = [{ productId: 1, quantity: 2 }];
+      const tx = txMock;
+
+      jest
+        .spyOn(service['stockService'], 'findByProductIdAsync')
+        .mockResolvedValue(stockMock);
+      jest
+        .spyOn(service['stockService'], 'updateStockByProductIdAsync')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(service['stockChangeRepository'], 'createManyStockChangeAsync')
+        .mockResolvedValue(undefined);
+
+      // Act
+      await service['manageStockChanges'](
+        order,
+        orderItems,
+        null,
+        OrderStatusId.InPreparation,
+        tx,
+      );
+
+      // Assert
+      expect(service['stockService'].findByProductIdAsync).toHaveBeenCalledWith(
+        1,
+        tx,
+      );
+      expect(
+        service['stockService'].updateStockByProductIdAsync,
+      ).toHaveBeenCalledWith(
+        1,
+        {
+          quantityAvailable: stockMock.quantityAvailable - 2,
+          quantityOrdered: stockMock.quantityOrdered,
+          quantityReserved: stockMock.quantityReserved + 2,
+        },
+        tx,
+      );
+      expect(
+        service['stockChangeRepository'].createManyStockChangeAsync,
       ).toHaveBeenCalled();
     });
   });
@@ -1026,6 +1426,122 @@ describe('OrderService', () => {
         query.searchText,
         query.filters,
         query.orderBy,
+      );
+    });
+  });
+
+  describe('sendBillByEmailAsync', () => {
+    it('should call reportService.generateBillReport with the correct parameters', async () => {
+      // Arrange
+      const billReportGenerationDataDto = {
+        billId: 1,
+        createdAt: new Date('1990-01-31'),
+        orderId: 1,
+        clientCompanyName: 'Test Client',
+        clientAddress: 'Calle Falsa 123',
+        clientDocumentType: 'DNI',
+        clientDocumentNumber: '12345678',
+        clientTaxCategory: 'Responsable Inscripto',
+        deliveryMethod: 'Delivery',
+        orderStatus: 'Prepared',
+        totalAmount: new Prisma.Decimal(20.0),
+        orderItems: [
+          {
+            productName: 'Test Product',
+            quantity: 2,
+            unitPrice: new Prisma.Decimal(10.0),
+            subtotalPrice: new Prisma.Decimal(20.0),
+          },
+        ],
+        paid: true,
+        paymentType: 'Efectivo',
+        observation: 'Test Observation',
+      };
+
+      const clientEmail = 'client@test.com';
+
+      const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
+      setImmediate(() => {
+        fakePdfStream.end();
+      });
+
+      jest
+        .spyOn(reportService, 'generateBillReport')
+        .mockResolvedValueOnce(fakePdfStream);
+
+      jest
+        .spyOn(mailingService, 'sendMailWithAttachmentAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendBillByEmailAsync(
+        billReportGenerationDataDto,
+        clientEmail,
+      );
+
+      // Assert
+      expect(reportService.generateBillReport).toHaveBeenCalledWith(
+        billReportGenerationDataDto,
+      );
+    });
+
+    it('should call mailingService.sendMailWithAttachmentAsync with the correct parameters', async () => {
+      // Arrange
+      const billReportGenerationDataDto = {
+        billId: 1,
+        createdAt: new Date('1990-01-31'),
+        orderId: 1,
+        clientCompanyName: 'Test Client',
+        clientAddress: 'Calle Falsa 123',
+        clientDocumentType: 'DNI',
+        clientDocumentNumber: '12345678',
+        clientTaxCategory: 'Responsable Inscripto',
+        deliveryMethod: 'Delivery',
+        orderStatus: 'Prepared',
+        totalAmount: new Prisma.Decimal(20.0),
+        orderItems: [
+          {
+            productName: 'Test Product',
+            quantity: 2,
+            unitPrice: new Prisma.Decimal(10.0),
+            subtotalPrice: new Prisma.Decimal(20.0),
+          },
+        ],
+        paid: true,
+        paymentType: 'Efectivo',
+        observation: 'Test Observation',
+      };
+
+      const clientEmail = 'client@test.com';
+
+      const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
+      setImmediate(() => {
+        fakePdfStream.end();
+      });
+
+      jest
+        .spyOn(reportService, 'generateBillReport')
+        .mockResolvedValueOnce(fakePdfStream);
+
+      jest
+        .spyOn(mailingService, 'sendMailWithAttachmentAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendBillByEmailAsync(
+        billReportGenerationDataDto,
+        clientEmail,
+      );
+
+      // Assert
+      expect(mailingService.sendMailWithAttachmentAsync).toHaveBeenCalledWith(
+        clientEmail,
+        `Factura #${billReportGenerationDataDto.billId}`,
+        'Adjuntamos la factura en formato PDF.',
+        {
+          filename: `MP-FC-${billReportGenerationDataDto.billId}.pdf`,
+          content: expect.any(Buffer),
+        },
       );
     });
   });

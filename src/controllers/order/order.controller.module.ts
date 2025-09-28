@@ -6,6 +6,7 @@ import { AuthenticationServiceModule } from './../../domain/service/authenticati
 import { ClientServiceModule } from './../../domain/service/client/client.service.module';
 import { OrderServiceModule } from './../../domain/service/order/order.service.module';
 import { CreateOrderCommandHandler } from './command/create-order.command.handler';
+import { UpdateOrderStatusCommandHandler } from './command/update-order-status.command.handler';
 import { OrderController } from './order.controller';
 import { CheckoutOrderQueryHandler } from './query/checkout-order.query.handler';
 import { DownloadOrderQueryHandler } from './query/download-order.query.handler';
@@ -14,7 +15,10 @@ import { GetOrderByIdQueryHandler } from './query/get-order-by-id.query.handler'
 import { SearchOrderFromClientQueryHandler } from './query/search-order-from-client.query.handler';
 import { SearchOrderQueryHandler } from './query/search-order.query.handler';
 
-const commandHandlers = [CreateOrderCommandHandler];
+const commandHandlers = [
+  CreateOrderCommandHandler,
+  UpdateOrderStatusCommandHandler,
+];
 const queryHandlers = [
   SearchOrderFromClientQueryHandler,
   CheckoutOrderQueryHandler,

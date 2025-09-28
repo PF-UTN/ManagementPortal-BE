@@ -10,6 +10,10 @@ import {
   StockChangeTypeIds,
   OrderStatusId,
   PaymentTypeEnum,
+  canOrderTransition,
+  DeliveryMethodId,
+  deliveryMethodTranslations,
+  PaymentTypeTranslations,
 } from '@mp/common/constants';
 import {
   StockChangeCreationDataDto,
@@ -18,10 +22,14 @@ import {
   SearchOrderFromClientServiceDto,
   OrderDetailsDto,
   OrderDetailsToClientDto,
+  BillReportGenerationDataDto,
 } from '@mp/common/dtos';
 import { OrderItemDataDto, OrderItemDataToClientDto } from '@mp/common/dtos';
-import { calculateTotalAmount } from '@mp/common/helpers';
+import { calculateTotalAmount, pdfToBuffer } from '@mp/common/helpers';
+import { MailingService, ReportService } from '@mp/common/services';
+import { BillRepository } from '@mp/repository';
 import {
+  BillItemRepository,
   PrismaUnitOfWork,
   ProductRepository,
   StockChangeRepository,
@@ -48,6 +56,10 @@ export class OrderService {
     private readonly stockService: StockService,
     private readonly stockChangeRepository: StockChangeRepository,
     private readonly clientService: ClientService,
+    private readonly reportService: ReportService,
+    private readonly mailingService: MailingService,
+    private readonly billRepository: BillRepository,
+    private readonly billItemRepository: BillItemRepository,
   ) {}
 
   async createOrderAsync(orderCreationDto: OrderCreationDto) {
@@ -69,9 +81,32 @@ export class OrderService {
       );
     }
 
-    if (orderData.orderStatusId !== OrderStatusId.Pending) {
-      throw new Error(
-        'Invalid order status. Only PENDING orders can be created.',
+    if (
+      paymentDetail.paymentTypeId === PaymentTypeEnum.UponDelivery &&
+      orderData.deliveryMethodId === DeliveryMethodId.HomeDelivery &&
+      orderData.orderStatusId !== OrderStatusId.Pending
+    ) {
+      throw new BadRequestException(
+        'Invalid order status. Only PENDING orders can be created with Upon Delivery payment method and home delivery delivery method.',
+      );
+    }
+
+    if (
+      paymentDetail.paymentTypeId === PaymentTypeEnum.CreditDebitCard &&
+      orderData.orderStatusId !== OrderStatusId.PaymentPending
+    ) {
+      throw new BadRequestException(
+        'Invalid order status. Only PAYMENT_PENDING orders can be created with Credit/Debit Card payment method.',
+      );
+    }
+
+    if (
+      paymentDetail.paymentTypeId === PaymentTypeEnum.UponDelivery &&
+      orderData.deliveryMethodId === DeliveryMethodId.PickUpAtStore &&
+      orderData.orderStatusId !== OrderStatusId.InPreparation
+    ) {
+      throw new BadRequestException(
+        'Invalid order status. Only IN_PREPARATION orders can be created with Pick Up At Store delivery method and Upon Delivery payment method.',
       );
     }
 
@@ -109,11 +144,89 @@ export class OrderService {
       await this.manageStockChanges(
         order,
         orderItemsToCreate,
+        null,
         orderData.orderStatusId,
         tx,
       );
       return order;
     });
+  }
+
+  async updateOrderStatusAsync(id: number, newStatus: OrderStatusId) {
+    const order = await this.orderRepository.findOrderByIdAsync(id);
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} does not exist.`);
+    }
+    const currentStatus = order.orderStatusId;
+
+    const validTransition = canOrderTransition(currentStatus, newStatus);
+    if (!validTransition) {
+      throw new BadRequestException(
+        `Invalid status transition from ${OrderStatusId[currentStatus]} to ${OrderStatusId[newStatus]}`,
+      );
+    }
+    const orderItems = await this.orderItemRepository.findByOrderIdAsync(
+      order.id,
+    );
+
+    await this.orderRepository.updateOrderAsync(order.id, {
+      orderStatus: { connect: { id: newStatus } },
+    });
+
+    if (newStatus === OrderStatusId.Finished) {
+      const createBill = await this.unitOfWork.execute(
+        async (tx: Prisma.TransactionClient) => {
+          const bill = await this.billRepository.createBillAsync(
+            {
+              beforeTaxPrice: order.totalAmount,
+              totalPrice: order.totalAmount,
+              orderId: order.id,
+            },
+            tx,
+          );
+
+          const billItemsToCreate = orderItems.map((item) => ({
+            subTotalPrice: item.subtotalPrice,
+            billId: bill.id,
+          }));
+
+          await this.billItemRepository.createManyBillItemAsync(
+            billItemsToCreate,
+            tx,
+          );
+
+          return bill;
+        },
+      );
+      const billReportGenerationDataDto: BillReportGenerationDataDto = {
+        billId: createBill.id,
+        orderId: order.id,
+        clientCompanyName: order.client.companyName,
+        clientAddress: `${order.client.address.street} ${order.client.address.streetNumber}`,
+        clientDocumentType: order.client.user.documentType,
+        clientDocumentNumber: order.client.user.documentNumber,
+        clientTaxCategory: order.client.taxCategory.name,
+        deliveryMethod:
+          deliveryMethodTranslations[order.deliveryMethod.name] ||
+          order.deliveryMethod.name,
+        totalAmount: order.totalAmount,
+        orderItems: orderItems.map((item) => ({
+          productName: item.product.name,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+          subtotalPrice: item.subtotalPrice,
+        })),
+        paymentType:
+          PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
+          order.paymentDetail.paymentType.name,
+        observation: '',
+        createdAt: new Date(),
+      };
+      this.sendBillByEmailAsync(
+        billReportGenerationDataDto,
+        order.client.user.email,
+      );
+    }
   }
 
   async validateOrderItemsAsync(productIds: number[]) {
@@ -154,6 +267,7 @@ export class OrderService {
   private async manageStockChanges(
     order: Order,
     orderItems: { productId: number; quantity: number }[],
+    oldStatus: OrderStatusId | null,
     newStatus: OrderStatusId,
     tx: Prisma.TransactionClient,
   ) {
@@ -208,8 +322,61 @@ export class OrderService {
         break;
       }
 
-      case OrderStatusId.InPreparation:
+      case OrderStatusId.InPreparation: {
+        if (
+          (oldStatus === OrderStatusId.PaymentPending &&
+            order.paymentDetailId === PaymentTypeEnum.CreditDebitCard) ||
+          (oldStatus === null &&
+            order.paymentDetailId === PaymentTypeEnum.UponDelivery)
+        ) {
+          const stocks = await Promise.all(
+            orderItems.map((item) =>
+              this.stockService.findByProductIdAsync(item.productId, tx),
+            ),
+          );
+          const updatePromises = orderItems.map((item, index) => {
+            const stock = stocks[index];
+            if (!stock) {
+              throw new NotFoundException(
+                `Stock not found for product ID ${item.productId}`,
+              );
+            }
+
+            const newStock: StockDto = {
+              quantityAvailable: stock.quantityAvailable - item.quantity,
+              quantityOrdered: stock.quantityOrdered,
+              quantityReserved: stock.quantityReserved + item.quantity,
+            };
+            stockUpdates.push({
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Outcome,
+              changedField: StockChangedField.QuantityAvailable,
+              previousValue: stock.quantityAvailable,
+              newValue: newStock.quantityAvailable,
+              reason: `Order ${order.id} in preparation to pick up.`,
+            });
+            stockUpdates.push({
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Income,
+              changedField: StockChangedField.QuantityReserved,
+              previousValue: stock.quantityReserved,
+              newValue: newStock.quantityReserved,
+              reason: `Order ${order.id} in preparation to pick up.`,
+            });
+            return this.stockService.updateStockByProductIdAsync(
+              item.productId,
+              newStock,
+              tx,
+            );
+          });
+          await Promise.all(updatePromises);
+          await this.stockChangeRepository.createManyStockChangeAsync(
+            stockUpdates,
+            tx,
+          );
+        }
         break;
+      }
       case OrderStatusId.Shipped:
         break;
       case OrderStatusId.Cancelled: {
@@ -260,9 +427,7 @@ export class OrderService {
         );
         break;
       }
-      case OrderStatusId.Returned:
-        break;
-      case OrderStatusId.Delivered: {
+      case OrderStatusId.Finished: {
         const stocks = await Promise.all(
           orderItems.map((item) =>
             this.stockService.findByProductIdAsync(item.productId, tx),
@@ -287,7 +452,7 @@ export class OrderService {
             changedField: StockChangedField.QuantityReserved,
             previousValue: stock.quantityReserved,
             newValue: newStock.quantityReserved,
-            reason: `Order ${order.id} delivered.`,
+            reason: `Order ${order.id} picked up.`,
           });
           return this.stockService.updateStockByProductIdAsync(
             item.productId,
@@ -470,6 +635,25 @@ export class OrderService {
       query.searchText,
       query.filters,
       query.orderBy,
+    );
+  }
+
+  async sendBillByEmailAsync(
+    bill: BillReportGenerationDataDto,
+    clientEmail: string,
+  ) {
+    const pdfDoc = await this.reportService.generateBillReport(bill);
+
+    const buffer = await pdfToBuffer(pdfDoc);
+
+    return this.mailingService.sendMailWithAttachmentAsync(
+      clientEmail,
+      `Factura #${bill.billId}`,
+      'Adjuntamos la factura en formato PDF.',
+      {
+        filename: `MP-FC-${bill.billId}.pdf`,
+        content: buffer,
+      },
     );
   }
 }

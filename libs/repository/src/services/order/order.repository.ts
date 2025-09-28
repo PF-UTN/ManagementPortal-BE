@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Order, Prisma } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 
 import {
@@ -387,6 +387,17 @@ export class OrderRepository {
           },
         },
       },
+    });
+  }
+  async updateOrderAsync(
+    id: number,
+    data: Prisma.OrderUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ): Promise<Order> {
+    const prismaClient = tx ?? this.prisma;
+    return prismaClient.order.update({
+      where: { id },
+      data,
     });
   }
 }
