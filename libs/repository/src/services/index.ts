@@ -22,5 +22,6 @@ export * from './maintenance/maintenance.repository';
 export * from './order/order.repository';
 export * from './order-item/order-item.repository';
 export * from './payment-detail/payment-detail.repository';
+export * from './shipment/shipment.repository';
 export * from './bill/bill.repository';
 export * from './bill-item/bill-item.repository';

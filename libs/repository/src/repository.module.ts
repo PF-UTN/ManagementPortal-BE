@@ -25,6 +25,7 @@ import {
   OrderRepository,
   OrderItemRepository,
   PaymentDetailRepository,
+  ShipmentRepository,
   BillItemRepository,
   BillRepository,
 } from './services';
@@ -59,6 +60,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     OrderRepository,
     OrderItemRepository,
     PaymentDetailRepository,
+    ShipmentRepository,
     BillRepository,
     BillItemRepository,
   ],
@@ -88,6 +90,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     OrderRepository,
     OrderItemRepository,
     PaymentDetailRepository,
+    ShipmentRepository,
     BillRepository,
     BillItemRepository,
   ],
