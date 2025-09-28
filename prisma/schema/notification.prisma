@@ -1,0 +1,9 @@
+model Notification {
+    id        Int      @id @default(autoincrement())
+    userId    Int
+    user      User     @relation(fields: [userId], references: [id])
+    timestamp DateTime @default(now())
+    viewed    Boolean  @default(false)
+    message   String   @db.VarChar(255)
+    deleted   Boolean  @default(false)
+}
