@@ -2,7 +2,6 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDefined,
-  IsNumber,
   IsString,
   MaxLength,
   ValidateNested,
@@ -10,12 +9,13 @@ import {
 } from 'class-validator';
 
 import { OrderSortDto } from './order-sort.dto';
-import { SearchOrderFromClientFiltersDto } from './search-order-from-client-filters.dto';
+import { SearchOrderFiltersDto } from './search-order-filters.dto';
 
-export class SearchOrderFromClientRequest {
+export class DownloadOrderRequest {
   @ApiProperty({
     example: 'search text',
     description: 'The text to search for',
+    required: true,
   })
   @IsDefined()
   @IsString()
@@ -23,33 +23,20 @@ export class SearchOrderFromClientRequest {
   searchText: string;
 
   @ApiProperty({
-    example: 1,
-    description: 'The page number for pagination',
-  })
-  @IsNumber()
-  page: number;
-
-  @ApiProperty({
-    example: 10,
-    description: 'The number of items per page',
-  })
-  @IsNumber()
-  pageSize: number;
-
-  @ApiProperty({
-    type: SearchOrderFromClientFiltersDto,
+    type: SearchOrderFiltersDto,
     description: 'Filters to apply to the search',
     required: false,
   })
   @IsDefined()
   @ValidateNested()
-  @Type(() => SearchOrderFromClientFiltersDto)
-  filters: SearchOrderFromClientFiltersDto;
+  @Type(() => SearchOrderFiltersDto)
+  filters: SearchOrderFiltersDto;
 
   @ApiPropertyOptional({
     description: 'Order for the results',
     type: OrderSortDto,
     example: { field: 'createdAt', direction: 'asc' },
+    required: false,
   })
   @IsOptional()
   @ValidateNested()

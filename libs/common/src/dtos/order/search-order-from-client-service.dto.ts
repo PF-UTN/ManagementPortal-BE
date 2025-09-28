@@ -9,7 +9,7 @@ import {
   IsOptional,
 } from 'class-validator';
 
-import { OrderSortDto } from './order-order.dto';
+import { OrderSortDto } from './order-sort.dto';
 import { SearchOrderFromClientFiltersDto } from './search-order-from-client-filters.dto';
 
 export class SearchOrderFromClientServiceDto {

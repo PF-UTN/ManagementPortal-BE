@@ -3,7 +3,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderStatusId } from '@mp/common/constants';
+import {
+  OrderDirection,
+  OrderField,
+  OrderStatusId,
+} from '@mp/common/constants';
+import { SearchOrderFiltersDto } from '@mp/common/dtos';
 import {
   clientMock,
   mockOrderItem,
@@ -23,6 +28,8 @@ import {
 } from '@mp/repository';
 
 import { OrderService } from './order.service';
+import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
+import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
@@ -950,6 +957,74 @@ describe('OrderService', () => {
 
       // Assert
       expect(result).toEqual(orderDetailsDtoMock);
+    });
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchOrderFiltersDto = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2025-01-01',
+        toCreatedAtDate: '2025-12-31',
+      };
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      };
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchOrderQuery({
+        searchText,
+        filters,
+        page,
+        pageSize,
+        orderBy,
+      });
+
+      // Act
+      await service.searchWithFiltersAsync(query);
+
+      // Assert
+      expect(orderRepository.searchWithFiltersAsync).toHaveBeenCalledWith(
+        query.page,
+        query.pageSize,
+        query.searchText,
+        query.filters,
+        query.orderBy,
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchOrderFiltersDto = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2025-01-01',
+        toCreatedAtDate: '2025-12-31',
+      };
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.ASC,
+      };
+      const query = new DownloadOrderQuery({
+        searchText,
+        filters,
+        orderBy,
+      });
+
+      // Act
+      await service.downloadWithFiltersAsync(query);
+
+      // Assert
+      expect(orderRepository.downloadWithFiltersAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.filters,
+        query.orderBy,
+      );
     });
   });
 });
