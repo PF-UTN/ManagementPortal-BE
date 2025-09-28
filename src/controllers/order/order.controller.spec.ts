@@ -19,6 +19,7 @@ import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateOrderCommand } from './command/create-order.command';
 import { OrderController } from './order.controller';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
 import { DownloadOrderQuery } from './query/download-order.query';
 import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
@@ -226,6 +227,31 @@ describe('OrderController', () => {
     it('should set the correct length', async () => {
       const result = await controller.downloadOrdersAsync(downloadOrderRequest);
       expect(result.options.length).toBe(buffer.length);
+    });
+  });
+
+  describe('checkoutAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const orderId = 123;
+      const authorizationHeader = 'Bearer testtoken';
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('checkoutResult');
+      const expectedQuery = new CheckoutOrderQuery(
+        orderId,
+        authorizationHeader,
+      );
+
+      // Act
+      const result = await controller.checkoutAsync(
+        orderId,
+        authorizationHeader,
+      );
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+      expect(result).toBe('checkoutResult');
     });
   });
 });

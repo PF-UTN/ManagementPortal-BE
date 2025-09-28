@@ -913,6 +913,7 @@ describe('OrderService', () => {
           },
         },
         deliveryMethodName: 'Delivery',
+        deliveryMethodId: 1,
         orderStatus: {
           name: 'Pending',
         },
@@ -923,6 +924,7 @@ describe('OrderService', () => {
         },
         orderItems: [
           {
+            id: 1,
             product: {
               name: 'Test Product',
               description: 'Producto de prueba',

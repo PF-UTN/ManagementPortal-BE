@@ -404,6 +404,7 @@ export class OrderService {
     const items = await this.orderItemRepository.findByOrderIdAsync(order.id);
 
     const itemsDto: OrderItemDataToClientDto[] = items.map((item) => ({
+      id: item.id,
       product: {
         name: item.product.name,
         description: item.product.description,
@@ -438,6 +439,7 @@ export class OrderService {
         },
       },
       deliveryMethodName: order.deliveryMethod.name,
+      deliveryMethodId: order.deliveryMethod.id,
       orderStatus: {
         name: order.orderStatus.name,
       },

@@ -58,6 +58,7 @@ export class OrderDetailsToClientDto {
   paymentDetail: PaymentDetailDto;
   totalAmount: number;
   deliveryMethodName: string;
+  deliveryMethodId: number;
   createdAt: Date;
   orderItems: OrderItemDataToClientDto[];
 }

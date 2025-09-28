@@ -190,6 +190,7 @@ describe('OrderRepository', () => {
       });
     });
   });
+
   describe('findOrderByIdAsync', () => {
     it('should find an order by id', async () => {
       // Arrange
@@ -215,7 +216,9 @@ describe('OrderRepository', () => {
       expect(prismaService.order.findUnique).toHaveBeenCalledWith({
         where: { id: orderId },
         include: {
-          orderItems: true,
+          orderItems: {
+            include: { product: true },
+          },
           orderStatus: true,
           client: {
             include: {

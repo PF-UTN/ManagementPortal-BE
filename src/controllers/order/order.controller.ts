@@ -23,6 +23,7 @@ import {
 import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateOrderCommand } from './command/create-order.command';
+import { CheckoutOrderQuery } from './query/checkout-order.query';
 import { DownloadOrderQuery } from './query/download-order.query';
 import { GetOrderByIdForClientQuery } from './query/get-order-by-id-to-client.query';
 import { GetOrderByIdQuery } from './query/get-order-by-id.query';
@@ -143,5 +144,21 @@ export class OrderController {
       length: buffer.length,
       disposition: `attachment; filename="${filename}"`,
     });
+  }
+
+  @Get('checkout/:orderId')
+  @ApiBearerAuth()
+  @Public()
+  @ApiOperation({
+    summary: 'Get order ready for checkout',
+    description: 'Process an order for checkout.',
+  })
+  async checkoutAsync(
+    @Param('orderId', ParseIntPipe) orderId: number,
+    @Headers('Authorization') authorizationHeader: string,
+  ) {
+    return this.queryBus.execute(
+      new CheckoutOrderQuery(orderId, authorizationHeader),
+    );
   }
 }
