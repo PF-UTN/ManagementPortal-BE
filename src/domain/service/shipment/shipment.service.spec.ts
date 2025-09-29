@@ -1,9 +1,13 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Shipment } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { OrderStatusId, ShipmentStatusId } from '@mp/common/constants';
+import {
+  OrderStatusId,
+  orderStatusTranslations,
+  ShipmentStatusId,
+} from '@mp/common/constants';
 import { ShipmentCreationDataDto, ShipmentCreationDto } from '@mp/common/dtos';
 import { MailingService } from '@mp/common/services';
 import {
@@ -183,9 +187,251 @@ describe('ShipmentService', () => {
     });
   });
 
+  describe('sendShipmentAsync', () => {
+    it('should throw NotFoundException if shipment does not exist', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException if shipment status is not pending', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.statusId = ShipmentStatusId.Finished;
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+
+      // Act & Assert
+      await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw BadRequestException if not all orders are with Prepared status', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.orders[0].orderStatusId = OrderStatusId.Pending;
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+      jest
+        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
+        .mockResolvedValueOnce(shipmentMock.orders);
+
+      // Act & Assert
+      await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should call orderRepository.updateManyOrderStatusAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.statusId = ShipmentStatusId.Pending;
+      shipmentMock.orders = [
+        {
+          orderStatusId: OrderStatusId.Prepared,
+          client: {
+            id: 1,
+            companyName: 'test client',
+            addressId: 1,
+            taxCategoryId: 1,
+            user: {
+              email: 'test-client@test.com',
+            },
+            userId: 1,
+          },
+          clientId: 1,
+          createdAt: mockDeep<Date>(new Date('2015-01-15')),
+          deliveryMethodId: 1,
+          id: 1,
+          paymentDetailId: 1,
+          shipmentId: shipment.id,
+          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+        },
+      ];
+
+      const orderIds = shipmentMock.orders.map((order) => order.id);
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+      jest
+        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
+        .mockResolvedValueOnce(shipmentMock.orders);
+      jest
+        .spyOn(repository, 'updateShipmentStatusAsync')
+        .mockResolvedValueOnce(shipment);
+      jest
+        .spyOn(service, 'sendShipmentOrdersStatusEmail')
+        .mockResolvedValueOnce();
+
+      const txMock = {} as Prisma.TransactionClient;
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      // Act
+      await service.sendShipmentAsync(shipmentId);
+
+      // Assert
+      expect(orderRepository.updateManyOrderStatusAsync).toHaveBeenCalledWith(
+        orderIds,
+        OrderStatusId.Shipped,
+        txMock,
+      );
+    });
+
+    it('should call repository.sendShipmentAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.statusId = ShipmentStatusId.Pending;
+      shipmentMock.orders = [
+        {
+          orderStatusId: OrderStatusId.Prepared,
+          client: {
+            id: 1,
+            companyName: 'test client',
+            addressId: 1,
+            taxCategoryId: 1,
+            user: {
+              email: 'test-client@test.com',
+            },
+            userId: 1,
+          },
+          clientId: 1,
+          createdAt: mockDeep<Date>(new Date('2015-01-15')),
+          deliveryMethodId: 1,
+          id: 1,
+          paymentDetailId: 1,
+          shipmentId: shipment.id,
+          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+        },
+      ];
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+      jest
+        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
+        .mockResolvedValueOnce(shipmentMock.orders);
+      jest
+        .spyOn(repository, 'updateShipmentStatusAsync')
+        .mockResolvedValueOnce(shipment);
+      jest
+        .spyOn(service, 'sendShipmentOrdersStatusEmail')
+        .mockResolvedValueOnce();
+
+      const txMock = {} as Prisma.TransactionClient;
+      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
+        return cb(txMock);
+      });
+
+      // Act
+      await service.sendShipmentAsync(shipmentId);
+
+      // Assert
+      expect(repository.updateShipmentStatusAsync).toHaveBeenCalledWith(
+        shipmentId,
+        ShipmentStatusId.Shipped,
+        txMock,
+      );
+    });
+  });
+
   describe('sendShipmentOrdersStatusEmail', () => {
     it('should call mailingService.sendMailAsync for each order', async () => {
       // Arrange
+      const newStatus = OrderStatusId.InPreparation;
       const orders = [
         { id: 1, client: { user: { email: 'cliente1@test.com' } } },
         { id: 2, client: { user: { email: 'cliente2@test.com' } } },
@@ -195,7 +441,7 @@ describe('ShipmentService', () => {
       jest.spyOn(mailingService, 'sendMailAsync').mockResolvedValueOnce({});
 
       // Act
-      await service.sendShipmentOrdersStatusEmail(orders);
+      await service.sendShipmentOrdersStatusEmail(orders, newStatus);
 
       // Assert
       expect(mailingService.sendMailAsync).toHaveBeenCalledTimes(2);
@@ -204,14 +450,14 @@ describe('ShipmentService', () => {
         1,
         'cliente1@test.com',
         'Actualización de estado de su pedido',
-        'Su pedido #1 se encuentra en preparación.',
+        `Su pedido #1 se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`,
       );
 
       expect(mailingService.sendMailAsync).toHaveBeenNthCalledWith(
         2,
         'cliente2@test.com',
         'Actualización de estado de su pedido',
-        'Su pedido #2 se encuentra en preparación.',
+        `Su pedido #2 se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`,
       );
     });
   });

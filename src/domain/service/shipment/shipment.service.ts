@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
-import { OrderStatusId, ShipmentStatusId } from '@mp/common/constants';
+import {
+  OrderStatusId,
+  orderStatusTranslations,
+  ShipmentStatusId,
+} from '@mp/common/constants';
 import { ShipmentCreationDataDto, ShipmentCreationDto } from '@mp/common/dtos';
 import { MailingService } from '@mp/common/services';
 import {
@@ -77,19 +85,61 @@ export class ShipmentService {
       shipment.id,
     );
 
-    this.sendShipmentOrdersStatusEmail(orders);
+    this.sendShipmentOrdersStatusEmail(orders, OrderStatusId.InPreparation);
+  }
+
+  async sendShipmentAsync(id: number) {
+    const shipment = await this.shipmentRepository.findByIdAsync(id);
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with id ${id} does not exists`);
+    }
+
+    if (shipment.statusId !== ShipmentStatusId.Pending) {
+      throw new BadRequestException(`Shipment status is not pending`);
+    }
+
+    const allOrdersPending = shipment.orders.every(
+      (order) => order.orderStatusId === OrderStatusId.Prepared,
+    );
+
+    if (!allOrdersPending) {
+      throw new BadRequestException(`Not all orders are prepared`);
+    }
+
+    const orderIds = shipment.orders.map((order) => order.id);
+
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      const orderStatusUpdateTask =
+        this.orderRepository.updateManyOrderStatusAsync(
+          orderIds,
+          OrderStatusId.Shipped,
+          tx,
+        );
+      const shipmentUpdateTask =
+        this.shipmentRepository.updateShipmentStatusAsync(
+          id,
+          ShipmentStatusId.Shipped,
+          tx,
+        );
+
+      await Promise.all([orderStatusUpdateTask, shipmentUpdateTask]);
+    });
+
+    this.sendShipmentOrdersStatusEmail(shipment.orders, OrderStatusId.Shipped);
   }
 
   async sendShipmentOrdersStatusEmail(
     orders: Prisma.OrderGetPayload<{
       include: { client: { include: { user: { select: { email: true } } } } };
     }>[],
+    newStatus: OrderStatusId,
   ) {
     for (const order of orders) {
       const email = order.client?.user?.email;
 
       const subject = 'Actualización de estado de su pedido';
-      const text = `Su pedido #${order.id} se encuentra en preparación.`;
+      const text = `Su pedido #${order.id} se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`;
 
       this.mailingService.sendMailAsync(email, subject, text);
     }
