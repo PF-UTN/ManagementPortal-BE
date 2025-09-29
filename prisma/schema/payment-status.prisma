@@ -1,0 +1,5 @@
+model PaymentStatus {
+  id          Int     @id @default(autoincrement())
+  code        String  @unique
+  payments    Payment[]
+}
