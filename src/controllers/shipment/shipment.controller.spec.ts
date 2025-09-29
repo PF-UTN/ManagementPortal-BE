@@ -6,6 +6,7 @@ import { mockDeep } from 'jest-mock-extended';
 import { ShipmentCreationDto } from '@mp/common/dtos';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
+import { SendShipmentCommand } from './command/send-shipment.command';
 import { ShipmentController } from './shipment.controller';
 
 describe('ShipmentController', () => {
@@ -59,6 +60,21 @@ describe('ShipmentController', () => {
 
       // Act
       await controller.createShipmentAsync(shipmentCreationDtoMock);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('sendShipmentAsync', () => {
+    it('should call execute on the commandBus with correct parameters', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const executeSpy = jest.spyOn(commandBus, 'execute');
+      const expectedCommand = new SendShipmentCommand(shipmentId);
+
+      // Act
+      await controller.sendShipmentAsync(shipmentId);
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
