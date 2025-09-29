@@ -89,4 +89,55 @@ describe('ShipmentRepository', () => {
       });
     });
   });
+
+  describe('findByIdAsync', () => {
+    it('should return a shipment if exists', async () => {
+      // Arrange
+      const id = shipment.id;
+      jest
+        .spyOn(prismaService.shipment, 'findUnique')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      const foundShipment = await repository.findByIdAsync(id);
+
+      // Assert
+      expect(foundShipment).toBe(shipment);
+    });
+
+    it('should return null if shipment does not exist', async () => {
+      // Arrange
+      const id = shipment.id;
+      jest
+        .spyOn(prismaService.shipment, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const foundShipment = await repository.findByIdAsync(id);
+
+      // Assert
+      expect(foundShipment).toBe(null);
+    });
+  });
+
+  describe('updateShipmentStatusAsync', () => {
+    it('should update an existing shipment status', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const newStatus = shipment.statusId;
+
+      jest
+        .spyOn(prismaService.shipment, 'update')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      const updatedShipment = await repository.updateShipmentStatusAsync(
+        shipmentId,
+        newStatus,
+      );
+
+      // Assert
+      expect(updatedShipment).toEqual(shipment);
+    });
+  });
 });

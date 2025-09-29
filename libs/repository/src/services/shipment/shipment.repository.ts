@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Shipment } from '@prisma/client';
 
+import { ShipmentStatusId } from '@mp/common/constants';
 import { ShipmentCreationDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -28,6 +29,42 @@ export class ShipmentRepository {
           connect: orderIds.map((id) => ({ id })),
         },
       },
+    });
+  }
+
+  async findByIdAsync(id: number) {
+    const shipment = await this.prisma.shipment.findUnique({
+      where: { id },
+      include: {
+        orders: {
+          include: {
+            client: {
+              include: {
+                user: {
+                  select: {
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    return shipment;
+  }
+
+  async updateShipmentStatusAsync(
+    id: number,
+    newStatus: ShipmentStatusId,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.shipment.update({
+      data: {
+        statusId: newStatus,
+      },
+      where: { id },
     });
   }
 }
