@@ -14,6 +14,7 @@ import {
   DeliveryMethodId,
   deliveryMethodTranslations,
   PaymentTypeTranslations,
+  orderStatusTranslations,
 } from '@mp/common/constants';
 import {
   StockChangeCreationDataDto,
@@ -538,13 +539,19 @@ export class OrderService {
           description: order.client.taxCategory.description ?? '',
         },
       },
-      deliveryMethodName: order.deliveryMethod.name,
+      deliveryMethodName:
+        deliveryMethodTranslations[order.deliveryMethod.name] ||
+        order.deliveryMethod.name,
       orderStatus: {
-        name: order.orderStatus.name,
+        name:
+          orderStatusTranslations[order.orderStatus.name] ||
+          order.orderStatus.name,
       },
       paymentDetail: {
         paymentType: {
-          name: order.paymentDetail.paymentType.name,
+          name:
+            PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
+            order.paymentDetail.paymentType.name,
         },
       },
       orderItems: itemsDto,
@@ -603,14 +610,20 @@ export class OrderService {
           description: order.client.taxCategory.description ?? '',
         },
       },
-      deliveryMethodName: order.deliveryMethod.name,
+      deliveryMethodName:
+        deliveryMethodTranslations[order.deliveryMethod.name] ||
+        order.deliveryMethod.name,
       deliveryMethodId: order.deliveryMethod.id,
       orderStatus: {
-        name: order.orderStatus.name,
+        name:
+          orderStatusTranslations[order.orderStatus.name] ||
+          order.orderStatus.name,
       },
       paymentDetail: {
         paymentType: {
-          name: order.paymentDetail.paymentType.name,
+          name:
+            PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
+            order.paymentDetail.paymentType.name,
         },
       },
       orderItems: itemsDto,
