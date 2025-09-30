@@ -14,6 +14,7 @@ import {
   DeliveryMethodId,
   deliveryMethodTranslations,
   PaymentTypeTranslations,
+  orderStatusTranslations,
 } from '@mp/common/constants';
 import {
   StockChangeCreationDataDto,
@@ -144,6 +145,7 @@ export class OrderService {
       await this.manageStockChanges(
         order,
         orderItemsToCreate,
+        paymentDetail.paymentTypeId,
         null,
         orderData.orderStatusId,
         tx,
@@ -169,8 +171,23 @@ export class OrderService {
       order.id,
     );
 
-    await this.orderRepository.updateOrderAsync(order.id, {
-      orderStatus: { connect: { id: newStatus } },
+    await this.unitOfWork.execute(async (tx) => {
+      const orderUpdated = await this.orderRepository.updateOrderAsync(
+        order.id,
+        {
+          orderStatus: { connect: { id: newStatus } },
+        },
+      );
+
+      await this.manageStockChanges(
+        order,
+        orderItems,
+        order.paymentDetail.paymentTypeId,
+        currentStatus,
+        newStatus,
+        tx,
+      );
+      return orderUpdated;
     });
 
     if (newStatus === OrderStatusId.Finished) {
@@ -267,57 +284,39 @@ export class OrderService {
   private async manageStockChanges(
     order: Order,
     orderItems: { productId: number; quantity: number }[],
+    paymentTypeId: PaymentTypeEnum | null,
     oldStatus: OrderStatusId | null,
     newStatus: OrderStatusId,
     tx: Prisma.TransactionClient,
   ) {
-    const stockUpdates: StockChangeCreationDataDto[] = [];
     switch (newStatus) {
       case OrderStatusId.Pending: {
-        const stocks = await Promise.all(
-          orderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
-          ),
-        );
-        const updatePromises = orderItems.map((item, index) => {
-          const stock = stocks[index];
-          if (!stock) {
-            throw new NotFoundException(
-              `Stock not found for product ID ${item.productId}`,
-            );
-          }
-
-          const newStock: StockDto = {
+        await this.updateStocksAndRegisterChanges(
+          orderItems,
+          tx,
+          (stock, item) => ({
             quantityAvailable: stock.quantityAvailable - item.quantity,
             quantityOrdered: stock.quantityOrdered,
             quantityReserved: stock.quantityReserved + item.quantity,
-          };
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Outcome,
-            changedField: StockChangedField.QuantityAvailable,
-            previousValue: stock.quantityAvailable,
-            newValue: newStock.quantityAvailable,
-            reason: `Order ${order.id} pending.`,
-          });
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Income,
-            changedField: StockChangedField.QuantityReserved,
-            previousValue: stock.quantityReserved,
-            newValue: newStock.quantityReserved,
-            reason: `Order ${order.id} pending.`,
-          });
-          return this.stockService.updateStockByProductIdAsync(
-            item.productId,
-            newStock,
-            tx,
-          );
-        });
-        await Promise.all(updatePromises);
-        await this.stockChangeRepository.createManyStockChangeAsync(
-          stockUpdates,
-          tx,
+          }),
+          (stock, newStock, item) => [
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Outcome,
+              changedField: StockChangedField.QuantityAvailable,
+              previousValue: stock.quantityAvailable,
+              newValue: newStock.quantityAvailable,
+              reason: `Order ${order.id} pending.`,
+            },
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Income,
+              changedField: StockChangedField.QuantityReserved,
+              previousValue: stock.quantityReserved,
+              newValue: newStock.quantityReserved,
+              reason: `Order ${order.id} pending.`,
+            },
+          ],
         );
         break;
       }
@@ -325,54 +324,35 @@ export class OrderService {
       case OrderStatusId.InPreparation: {
         if (
           (oldStatus === OrderStatusId.PaymentPending &&
-            order.paymentDetailId === PaymentTypeEnum.CreditDebitCard) ||
-          (oldStatus === null &&
-            order.paymentDetailId === PaymentTypeEnum.UponDelivery)
+            paymentTypeId === PaymentTypeEnum.CreditDebitCard) ||
+          (oldStatus === null && paymentTypeId === PaymentTypeEnum.UponDelivery)
         ) {
-          const stocks = await Promise.all(
-            orderItems.map((item) =>
-              this.stockService.findByProductIdAsync(item.productId, tx),
-            ),
-          );
-          const updatePromises = orderItems.map((item, index) => {
-            const stock = stocks[index];
-            if (!stock) {
-              throw new NotFoundException(
-                `Stock not found for product ID ${item.productId}`,
-              );
-            }
-
-            const newStock: StockDto = {
+          await this.updateStocksAndRegisterChanges(
+            orderItems,
+            tx,
+            (stock, item) => ({
               quantityAvailable: stock.quantityAvailable - item.quantity,
               quantityOrdered: stock.quantityOrdered,
               quantityReserved: stock.quantityReserved + item.quantity,
-            };
-            stockUpdates.push({
-              productId: item.productId,
-              changeTypeId: StockChangeTypeIds.Outcome,
-              changedField: StockChangedField.QuantityAvailable,
-              previousValue: stock.quantityAvailable,
-              newValue: newStock.quantityAvailable,
-              reason: `Order ${order.id} in preparation to pick up.`,
-            });
-            stockUpdates.push({
-              productId: item.productId,
-              changeTypeId: StockChangeTypeIds.Income,
-              changedField: StockChangedField.QuantityReserved,
-              previousValue: stock.quantityReserved,
-              newValue: newStock.quantityReserved,
-              reason: `Order ${order.id} in preparation to pick up.`,
-            });
-            return this.stockService.updateStockByProductIdAsync(
-              item.productId,
-              newStock,
-              tx,
-            );
-          });
-          await Promise.all(updatePromises);
-          await this.stockChangeRepository.createManyStockChangeAsync(
-            stockUpdates,
-            tx,
+            }),
+            (stock, newStock, item) => [
+              {
+                productId: item.productId,
+                changeTypeId: StockChangeTypeIds.Outcome,
+                changedField: StockChangedField.QuantityAvailable,
+                previousValue: stock.quantityAvailable,
+                newValue: newStock.quantityAvailable,
+                reason: `Order ${order.id} in preparation.`,
+              },
+              {
+                productId: item.productId,
+                changeTypeId: StockChangeTypeIds.Income,
+                changedField: StockChangedField.QuantityReserved,
+                previousValue: stock.quantityReserved,
+                newValue: newStock.quantityReserved,
+                reason: `Order ${order.id} in preparation.`,
+              },
+            ],
           );
         }
         break;
@@ -380,94 +360,99 @@ export class OrderService {
       case OrderStatusId.Shipped:
         break;
       case OrderStatusId.Cancelled: {
-        const stocks = await Promise.all(
-          orderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
-          ),
-        );
-        const updatePromises = orderItems.map((item, index) => {
-          const stock = stocks[index];
-          if (!stock) {
-            throw new NotFoundException(
-              `Stock not found for product ID ${item.productId}`,
-            );
-          }
-
-          const newStock: StockDto = {
+        await this.updateStocksAndRegisterChanges(
+          orderItems,
+          tx,
+          (stock, item) => ({
             quantityAvailable: stock.quantityAvailable + item.quantity,
             quantityOrdered: stock.quantityOrdered,
             quantityReserved: stock.quantityReserved - item.quantity,
-          };
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Income,
-            changedField: StockChangedField.QuantityAvailable,
-            previousValue: stock.quantityAvailable,
-            newValue: newStock.quantityAvailable,
-            reason: `Order ${order.id} cancelled.`,
-          });
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Outcome,
-            changedField: StockChangedField.QuantityReserved,
-            previousValue: stock.quantityReserved,
-            newValue: newStock.quantityReserved,
-            reason: `Order ${order.id} cancelled.`,
-          });
-          return this.stockService.updateStockByProductIdAsync(
-            item.productId,
-            newStock,
-            tx,
-          );
-        });
-        await Promise.all(updatePromises);
-        await this.stockChangeRepository.createManyStockChangeAsync(
-          stockUpdates,
-          tx,
+          }),
+          (stock, newStock, item) => [
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Income,
+              changedField: StockChangedField.QuantityAvailable,
+              previousValue: stock.quantityAvailable,
+              newValue: newStock.quantityAvailable,
+              reason: `Order ${order.id} cancelled.`,
+            },
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Outcome,
+              changedField: StockChangedField.QuantityReserved,
+              previousValue: stock.quantityReserved,
+              newValue: newStock.quantityReserved,
+              reason: `Order ${order.id} cancelled.`,
+            },
+          ],
         );
         break;
       }
       case OrderStatusId.Finished: {
-        const stocks = await Promise.all(
-          orderItems.map((item) =>
-            this.stockService.findByProductIdAsync(item.productId, tx),
-          ),
-        );
-        const updatePromises = orderItems.map((item, index) => {
-          const stock = stocks[index];
-          if (!stock) {
-            throw new NotFoundException(
-              `Stock not found for product ID ${item.productId}`,
-            );
-          }
-
-          const newStock: StockDto = {
+        await this.updateStocksAndRegisterChanges(
+          orderItems,
+          tx,
+          (stock, item) => ({
             quantityAvailable: stock.quantityAvailable,
             quantityOrdered: stock.quantityOrdered,
             quantityReserved: stock.quantityReserved - item.quantity,
-          };
-          stockUpdates.push({
-            productId: item.productId,
-            changeTypeId: StockChangeTypeIds.Outcome,
-            changedField: StockChangedField.QuantityReserved,
-            previousValue: stock.quantityReserved,
-            newValue: newStock.quantityReserved,
-            reason: `Order ${order.id} picked up.`,
-          });
-          return this.stockService.updateStockByProductIdAsync(
-            item.productId,
-            newStock,
-            tx,
-          );
-        });
-        await Promise.all(updatePromises);
-        await this.stockChangeRepository.createManyStockChangeAsync(
-          stockUpdates,
-          tx,
+          }),
+          (stock, newStock, item) => [
+            {
+              productId: item.productId,
+              changeTypeId: StockChangeTypeIds.Outcome,
+              changedField: StockChangedField.QuantityReserved,
+              previousValue: stock.quantityReserved,
+              newValue: newStock.quantityReserved,
+              reason: `Order ${order.id} finished.`,
+            },
+          ],
         );
         break;
       }
     }
+  }
+
+  private async updateStocksAndRegisterChanges(
+    orderItems: { productId: number; quantity: number }[],
+    tx: Prisma.TransactionClient,
+    getNewStock: (
+      stock: StockDto,
+      item: { productId: number; quantity: number },
+    ) => StockDto,
+    getStockChanges: (
+      stock: StockDto,
+      newStock: StockDto,
+      item: { productId: number; quantity: number },
+    ) => StockChangeCreationDataDto[],
+  ) {
+    const stockUpdates: StockChangeCreationDataDto[] = [];
+    const stocks = await Promise.all(
+      orderItems.map((item) =>
+        this.stockService.findByProductIdAsync(item.productId, tx),
+      ),
+    );
+    const updatePromises = orderItems.map((item, index) => {
+      const stock = stocks[index];
+      if (!stock) {
+        throw new NotFoundException(
+          `Stock not found for product ID ${item.productId}`,
+        );
+      }
+      const newStock = getNewStock(stock, item);
+      stockUpdates.push(...getStockChanges(stock, newStock, item));
+      return this.stockService.updateStockByProductIdAsync(
+        item.productId,
+        newStock,
+        tx,
+      );
+    });
+    await Promise.all(updatePromises);
+    await this.stockChangeRepository.createManyStockChangeAsync(
+      stockUpdates,
+      tx,
+    );
   }
 
   async searchClientOrdersWithFiltersAsync(
@@ -538,13 +523,19 @@ export class OrderService {
           description: order.client.taxCategory.description ?? '',
         },
       },
-      deliveryMethodName: order.deliveryMethod.name,
+      deliveryMethodName:
+        deliveryMethodTranslations[order.deliveryMethod.name] ||
+        order.deliveryMethod.name,
       orderStatus: {
-        name: order.orderStatus.name,
+        name:
+          orderStatusTranslations[order.orderStatus.name] ||
+          order.orderStatus.name,
       },
       paymentDetail: {
         paymentType: {
-          name: order.paymentDetail.paymentType.name,
+          name:
+            PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
+            order.paymentDetail.paymentType.name,
         },
       },
       orderItems: itemsDto,
@@ -603,14 +594,20 @@ export class OrderService {
           description: order.client.taxCategory.description ?? '',
         },
       },
-      deliveryMethodName: order.deliveryMethod.name,
+      deliveryMethodName:
+        deliveryMethodTranslations[order.deliveryMethod.name] ||
+        order.deliveryMethod.name,
       deliveryMethodId: order.deliveryMethod.id,
       orderStatus: {
-        name: order.orderStatus.name,
+        name:
+          orderStatusTranslations[order.orderStatus.name] ||
+          order.orderStatus.name,
       },
       paymentDetail: {
         paymentType: {
-          name: order.paymentDetail.paymentType.name,
+          name:
+            PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
+            order.paymentDetail.paymentType.name,
         },
       },
       orderItems: itemsDto,
