@@ -963,7 +963,7 @@ describe('OrderService', () => {
         },
         orderStatus: {
           id: 1,
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1000,7 +1000,7 @@ describe('OrderService', () => {
         },
         deliveryMethodName: 'Delivery',
         orderStatus: {
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1277,7 +1277,7 @@ describe('OrderService', () => {
         },
         orderStatus: {
           id: 1,
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1315,7 +1315,7 @@ describe('OrderService', () => {
         deliveryMethodName: 'Delivery',
         deliveryMethodId: 1,
         orderStatus: {
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
