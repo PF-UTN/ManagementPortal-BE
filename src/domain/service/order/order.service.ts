@@ -170,7 +170,7 @@ export class OrderService {
     );
 
     await this.orderRepository.updateOrderAsync(order.id, {
-      orderStatus: { connect: { id: newStatus } },
+      orderStatusId: newStatus,
     });
 
     if (newStatus === OrderStatusId.Finished) {

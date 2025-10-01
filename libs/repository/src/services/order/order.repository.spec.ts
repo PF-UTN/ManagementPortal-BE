@@ -622,6 +622,44 @@ describe('OrderRepository', () => {
     });
   });
 
+  describe('updateOrderStatusAsync', () => {
+    it('should update order status with the provided data', async () => {
+      // Arrange
+      const orderId = 1;
+      const newStatus = OrderStatusId.Finished;
+      jest.spyOn(prismaService.order, 'update').mockResolvedValueOnce(order);
+
+      // Act
+      const result = await repository.updateOrderStatusAsync(
+        orderId,
+        newStatus,
+      );
+
+      // Assert
+      expect(result).toEqual(order);
+    });
+
+    it('should call prisma.order.update with correct data', async () => {
+      // Arrange
+      const orderId = 1;
+      const newStatus = OrderStatusId.Finished;
+      jest.spyOn(prismaService.order, 'update').mockResolvedValueOnce(order);
+
+      // Act
+      await repository.updateOrderStatusAsync(orderId, newStatus);
+
+      // Assert
+      expect(prismaService.order.update).toHaveBeenCalledWith({
+        where: {
+          id: orderId,
+        },
+        data: {
+          orderStatusId: newStatus,
+        },
+      });
+    });
+  });
+
   describe('findOrdersByShipmentIdAsync', () => {
     it('should return orders with the provided shipment id', async () => {
       // Arrange
