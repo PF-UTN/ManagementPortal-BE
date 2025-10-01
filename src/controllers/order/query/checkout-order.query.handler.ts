@@ -57,6 +57,8 @@ export class CheckoutOrderQueryHandler
           pending: `${baseUrl}/pedidos/checkout/pendiente`,
         },
         auto_return: 'approved',
+        notification_url: this.configService.get<string>('MP_WEBHOOK_URL'),
+        external_reference: order.id.toString(),
       },
     });
 

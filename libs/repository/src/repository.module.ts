@@ -93,6 +93,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     ShipmentRepository,
     BillRepository,
     BillItemRepository,
+    PrismaService,
   ],
 })
 export class RepositoryModule {}
