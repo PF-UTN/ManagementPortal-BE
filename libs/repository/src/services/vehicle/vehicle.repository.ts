@@ -107,6 +107,20 @@ export class VehicleRepository {
     });
   }
 
+  async updateVehicleKmTraveledAsync(
+    id: number,
+    kmTraveled: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.vehicle.update({
+      where: { id },
+      data: {
+        kmTraveled,
+      },
+    });
+  }
+
   async findByIdAsync(id: number): Promise<Vehicle | null> {
     return this.prisma.vehicle.findUnique({
       where: { id, deleted: false },
