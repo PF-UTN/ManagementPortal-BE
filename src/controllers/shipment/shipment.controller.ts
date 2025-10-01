@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  HttpCode,
   Param,
   ParseIntPipe,
   Patch,
@@ -16,9 +17,10 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { ShipmentCreationDto } from '@mp/common/dtos';
+import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
+import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
 
 @Controller('shipment')
@@ -39,6 +41,7 @@ export class ShipmentController {
     );
   }
 
+  @HttpCode(204)
   @Patch('/:id/send')
   @RequiredPermissions(PermissionCodes.Shipment.UPDATE)
   @ApiBearerAuth()
@@ -52,5 +55,29 @@ export class ShipmentController {
   })
   async sendShipmentAsync(@Param('id', ParseIntPipe) id: number) {
     return this.commandBus.execute(new SendShipmentCommand(id));
+  }
+
+  @HttpCode(204)
+  @Patch('/:id/finish')
+  @RequiredPermissions(PermissionCodes.Shipment.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Finish a shipment',
+    description: 'Finish an existant shipment.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the shipment to send',
+  })
+  @ApiBody({
+    type: FinishShipmentDto,
+  })
+  async finishShipmentAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() finishShipmentDto: FinishShipmentDto,
+  ) {
+    return this.commandBus.execute(
+      new FinishShipmentCommand(id, finishShipmentDto),
+    );
   }
 }

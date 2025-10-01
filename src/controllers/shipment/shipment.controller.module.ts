@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { CreateShipmentCommandHandler } from './command/create-shipment.command.handler';
+import { FinishShipmentCommandHandler } from './command/finish-shipment.command.handler';
 import { SendShipmentCommandHandler } from './command/send-shipment.command.handler';
 import { ShipmentController } from './shipment.controller';
 import { ShipmentServiceModule } from '../../domain/service/shipment/shipment.service.module';
@@ -8,6 +9,7 @@ import { ShipmentServiceModule } from '../../domain/service/shipment/shipment.se
 const commandHandlers = [
   CreateShipmentCommandHandler,
   SendShipmentCommandHandler,
+  FinishShipmentCommandHandler,
 ];
 
 @Module({
