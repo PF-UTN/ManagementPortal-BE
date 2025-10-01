@@ -175,7 +175,7 @@ export class OrderService {
       const orderUpdated = await this.orderRepository.updateOrderAsync(
         order.id,
         {
-          orderStatus: { connect: { id: newStatus } },
+          orderStatusId: newStatus,
         },
       );
 

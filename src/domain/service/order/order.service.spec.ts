@@ -547,7 +547,7 @@ describe('OrderService', () => {
       // Assert
       expect(orderRepository.updateOrderAsync).toHaveBeenCalledWith(
         orderMock.id,
-        { orderStatus: { connect: { id: OrderStatusId.Finished } } },
+        { orderStatusId: OrderStatusId.Finished },
       );
       expect(billRepository.createBillAsync).toHaveBeenCalledWith(
         {

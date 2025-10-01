@@ -30,4 +30,38 @@ export class ShipmentRepository {
       },
     });
   }
+
+  async findByIdAsync(id: number) {
+    const shipment = await this.prisma.shipment.findUnique({
+      where: { id },
+      include: {
+        orders: {
+          include: {
+            client: {
+              include: {
+                user: {
+                  select: {
+                    email: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    return shipment;
+  }
+
+  async updateShipmentAsync(
+    id: number,
+    data: Prisma.ShipmentUncheckedUpdateInput,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+    return client.shipment.update({
+      where: { id },
+      data,
+    });
+  }
 }

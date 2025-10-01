@@ -3,4 +3,5 @@ export class MaintenanceSummaryDto {
   date: Date;
   description: string;
   kmPerformed: number;
+  serviceSupplierId: number;
 }

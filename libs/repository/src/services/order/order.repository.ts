@@ -156,7 +156,7 @@ export class OrderRepository {
     searchText: string,
     filters: SearchOrderFiltersDto,
     orderBy: {
-      field: OrderField;
+      field: OrderField.CREATED_AT | OrderField.TOTAL_AMOUNT;
       direction: OrderDirection.ASC | OrderDirection.DESC;
     } = {
       field: OrderField.CREATED_AT,
@@ -165,7 +165,7 @@ export class OrderRepository {
   ) {
     const prismaOrderBy =
       orderBy &&
-      [OrderField.CREATED_AT].includes(orderBy.field) &&
+      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
       [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
@@ -371,6 +371,25 @@ export class OrderRepository {
     return result.count;
   }
 
+  async updateOrderStatusAsync(
+    id: number,
+    newStatus: OrderStatusId,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const client = tx ?? this.prisma;
+
+    const order = await client.order.update({
+      where: {
+        id,
+      },
+      data: {
+        orderStatusId: newStatus,
+      },
+    });
+
+    return order;
+  }
+
   async findOrdersByShipmentIdAsync(shipmentId: number) {
     return this.prisma.order.findMany({
       where: {
@@ -391,7 +410,7 @@ export class OrderRepository {
   }
   async updateOrderAsync(
     id: number,
-    data: Prisma.OrderUpdateInput,
+    data: Prisma.OrderUncheckedUpdateInput,
     tx?: Prisma.TransactionClient,
   ): Promise<Order> {
     const prismaClient = tx ?? this.prisma;

@@ -1,12 +1,27 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  Param,
+  ParseIntPipe,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
-import { ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiBearerAuth,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { ShipmentCreationDto } from '@mp/common/dtos';
+import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
+import { FinishShipmentCommand } from './command/finish-shipment.command';
+import { SendShipmentCommand } from './command/send-shipment.command';
 
 @Controller('shipment')
 export class ShipmentController {
@@ -23,6 +38,46 @@ export class ShipmentController {
   async createShipmentAsync(@Body() shipmentCreationDto: ShipmentCreationDto) {
     return this.commandBus.execute(
       new CreateShipmentCommand(shipmentCreationDto),
+    );
+  }
+
+  @HttpCode(204)
+  @Patch('/:id/send')
+  @RequiredPermissions(PermissionCodes.Shipment.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Send a shipment',
+    description: 'Send an existant shipment.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the shipment to send',
+  })
+  async sendShipmentAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.commandBus.execute(new SendShipmentCommand(id));
+  }
+
+  @HttpCode(204)
+  @Patch('/:id/finish')
+  @RequiredPermissions(PermissionCodes.Shipment.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Finish a shipment',
+    description: 'Finish an existant shipment.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the shipment to send',
+  })
+  @ApiBody({
+    type: FinishShipmentDto,
+  })
+  async finishShipmentAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() finishShipmentDto: FinishShipmentDto,
+  ) {
+    return this.commandBus.execute(
+      new FinishShipmentCommand(id, finishShipmentDto),
     );
   }
 }

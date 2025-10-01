@@ -283,6 +283,27 @@ describe('VehicleRepository', () => {
     });
   });
 
+  describe('updateVehicleKmTraveledAsync', () => {
+    it('should update an existing vehicle kmTraveled', async () => {
+      // Arrange
+      const vehicleId = vehicle.id;
+      const kmTraveled = vehicle.kmTraveled;
+
+      jest
+        .spyOn(prismaService.vehicle, 'update')
+        .mockResolvedValueOnce(vehicle);
+
+      // Act
+      const updatedVehicle = await repository.updateVehicleKmTraveledAsync(
+        vehicleId,
+        kmTraveled,
+      );
+
+      // Assert
+      expect(updatedVehicle).toEqual(vehicle);
+    });
+  });
+
   describe('findByIdAsync', () => {
     it('should return a vehicle if it exists', async () => {
       // Arrange

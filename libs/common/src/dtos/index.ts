@@ -27,3 +27,4 @@ export * from './delivery-method';
 export * from './shipment';
 export * from './bill';
 export * from './bill-item';
+export * from './vehicle-usage';

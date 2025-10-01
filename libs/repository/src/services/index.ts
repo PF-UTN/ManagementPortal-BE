@@ -25,3 +25,4 @@ export * from './payment-detail/payment-detail.repository';
 export * from './shipment/shipment.repository';
 export * from './bill/bill.repository';
 export * from './bill-item/bill-item.repository';
+export * from './vehicle-usage/vehicle-usage.repository';

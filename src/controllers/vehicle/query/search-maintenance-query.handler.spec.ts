@@ -94,6 +94,7 @@ describe('SearchMaintenanceQueryHandler', () => {
           description:
             maintenance.maintenancePlanItem.maintenanceItem.description,
           kmPerformed: maintenance.kmPerformed,
+          serviceSupplierId: maintenance.serviceSupplierId,
         })),
       });
 
