@@ -6,17 +6,24 @@ import {
 import { Prisma } from '@prisma/client';
 
 import {
+  DeliveryMethodId,
   OrderStatusId,
   orderStatusTranslations,
   ShipmentStatusId,
 } from '@mp/common/constants';
-import { ShipmentCreationDataDto, ShipmentCreationDto } from '@mp/common/dtos';
+import {
+  FinishShipmentDto,
+  ShipmentCreationDataDto,
+  ShipmentCreationDto,
+  VehicleUsageCreationDataDto,
+} from '@mp/common/dtos';
 import { MailingService } from '@mp/common/services';
 import {
   ShipmentRepository,
   VehicleRepository,
   OrderRepository,
   PrismaUnitOfWork,
+  VehicleUsageRepository,
 } from '@mp/repository';
 
 @Injectable()
@@ -25,6 +32,7 @@ export class ShipmentService {
     private readonly shipmentRepository: ShipmentRepository,
     private readonly vehicleRepository: VehicleRepository,
     private readonly orderRepository: OrderRepository,
+    private readonly vehicleUsageRepository: VehicleUsageRepository,
     private readonly mailingService: MailingService,
     private readonly unitOfWork: PrismaUnitOfWork,
   ) {}
@@ -107,6 +115,16 @@ export class ShipmentService {
       throw new BadRequestException(`Not all orders are prepared`);
     }
 
+    const allOrdersHomeDelivery = shipment.orders.every(
+      (order) => order.deliveryMethodId === DeliveryMethodId.HomeDelivery,
+    );
+
+    if (!allOrdersHomeDelivery) {
+      throw new BadRequestException(
+        `Not all orders delivery method is home delivery`,
+      );
+    }
+
     const orderIds = shipment.orders.map((order) => order.id);
 
     await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
@@ -116,17 +134,160 @@ export class ShipmentService {
           OrderStatusId.Shipped,
           tx,
         );
-      const shipmentUpdateTask =
-        this.shipmentRepository.updateShipmentStatusAsync(
-          id,
-          ShipmentStatusId.Shipped,
-          tx,
-        );
+      const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+        id,
+        { statusId: ShipmentStatusId.Shipped },
+        tx,
+      );
 
       await Promise.all([orderStatusUpdateTask, shipmentUpdateTask]);
     });
 
     this.sendShipmentOrdersStatusEmail(shipment.orders, OrderStatusId.Shipped);
+  }
+
+  async finishShipmentAsync(id: number, finishShipmentDto: FinishShipmentDto) {
+    const shipment = await this.shipmentRepository.findByIdAsync(id);
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with id ${id} does not exists`);
+    }
+
+    if (shipment.statusId !== ShipmentStatusId.Shipped) {
+      throw new BadRequestException(`Shipment status is not shipped`);
+    }
+
+    const dtoOrderIds = finishShipmentDto.orders.map((o) => o.orderId);
+    const shipmentOrderIds = shipment.orders.map((o) => o.id);
+
+    const invalidOrderIds = dtoOrderIds.filter(
+      (orderId) => !shipmentOrderIds.includes(orderId),
+    );
+
+    if (invalidOrderIds.length > 0) {
+      throw new BadRequestException(
+        `The following orders do not belong to shipment ${id}: ${invalidOrderIds.join(
+          ', ',
+        )}`,
+      );
+    }
+
+    const missingOrderIds = shipmentOrderIds.filter(
+      (orderId) => !dtoOrderIds.includes(orderId),
+    );
+    if (missingOrderIds.length > 0) {
+      throw new BadRequestException(
+        `The following orders from shipment ${id} are missing in finishShipmentDto: ${missingOrderIds.join(
+          ', ',
+        )}`,
+      );
+    }
+
+    const lastVehicleUsage =
+      await this.vehicleUsageRepository.findLastByVehicleIdAsync(
+        shipment.vehicleId,
+      );
+
+    const lastOdometer =
+      lastVehicleUsage?.odometer ??
+      (await this.vehicleRepository.findByIdAsync(shipment.vehicleId))!
+        .kmTraveled;
+
+    if (Number(lastOdometer) > finishShipmentDto.odometer) {
+      throw new BadRequestException(
+        `The new odometer value (${finishShipmentDto.odometer}) cannot be less than the previously registered value (${lastOdometer}).`,
+      );
+    }
+
+    if (
+      lastVehicleUsage &&
+      new Date(finishShipmentDto.finishedAt) < new Date(lastVehicleUsage.date)
+    ) {
+      throw new BadRequestException(
+        `The provided finish date (${finishShipmentDto.finishedAt}) cannot be earlier than the last registered usage date (${lastVehicleUsage.date.toISOString()}).`,
+      );
+    }
+
+    const vehicleUsageCreationDataDto: VehicleUsageCreationDataDto = {
+      date: finishShipmentDto.finishedAt,
+      vehicleId: shipment.vehicleId,
+      odometer: finishShipmentDto.odometer,
+      kmUsed: finishShipmentDto.odometer - Number(lastOdometer),
+    };
+
+    const orders = await this.orderRepository.findOrdersByShipmentIdAsync(id);
+
+    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
+      const orderUpdateTasks = finishShipmentDto.orders.map((order) => {
+        const data: Prisma.OrderUncheckedUpdateInput = {
+          orderStatusId: order.orderStatusId,
+        };
+
+        if (order.orderStatusId === OrderStatusId.Pending) {
+          data.shipmentId = null;
+        }
+
+        return this.orderRepository.updateOrderAsync(order.orderId, data, tx);
+      });
+
+      const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+        id,
+        {
+          statusId: ShipmentStatusId.Finished,
+          finishedAt: finishShipmentDto.finishedAt,
+          effectiveKm: finishShipmentDto.odometer - Number(lastOdometer),
+        },
+        tx,
+      );
+
+      const vehicleUsageCreationTask =
+        this.vehicleUsageRepository.createVehicleUsageAsync(
+          vehicleUsageCreationDataDto,
+          tx,
+        );
+
+      const vehicleUpdateTask =
+        this.vehicleRepository.updateVehicleKmTraveledAsync(
+          shipment.vehicleId,
+          finishShipmentDto.odometer,
+          tx,
+        );
+
+      await Promise.all([
+        ...orderUpdateTasks,
+        shipmentUpdateTask,
+        vehicleUsageCreationTask,
+        vehicleUpdateTask,
+      ]);
+    });
+
+    const finishedOrders = orders.filter((o) =>
+      finishShipmentDto.orders.some(
+        (dto) =>
+          dto.orderId === o.id && dto.orderStatusId === OrderStatusId.Finished,
+      ),
+    );
+
+    const pendingOrders = orders.filter((o) =>
+      finishShipmentDto.orders.some(
+        (dto) =>
+          dto.orderId === o.id && dto.orderStatusId === OrderStatusId.Pending,
+      ),
+    );
+
+    if (finishedOrders.length > 0) {
+      await this.sendShipmentOrdersStatusEmail(
+        finishedOrders,
+        OrderStatusId.Finished,
+      );
+    }
+
+    if (pendingOrders.length > 0) {
+      await this.sendShipmentOrdersStatusEmail(
+        pendingOrders,
+        OrderStatusId.Pending,
+      );
+    }
   }
 
   async sendShipmentOrdersStatusEmail(
