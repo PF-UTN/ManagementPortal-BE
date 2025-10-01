@@ -159,6 +159,8 @@ describe('CheckoutOrderQueryHandler', () => {
           pending: 'http://frontend/pedidos/checkout/pendiente',
         },
         auto_return: 'approved',
+        notification_url: 'http://frontend',
+        external_reference: '1',
       },
     });
     expect(result).toBe(checkoutResult);

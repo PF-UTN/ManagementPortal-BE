@@ -11,6 +11,8 @@ import {
   DeliveryMethodId,
   OrderStatusId,
   PaymentTypeEnum,
+  StockChangeTypeIds,
+  StockChangedField,
 } from '@mp/common/constants';
 import { SearchOrderFiltersDto } from '@mp/common/dtos';
 import { MailingService, ReportService } from '@mp/common/services';
@@ -626,7 +628,56 @@ describe('OrderService', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
+    it('should update stocks and register changes for valid items', async () => {
+      // Arrange
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValue(stockMock);
+      jest
+        .spyOn(stockService, 'updateStockByProductIdAsync')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(stockChangeRepository, 'createManyStockChangeAsync')
+        .mockResolvedValue(undefined);
 
+      const orderItems = [{ productId: 1, quantity: 5 }];
+      const tx = txMock;
+
+      // Act
+      await service['updateStocksAndRegisterChanges'](
+        orderItems,
+        tx,
+        (stock, item) => ({
+          quantityAvailable: stock.quantityAvailable - item.quantity,
+          quantityOrdered: stock.quantityOrdered,
+          quantityReserved: stock.quantityReserved + item.quantity,
+        }),
+        (stock, newStock, item) => [
+          {
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Outcome,
+            changedField: StockChangedField.QuantityAvailable,
+            previousValue: stock.quantityAvailable,
+            newValue: newStock.quantityAvailable,
+            reason: 'Test reason',
+          },
+          {
+            productId: item.productId,
+            changeTypeId: StockChangeTypeIds.Income,
+            changedField: StockChangedField.QuantityReserved,
+            previousValue: stock.quantityReserved,
+            newValue: newStock.quantityReserved,
+            reason: 'Test reason',
+          },
+        ],
+      );
+
+      // Assert
+      expect(stockService.updateStockByProductIdAsync).toHaveBeenCalled();
+      expect(
+        stockChangeRepository.createManyStockChangeAsync,
+      ).toHaveBeenCalled();
+    });
     it('should throw NotFoundException if stock is missing for a product in Pending', async () => {
       // Arrange
       jest
@@ -637,6 +688,7 @@ describe('OrderService', () => {
         service['manageStockChanges'](
           orderMock,
           [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+          null,
           null,
           OrderStatusId.Pending,
           txMock,
@@ -654,6 +706,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+        null,
         null,
         OrderStatusId.Shipped,
         txMock,
@@ -678,7 +731,8 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
-        null, // oldStatus
+        null,
+        null,
         OrderStatusId.Pending,
         txMock,
       );
@@ -710,6 +764,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 10 }],
+        null,
         null, // oldStatus
         OrderStatusId.Cancelled,
         txMock,
@@ -742,6 +797,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
+        null,
         null,
         OrderStatusId.Finished,
         txMock,
@@ -781,6 +837,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         order,
         orderItems,
+        PaymentTypeEnum.CreditDebitCard,
         OrderStatusId.PaymentPending,
         OrderStatusId.InPreparation,
         tx,
@@ -831,6 +888,7 @@ describe('OrderService', () => {
       await service['manageStockChanges'](
         order,
         orderItems,
+        PaymentTypeEnum.UponDelivery,
         null,
         OrderStatusId.InPreparation,
         tx,
@@ -963,7 +1021,7 @@ describe('OrderService', () => {
         },
         orderStatus: {
           id: 1,
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1000,7 +1058,7 @@ describe('OrderService', () => {
         },
         deliveryMethodName: 'Delivery',
         orderStatus: {
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1277,7 +1335,7 @@ describe('OrderService', () => {
         },
         orderStatus: {
           id: 1,
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
@@ -1315,7 +1373,7 @@ describe('OrderService', () => {
         deliveryMethodName: 'Delivery',
         deliveryMethodId: 1,
         orderStatus: {
-          name: 'Pending',
+          name: 'Pendiente',
         },
         paymentDetail: {
           paymentType: {
