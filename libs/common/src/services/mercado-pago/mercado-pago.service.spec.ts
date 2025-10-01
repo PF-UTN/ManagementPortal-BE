@@ -11,6 +11,9 @@ jest.mock('mercadopago', () => ({
   Preference: jest.fn().mockImplementation(() => ({
     create: jest.fn(),
   })),
+  Payment: jest.fn().mockImplementation(() => ({
+    get: jest.fn(),
+  })),
 }));
 
 describe('MercadoPagoService', () => {
@@ -79,6 +82,35 @@ describe('MercadoPagoService', () => {
       jest.spyOn(preferenceMock, 'create').mockRejectedValue(error);
 
       await expect(service.createPreference(data)).rejects.toThrow(error);
+    });
+  });
+
+  describe('getPaymentDetailsAsync', () => {
+    it('should call payment.get with correct id and return response', async () => {
+      const paymentId = 'pay_123';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const paymentMock = (service as any).payment;
+      const response = { id: paymentId, status: 'approved' };
+
+      jest.spyOn(paymentMock, 'get').mockResolvedValue(response);
+
+      const result = await service.getPaymentDetailsAsync(paymentId);
+
+      expect(paymentMock.get).toHaveBeenCalledWith({ id: paymentId });
+      expect(result).toEqual(response);
+    });
+
+    it('should propagate errors from payment.get', async () => {
+      const paymentId = 'pay_123';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const paymentMock = (service as any).payment;
+      const error = new Error('Failed');
+
+      jest.spyOn(paymentMock, 'get').mockRejectedValue(error);
+
+      await expect(service.getPaymentDetailsAsync(paymentId)).rejects.toThrow(
+        error,
+      );
     });
   });
 });

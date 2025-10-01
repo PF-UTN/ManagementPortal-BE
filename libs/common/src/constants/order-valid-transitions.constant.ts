@@ -3,6 +3,7 @@ import { OrderStatusId } from './order-status.constant';
 const validTransitions: Record<OrderStatusId, OrderStatusId[]> = {
   [OrderStatusId.PaymentPending]: [
     OrderStatusId.Pending,
+    OrderStatusId.InPreparation,
     OrderStatusId.Cancelled,
     OrderStatusId.PaymentRejected,
   ],

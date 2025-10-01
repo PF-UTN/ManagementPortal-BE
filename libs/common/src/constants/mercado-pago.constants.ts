@@ -29,10 +29,8 @@ export function getOrderStatusFromPaymentAndDeliveryMethod(
       return OrderStatusId.Pending;
 
     case MercadoPagoPaymentStatus.Rejected:
-      return OrderStatusId.PaymentRejected;
-
     case MercadoPagoPaymentStatus.Cancelled:
-      return OrderStatusId.Cancelled;
+      return OrderStatusId.PaymentRejected;
 
     case MercadoPagoPaymentStatus.Pending:
     case MercadoPagoPaymentStatus.InProcess:
