@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Shipment } from '@prisma/client';
 
-import { ShipmentStatusId } from '@mp/common/constants';
 import { ShipmentCreationDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -54,17 +53,15 @@ export class ShipmentRepository {
     return shipment;
   }
 
-  async updateShipmentStatusAsync(
+  async updateShipmentAsync(
     id: number,
-    newStatus: ShipmentStatusId,
+    data: Prisma.ShipmentUncheckedUpdateInput,
     tx?: Prisma.TransactionClient,
   ) {
     const client = tx ?? this.prisma;
     return client.shipment.update({
-      data: {
-        statusId: newStatus,
-      },
       where: { id },
+      data,
     });
   }
 }

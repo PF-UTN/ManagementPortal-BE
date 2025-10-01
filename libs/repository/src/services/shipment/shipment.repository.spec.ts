@@ -125,16 +125,17 @@ describe('ShipmentRepository', () => {
       // Arrange
       const shipmentId = shipment.id;
       const newStatus = shipment.statusId;
+      const finishedAt = shipment.finishedAt;
 
       jest
         .spyOn(prismaService.shipment, 'update')
         .mockResolvedValueOnce(shipment);
 
       // Act
-      const updatedShipment = await repository.updateShipmentStatusAsync(
-        shipmentId,
-        newStatus,
-      );
+      const updatedShipment = await repository.updateShipmentAsync(shipmentId, {
+        statusId: newStatus,
+        finishedAt,
+      });
 
       // Assert
       expect(updatedShipment).toEqual(shipment);
