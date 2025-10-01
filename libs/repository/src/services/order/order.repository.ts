@@ -156,7 +156,7 @@ export class OrderRepository {
     searchText: string,
     filters: SearchOrderFiltersDto,
     orderBy: {
-      field: OrderField;
+      field: OrderField.CREATED_AT | OrderField.TOTAL_AMOUNT;
       direction: OrderDirection.ASC | OrderDirection.DESC;
     } = {
       field: OrderField.CREATED_AT,
@@ -165,7 +165,7 @@ export class OrderRepository {
   ) {
     const prismaOrderBy =
       orderBy &&
-      [OrderField.CREATED_AT].includes(orderBy.field) &&
+      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
       [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
