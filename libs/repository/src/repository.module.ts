@@ -28,6 +28,7 @@ import {
   ShipmentRepository,
   BillItemRepository,
   BillRepository,
+  VehicleUsageRepository,
 } from './services';
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
@@ -63,6 +64,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     ShipmentRepository,
     BillRepository,
     BillItemRepository,
+    VehicleUsageRepository,
   ],
   exports: [
     UserRepository,
@@ -93,6 +95,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     ShipmentRepository,
     BillRepository,
     BillItemRepository,
+    VehicleUsageRepository,
   ],
 })
 export class RepositoryModule {}
