@@ -28,3 +28,4 @@ export * from './shipment';
 export * from './bill';
 export * from './bill-item';
 export * from './vehicle-usage';
+export * from './notification';
