@@ -136,4 +136,51 @@ describe('NotificationRepository', () => {
       expect(foundNotification).toBeNull();
     });
   });
+
+  describe('updateManyNotificationsByUserIdAsync', () => {
+    it('should update notifications', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const notificationUpdateDataMock: Prisma.NotificationUpdateInput = {
+        viewed: true,
+      };
+
+      jest
+        .spyOn(prismaService.notification, 'updateMany')
+        .mockResolvedValueOnce({ count: 1 });
+
+      // Act
+      const result = await repository.updateManyNotificationsByUserIdAsync(
+        userId,
+        notificationUpdateDataMock,
+      );
+
+      // Assert
+      expect(result).toEqual({ count: 1 });
+    });
+
+    it('should call prisma.updateMany with correct parameters', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const notificationUpdateDataMock: Prisma.NotificationUpdateInput = {
+        viewed: true,
+      };
+
+      jest
+        .spyOn(prismaService.notification, 'updateMany')
+        .mockResolvedValueOnce({ count: 1 });
+
+      // Act
+      await repository.updateManyNotificationsByUserIdAsync(
+        userId,
+        notificationUpdateDataMock,
+      );
+
+      // Assert
+      expect(prismaService.notification.updateMany).toHaveBeenCalledWith({
+        where: { userId, viewed: false, deleted: false },
+        data: notificationUpdateDataMock,
+      });
+    });
+  });
 });

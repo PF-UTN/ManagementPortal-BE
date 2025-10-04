@@ -29,4 +29,14 @@ export class NotificationRepository {
       where: { id, deleted: false },
     });
   }
+
+  async updateManyNotificationsByUserIdAsync(
+    userId: number,
+    data: Prisma.NotificationUpdateInput,
+  ) {
+    return this.prisma.notification.updateMany({
+      where: { userId, viewed: false, deleted: false },
+      data,
+    });
+  }
 }
