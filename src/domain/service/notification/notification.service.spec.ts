@@ -69,7 +69,7 @@ describe('NotificationService', () => {
       // Arrange
       const notificationId = notification.id;
       const userId = notification.userId;
-      
+
       jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
 
       // Act & Assert
@@ -117,6 +117,68 @@ describe('NotificationService', () => {
 
       // Act
       await service.markNotificationAsViewedAsync(notificationId, userId);
+
+      // Assert
+      expect(repository.updateNotificationAsync).toHaveBeenCalledWith(
+        notification.id,
+        updateNotificationDataMock,
+      );
+    });
+  });
+
+  describe('deleteNotificationAsync', () => {
+    it('should throw NotFoundException if notification does not exist', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = notification.userId;
+
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.deleteNotificationAsync(notificationId, userId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if userId does not match notification.userId', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = 999;
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(notification);
+
+      // Act & Assert
+      await expect(
+        service.deleteNotificationAsync(notificationId, userId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.deleteNotificationAsync with the correct data', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = notification.userId;
+
+      const updateNotificationDataMock = {
+        deleted: true,
+      };
+
+      const deletedNotification = {
+        ...notification,
+        deleted: true,
+      };
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(notification);
+
+      jest
+        .spyOn(repository, 'updateNotificationAsync')
+        .mockResolvedValueOnce(deletedNotification);
+
+      // Act
+      await service.deleteNotificationAsync(notificationId, userId);
 
       // Assert
       expect(repository.updateNotificationAsync).toHaveBeenCalledWith(
