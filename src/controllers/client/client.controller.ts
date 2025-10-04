@@ -15,8 +15,8 @@ export class ClientController {
   @RequiredPermissions(PermissionCodes.Client.READ)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Get Client Address by User ID',
-    description: 'Retrieve the client address from the user.',
+    summary: 'Get Client Address from authenticated user',
+    description: 'Retrieve the client address from an authenticated user.',
   })
   async getClientAddressByUserIdAsync(
     @Headers('Authorization') authorizationHeader: string,

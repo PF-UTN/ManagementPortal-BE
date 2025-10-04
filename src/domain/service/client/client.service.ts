@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { ClientAddressDto } from '@mp/common/dtos';
 
@@ -19,7 +19,9 @@ export class ClientService {
   async findClientAddressByUserIdAsync(userId: number) {
     const client =
       await this.clientRepository.findClientAddressByUserIdAsync(userId);
-    if (!client) throw new Error(`Client with userId ${userId} not found`);
+    if (!client) {
+      throw new NotFoundException('Client not found');
+    }
 
     const clientAddress: ClientAddressDto = {
       id: client.id,

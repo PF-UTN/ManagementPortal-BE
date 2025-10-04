@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
@@ -100,15 +101,20 @@ describe('ClientService', () => {
       ).toHaveBeenCalledWith(1);
     });
 
-    it('should throw error if client not found', async () => {
-      //Arrange
+    it('should throw NotFoundException if client is not found', async () => {
+      // Arrange
       jest
         .spyOn(clientRepository, 'findClientAddressByUserIdAsync')
         .mockResolvedValueOnce(null);
 
-      //Act & Assert
+      // Act & Assert
       await expect(service.findClientAddressByUserIdAsync(999)).rejects.toThrow(
-        'Client with userId 999 not found',
+        NotFoundException,
+      );
+
+      // Opcional: verificar el mensaje
+      await expect(service.findClientAddressByUserIdAsync(999)).rejects.toThrow(
+        'Client not found',
       );
     });
   });
