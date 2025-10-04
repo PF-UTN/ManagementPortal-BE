@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { clientMock } from './../../../../libs/common/src/testing/client.mock';
+import {
+  clientAddressMock,
+  clientAddressMockInService,
+  clientMock,
+} from './../../../../libs/common/src/testing/client.mock';
 import { ClientRepository } from './../../../../libs/repository/src/services/client/client.repository';
 import { ClientService } from './client.service';
 
@@ -77,6 +81,35 @@ describe('ClientService', () => {
         999,
       );
       expect(result).toBeNull();
+    });
+  });
+  describe('findClientAddressByUserIdAsync', () => {
+    it('should return mapped client address dto', async () => {
+      //Arrange
+      jest
+        .spyOn(clientRepository, 'findClientAddressByUserIdAsync')
+        .mockResolvedValueOnce(clientAddressMock);
+
+      //Act
+      const result = await service.findClientAddressByUserIdAsync(1);
+
+      //Assert
+      expect(result).toEqual(clientAddressMockInService);
+      expect(
+        clientRepository.findClientAddressByUserIdAsync,
+      ).toHaveBeenCalledWith(1);
+    });
+
+    it('should throw error if client not found', async () => {
+      //Arrange
+      jest
+        .spyOn(clientRepository, 'findClientAddressByUserIdAsync')
+        .mockResolvedValueOnce(null);
+
+      //Act & Assert
+      await expect(service.findClientAddressByUserIdAsync(999)).rejects.toThrow(
+        'Client with userId 999 not found',
+      );
     });
   });
 });
