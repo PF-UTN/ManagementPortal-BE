@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   Headers,
   HttpCode,
@@ -13,6 +14,7 @@ import { ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 
+import { DeleteNotificationCommand } from './command/delete-notification.command';
 import { MarkNotificationAsViewedCommand } from './command/mark-notification-as-viewed.command';
 import { GetUserNotificationsQuery } from './query/get-user-notifications.query';
 
@@ -56,6 +58,24 @@ export class NotificationController {
   ) {
     return this.commandBus.execute(
       new MarkNotificationAsViewedCommand(id, authorizationHeader),
+    );
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Notification.DELETE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Delete notification',
+    description: 'Delete the notification with the provided id.',
+  })
+  deleteNotificationAsync(
+    @Param('id', ParseIntPipe) id: number,
+    @Headers('Authorization')
+    authorizationHeader: string,
+  ) {
+    return this.commandBus.execute(
+      new DeleteNotificationCommand(id, authorizationHeader),
     );
   }
 }

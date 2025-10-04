@@ -47,7 +47,7 @@ describe('NotificationController', () => {
     });
   });
 
-  describe('getNotificationsByUserIdAsync', () => {
+  describe('markNotificationAsViewedAsync', () => {
     it('should call execute on the commandBus', async () => {
       // Arrange
       const notificationId = 1;
@@ -58,6 +58,20 @@ describe('NotificationController', () => {
         notificationId,
         authHeader,
       );
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteNotificationAsync', () => {
+    it('should call execute on the commandBus', async () => {
+      // Arrange
+      const notificationId = 1;
+      const authHeader = 'bearer <token>';
+
+      // Act
+      await controller.deleteNotificationAsync(notificationId, authHeader);
 
       // Assert
       expect(commandBus.execute).toHaveBeenCalled();

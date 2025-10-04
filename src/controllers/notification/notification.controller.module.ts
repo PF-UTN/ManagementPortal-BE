@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { DeleteNotificationCommandHandler } from './command/delete-notification.command.handler';
 import { MarkNotificationAsViewedCommandHandler } from './command/mark-notification-as-viewed.command.handler';
 import { NotificationController } from './notification.controller';
 import { GetUserNotificationsQueryHandler } from './query/get-user-notifications.query.handler';
@@ -7,7 +8,10 @@ import { AuthenticationServiceModule } from '../../domain/service/authentication
 import { NotificationServiceModule } from '../../domain/service/notification/notification.service.module';
 
 const queryHandlers = [GetUserNotificationsQueryHandler];
-const commandHandlers = [MarkNotificationAsViewedCommandHandler];
+const commandHandlers = [
+  MarkNotificationAsViewedCommandHandler,
+  DeleteNotificationCommandHandler,
+];
 
 @Module({
   imports: [NotificationServiceModule, AuthenticationServiceModule],
