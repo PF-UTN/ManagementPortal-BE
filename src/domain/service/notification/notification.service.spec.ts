@@ -187,4 +187,27 @@ describe('NotificationService', () => {
       );
     });
   });
+
+  describe('markAllNotificationsAsViewedAsync', () => {
+    it('should call repository.markAllNotificationsAsViewedAsync with the correct data', async () => {
+      // Arrange
+      const userId = notification.userId;
+
+      const updateNotificationDataMock = {
+        viewed: true,
+      };
+
+      jest
+        .spyOn(repository, 'updateManyNotificationsByUserIdAsync')
+        .mockResolvedValueOnce({ count: 1 });
+
+      // Act
+      await service.markAllNotificationsAsViewedAsync(userId);
+
+      // Assert
+      expect(
+        repository.updateManyNotificationsByUserIdAsync,
+      ).toHaveBeenCalledWith(userId, updateNotificationDataMock);
+    });
+  });
 });

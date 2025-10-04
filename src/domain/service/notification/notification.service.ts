@@ -45,4 +45,11 @@ export class NotificationService {
       { deleted: true },
     );
   }
+
+  async markAllNotificationsAsViewedAsync(userId: number) {
+    return await this.notificationRepository.updateManyNotificationsByUserIdAsync(
+      userId,
+      { viewed: true },
+    );
+  }
 }
