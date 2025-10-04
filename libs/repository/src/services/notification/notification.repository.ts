@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Notification, Prisma } from '@prisma/client';
 
 import { PrismaService } from '../prisma.service';
 
@@ -21,6 +21,12 @@ export class NotificationRepository {
     return this.prisma.notification.update({
       where: { id },
       data,
+    });
+  }
+
+  async findByIdAsync(id: number): Promise<Notification | null> {
+    return this.prisma.notification.findUnique({
+      where: { id, deleted: false },
     });
   }
 }

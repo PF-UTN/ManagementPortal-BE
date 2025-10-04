@@ -106,4 +106,34 @@ describe('NotificationRepository', () => {
       expect(updatedNotification).toEqual(notificationMock);
     });
   });
+
+  describe('findByIdAsync', () => {
+    it('should return a notification if it exists', async () => {
+      // Arrange
+      const notificationId = 1;
+      jest
+        .spyOn(prismaService.notification, 'findUnique')
+        .mockResolvedValueOnce(notification);
+
+      // Act
+      const foundNotification = await repository.findByIdAsync(notificationId);
+
+      // Assert
+      expect(foundNotification).toEqual(notification);
+    });
+
+    it('should return null if the notification does not exist', async () => {
+      // Arrange
+      const notificationId = 1;
+      jest
+        .spyOn(prismaService.notification, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const foundNotification = await repository.findByIdAsync(notificationId);
+
+      // Assert
+      expect(foundNotification).toBeNull();
+    });
+  });
 });
