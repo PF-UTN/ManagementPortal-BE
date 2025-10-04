@@ -7,6 +7,7 @@ import { NotificationController } from './notification.controller';
 describe('NotificationController', () => {
   let controller: NotificationController;
   let queryBus: QueryBus;
+  let commandBus: CommandBus;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -24,6 +25,7 @@ describe('NotificationController', () => {
     }).compile();
 
     queryBus = module.get<QueryBus>(QueryBus);
+    commandBus = module.get<CommandBus>(CommandBus);
 
     controller = module.get<NotificationController>(NotificationController);
   });
@@ -42,6 +44,23 @@ describe('NotificationController', () => {
 
       // Assert
       expect(queryBus.execute).toHaveBeenCalled();
+    });
+  });
+
+  describe('getNotificationsByUserIdAsync', () => {
+    it('should call execute on the commandBus', async () => {
+      // Arrange
+      const notificationId = 1;
+      const authHeader = 'bearer <token>';
+
+      // Act
+      await controller.markNotificationAsViewedAsync(
+        notificationId,
+        authHeader,
+      );
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalled();
     });
   });
 });
