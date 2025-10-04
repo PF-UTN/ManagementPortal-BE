@@ -40,7 +40,7 @@ describe('billReport', () => {
     observation: 'Sin observaciones',
   };
 
-  it('debe generar el documento PDF con los datos principales', async () => {
+  it('should generate the PDF document with the main data', async () => {
     //Act
     const doc = await billReport(mockBill);
 
@@ -73,5 +73,56 @@ describe('billReport', () => {
 
     const observaciones = contentArr[4] as { text: string };
     expect(observaciones.text).toContain(mockBill.observation);
+  });
+  it('should apply styles to the TOTAL cell', async () => {
+    //Arrange
+    const doc = await billReport(mockBill);
+    //Assert
+    const tablaTotales = (doc.content as Content[])[3] as { table: Table };
+    const cell = tablaTotales.table.body[2][1];
+    if (
+      typeof cell === 'object' &&
+      cell !== null &&
+      'fillColor' in cell &&
+      'color' in cell
+    ) {
+      expect(cell.fillColor).toBe('#65558f');
+      expect(cell.color).toBe('white');
+    } else {
+      throw new Error('La celda no tiene estilos');
+    }
+  });
+  it('should display the products in the table correctly', async () => {
+    //Arrange
+    const doc = await billReport(mockBill);
+    //Assert
+    const tablaProductos = (doc.content as Content[])[2] as { table: Table };
+    expect(tablaProductos.table.body[1][1]).toBe('Producto A');
+    expect(tablaProductos.table.body[2][1]).toBe('Producto B');
+  });
+  it('should calculate VAT and total correctly', async () => {
+    //Arrange
+    const billIVA = { ...mockBill, totalAmount: new Decimal(1000) };
+    //Act
+    const doc = await billReport(billIVA);
+    //Assert
+    const tablaTotales = (doc.content as Content[])[3] as { table: Table };
+    expect(tablaTotales.table.body[0][1]).toBe('$ 1000.00');
+    expect(tablaTotales.table.body[1][1]).toBe('$ 210.00');
+    const cell = tablaTotales.table.body[2][1];
+    if (typeof cell === 'object' && cell !== null && 'text' in cell) {
+      expect(cell.text).toBe('$ 1210.00');
+    } else {
+      throw new Error('La celda no tiene la propiedad text');
+    }
+  });
+  it('should display default text if there are no observations', async () => {
+    //Arrange
+    const billSinObs = { ...mockBill, observation: '' };
+    //Act
+    const doc = await billReport(billSinObs);
+    //Assert
+    const observaciones = (doc.content as Content[])[4] as { text: string };
+    expect(observaciones.text).toContain('No se realizaron observaciones.');
   });
 });
