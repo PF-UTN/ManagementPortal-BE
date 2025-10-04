@@ -125,4 +125,43 @@ describe('billReport', () => {
     const observaciones = (doc.content as Content[])[4] as { text: string };
     expect(observaciones.text).toContain('No se realizaron observaciones.');
   });
+  it('should format the date in the header', async () => {
+    const doc = await billReport(mockBill);
+    const encabezado = (doc.content as Content[])[0] as ContentColumns;
+    const columns = encabezado.columns as Array<{
+      text: Array<{ text: string }>;
+    }>;
+    const headerText = columns[3].text.map((t) => t.text).join('');
+    expect(headerText).toMatch(/Fecha: (01\/01\/2024|31\/12\/2023)/);
+  });
+  it('should display the delivery method in the header', async () => {
+    const doc = await billReport(mockBill);
+    const encabezado = (doc.content as Content[])[0] as ContentColumns;
+    const columns = encabezado.columns as Array<{
+      text: Array<{ text: string }>;
+    }>;
+    const headerText = columns[3].text.map((t) => t.text).join('');
+    expect(headerText).toContain('Método de entrega: Envío');
+  });
+  it('should display client data in the client table', async () => {
+    const doc = await billReport(mockBill);
+    const tablaCliente = (doc.content as Content[])[1] as { table: Table };
+    expect(tablaCliente.table.body[0][1]).toBe(mockBill.clientCompanyName);
+    expect(tablaCliente.table.body[1][1]).toBe(mockBill.clientDocumentNumber);
+    expect(tablaCliente.table.body[2][1]).toBe(mockBill.clientTaxCategory);
+    expect(tablaCliente.table.body[3][1]).toBe(mockBill.clientAddress);
+    expect(tablaCliente.table.body[4][1]).toBe(mockBill.paymentType);
+  });
+  it('should handle empty orderItems array', async () => {
+    const billEmpty = { ...mockBill, orderItems: [] };
+    const doc = await billReport(billEmpty);
+    const tablaProductos = (doc.content as Content[])[2] as { table: Table };
+    expect(tablaProductos.table.body.length).toBe(1);
+  });
+  it('should handle empty orderItems array and only show table header', async () => {
+    const billEmpty = { ...mockBill, orderItems: [] };
+    const doc = await billReport(billEmpty);
+    const tablaProductos = (doc.content as Content[])[2] as { table: Table };
+    expect(tablaProductos.table.body.length).toBe(1);
+  });
 });
