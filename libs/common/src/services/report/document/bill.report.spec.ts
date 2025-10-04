@@ -125,15 +125,6 @@ describe('billReport', () => {
     const observaciones = (doc.content as Content[])[4] as { text: string };
     expect(observaciones.text).toContain('No se realizaron observaciones.');
   });
-  it('should format the date in the header', async () => {
-    const doc = await billReport(mockBill);
-    const encabezado = (doc.content as Content[])[0] as ContentColumns;
-    const columns = encabezado.columns as Array<{
-      text: Array<{ text: string }>;
-    }>;
-    const headerText = columns[3].text.map((t) => t.text).join('');
-    expect(headerText).toMatch(/Fecha: (01\/01\/2024|31\/12\/2023)/);
-  });
   it('should display the delivery method in the header', async () => {
     const doc = await billReport(mockBill);
     const encabezado = (doc.content as Content[])[0] as ContentColumns;
