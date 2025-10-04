@@ -15,6 +15,7 @@ import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 
 import { DeleteNotificationCommand } from './command/delete-notification.command';
+import { MarkAllNotificationsAsViewedCommand } from './command/mark-all-notifications-as-viewed.command';
 import { MarkNotificationAsViewedCommand } from './command/mark-notification-as-viewed.command';
 import { GetUserNotificationsQuery } from './query/get-user-notifications.query';
 
@@ -76,6 +77,24 @@ export class NotificationController {
   ) {
     return this.commandBus.execute(
       new DeleteNotificationCommand(id, authorizationHeader),
+    );
+  }
+
+  @Patch(':id/mark-all-as-viewed')
+  @HttpCode(204)
+  @RequiredPermissions(PermissionCodes.Notification.UPDATE)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Mark all user notifications as viewed',
+    description:
+      'Marks all notifications belonging to the authenticated user as viewed. This operation does not return any content.',
+  })
+  markAllNotificationsAsViewedAsync(
+    @Headers('Authorization')
+    authorizationHeader: string,
+  ) {
+    return this.commandBus.execute(
+      new MarkAllNotificationsAsViewedCommand(authorizationHeader),
     );
   }
 }

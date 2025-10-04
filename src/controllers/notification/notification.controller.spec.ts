@@ -64,6 +64,19 @@ describe('NotificationController', () => {
     });
   });
 
+  describe('markAllNotificationsAsViewedAsync', () => {
+    it('should call execute on the commandBus', async () => {
+      // Arrange
+      const authHeader = 'bearer <token>';
+
+      // Act
+      await controller.markAllNotificationsAsViewedAsync(authHeader);
+
+      // Assert
+      expect(commandBus.execute).toHaveBeenCalled();
+    });
+  });
+
   describe('deleteNotificationAsync', () => {
     it('should call execute on the commandBus', async () => {
       // Arrange
