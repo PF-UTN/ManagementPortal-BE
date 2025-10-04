@@ -39,6 +39,12 @@ describe('billReport', () => {
     totalAmount: new Decimal(250),
     observation: 'Sin observaciones',
   };
+  interface ProductTableLayout {
+    hLineWidth: () => number;
+    vLineWidth: () => number;
+    hLineColor: () => string;
+    vLineColor: () => string;
+  }
 
   it('should generate the PDF document with the main data', async () => {
     //Act
@@ -154,5 +160,44 @@ describe('billReport', () => {
     const doc = await billReport(billEmpty);
     const tablaProductos = (doc.content as Content[])[2] as { table: Table };
     expect(tablaProductos.table.body.length).toBe(1);
+  });
+  it('should define a layout for the products table', async () => {
+    const doc = await billReport(mockBill);
+    const tablaProductos = (doc.content as Content[])[2] as {
+      layout?: unknown;
+      table: Table;
+    };
+
+    expect(tablaProductos.layout).toBeDefined();
+
+    if (
+      typeof tablaProductos.layout === 'object' &&
+      tablaProductos.layout !== null
+    ) {
+      if (
+        'hLineWidth' in tablaProductos.layout &&
+        typeof (tablaProductos.layout as ProductTableLayout).hLineWidth ===
+          'function'
+      ) {
+        expect((tablaProductos.layout as ProductTableLayout).hLineWidth()).toBe(
+          1,
+        );
+        expect((tablaProductos.layout as ProductTableLayout).vLineWidth()).toBe(
+          1,
+        );
+        expect((tablaProductos.layout as ProductTableLayout).hLineColor()).toBe(
+          '#65558f',
+        );
+        expect((tablaProductos.layout as ProductTableLayout).vLineColor()).toBe(
+          '#65558f',
+        );
+      }
+    } else if (typeof tablaProductos.layout === 'string') {
+      expect(typeof tablaProductos.layout).toBe('string');
+    } else {
+      throw new Error(
+        'Product table layout is not defined as object or string',
+      );
+    }
   });
 });
