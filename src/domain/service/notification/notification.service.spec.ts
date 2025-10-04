@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Notification } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
@@ -59,6 +60,68 @@ describe('NotificationService', () => {
       // Assert
       expect(repository.getNotificationsByUserIdAsync).toHaveBeenCalledWith(
         userId,
+      );
+    });
+  });
+
+  describe('markNotificationAsViewedAsync', () => {
+    it('should throw NotFoundException if notification does not exist', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = notification.userId;
+      
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(
+        service.markNotificationAsViewedAsync(notificationId, userId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if userId does not match notification.userId', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = 999;
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(notification);
+
+      // Act & Assert
+      await expect(
+        service.markNotificationAsViewedAsync(notificationId, userId),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call repository.markNotificationAsViewedAsync with the correct data', async () => {
+      // Arrange
+      const notificationId = notification.id;
+      const userId = notification.userId;
+
+      const updateNotificationDataMock = {
+        viewed: true,
+      };
+
+      const updatedNotification = {
+        ...notification,
+        viewed: true,
+      };
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(notification);
+
+      jest
+        .spyOn(repository, 'updateNotificationAsync')
+        .mockResolvedValueOnce(updatedNotification);
+
+      // Act
+      await service.markNotificationAsViewedAsync(notificationId, userId);
+
+      // Assert
+      expect(repository.updateNotificationAsync).toHaveBeenCalledWith(
+        notification.id,
+        updateNotificationDataMock,
       );
     });
   });
