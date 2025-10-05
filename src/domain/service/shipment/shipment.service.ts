@@ -1,3 +1,4 @@
+import { protos } from '@googlemaps/routeoptimization';
 import {
   BadRequestException,
   Injectable,
@@ -26,6 +27,8 @@ import {
   VehicleUsageRepository,
 } from '@mp/repository';
 
+import { GoogleMapsRoutingService } from '../../../services/google-maps-routing.service';
+
 @Injectable()
 export class ShipmentService {
   constructor(
@@ -35,6 +38,7 @@ export class ShipmentService {
     private readonly vehicleUsageRepository: VehicleUsageRepository,
     private readonly mailingService: MailingService,
     private readonly unitOfWork: PrismaUnitOfWork,
+    private readonly googleMapsRoutingService: GoogleMapsRoutingService,
   ) {}
 
   async createShipmentAsync(shipmentCreationDto: ShipmentCreationDto) {
@@ -304,5 +308,46 @@ export class ShipmentService {
 
       this.mailingService.sendMailAsync(email, subject, text);
     }
+  }
+
+  async getOrCreateShipmentRoute(shipmentId: number) {
+    const shipment = await this.shipmentRepository.findByIdAsync(shipmentId);
+
+    if (shipment?.routeLink) {
+      return shipment.routeLink;
+    }
+
+    const shipments: protos.google.maps.routeoptimization.v1.IShipment[] =
+      await Promise.all(
+        shipment!.orders.map(async (order) => {
+          const fullClientAddress = `${order.client.address.street}, ${order.client.address.streetNumber}, ${order.client.address.town.name}, ${order.client.address.town.province.name}, ${order.client.address.town.province.country.name}`;
+          const clientCoords =
+            await this.googleMapsRoutingService.geocodeAsync(fullClientAddress);
+
+          return {
+            deliveries: [
+              {
+                arrivalLocation: {
+                  latitude: clientCoords.lat,
+                  longitude: clientCoords.lng,
+                },
+                duration: { seconds: 300 },
+              },
+            ],
+          } as protos.google.maps.routeoptimization.v1.IShipment;
+        }),
+      );
+
+    const { routeLink, estimatedKm } =
+      await this.googleMapsRoutingService.batchOptimizeToursAsync({
+        shipments,
+      });
+
+    await this.shipmentRepository.updateShipmentAsync(shipmentId, {
+      routeLink,
+      estimatedKm,
+    });
+
+    return routeLink!;
   }
 }

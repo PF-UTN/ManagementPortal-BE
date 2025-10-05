@@ -1,3 +1,5 @@
+import { Prisma } from '@prisma/client';
+
 export const newClientMock = {
   id: 1,
   companyName: 'Test Company',
@@ -37,4 +39,22 @@ export const clientMock = {
     street: 'Calle Falsa',
     streetNumber: 123,
   },
-};
+} as Prisma.ClientGetPayload<{
+  include: {
+    taxCategory: true;
+    user: true;
+    address: {
+      include: {
+        town: {
+          include: {
+            province: {
+              include: {
+                country: true;
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+}>;

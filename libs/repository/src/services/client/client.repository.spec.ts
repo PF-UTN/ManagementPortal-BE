@@ -78,7 +78,23 @@ describe('ClientRepository', () => {
       // Assert
       expect(prismaService.client.findUnique).toHaveBeenCalledWith({
         where: { id: clientId },
-        include: { taxCategory: true, user: true, address: true },
+        include: {
+          taxCategory: true,
+          user: true,
+          address: {
+            include: {
+              town: {
+                include: {
+                  province: {
+                    include: {
+                      country: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
       expect(result).toEqual(newClientMock);
     });

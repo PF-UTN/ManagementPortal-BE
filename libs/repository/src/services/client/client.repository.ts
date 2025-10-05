@@ -37,7 +37,23 @@ export class ClientRepository {
   async findClientByIdAsync(clientId: number) {
     return this.prisma.client.findUnique({
       where: { id: clientId },
-      include: { taxCategory: true, user: true, address: true },
+      include: {
+        taxCategory: true,
+        user: true,
+        address: {
+          include: {
+            town: {
+              include: {
+                province: {
+                  include: {
+                    country: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 

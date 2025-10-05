@@ -25,6 +25,7 @@ import {
 } from '@mp/repository';
 
 import { ShipmentService } from './shipment.service';
+import { GoogleMapsRoutingService } from '../../../services/google-maps-routing.service';
 
 describe('ShipmentService', () => {
   let service: ShipmentService;
@@ -63,6 +64,10 @@ describe('ShipmentService', () => {
         {
           provide: PrismaUnitOfWork,
           useValue: mockDeep(PrismaUnitOfWork),
+        },
+        {
+          provide: GoogleMapsRoutingService,
+          useValue: mockDeep(GoogleMapsRoutingService),
         },
       ],
     }).compile();
@@ -1275,6 +1280,160 @@ describe('ShipmentService', () => {
         finishShipmentDtoMock.odometer,
         txMock,
       );
+    });
+  });
+
+  describe('getOrCreateShipmentRoute', () => {
+    it('should return existing routeLink if present', async () => {
+      const shipmentId = 1;
+
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.id = shipmentId;
+      shipmentMock.routeLink = 'https://maps.google.com/route';
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+
+      const result = await service.getOrCreateShipmentRoute(shipmentId);
+
+      expect(repository.findByIdAsync).toHaveBeenCalledWith(shipmentId);
+      expect(result).toBe('https://maps.google.com/route');
+    });
+
+    it('should call geocodeAsync for each order and batchOptimizeToursAsync, then update shipment', async () => {
+      const shipmentId = 1;
+
+      const ordersMock = [
+        {
+          id: 10,
+          client: {
+            address: {
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              town: {
+                name: 'Springfield',
+                province: {
+                  name: 'Buenos Aires',
+                  country: { name: 'Argentina' },
+                },
+              },
+            },
+          },
+        },
+        {
+          id: 11,
+          client: {
+            address: {
+              street: 'Av Siempre Viva',
+              streetNumber: 742,
+              town: {
+                name: 'Shelbyville',
+                province: { name: 'Cordoba', country: { name: 'Argentina' } },
+              },
+            },
+          },
+        },
+      ];
+
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: { include: { user: { select: { email: true } } } };
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.id = shipmentId;
+      shipmentMock.routeLink = null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      shipmentMock.orders = ordersMock as any;
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+
+      const geocodeResults = [
+        { lat: -33.1, lng: -60.1 },
+        { lat: -33.2, lng: -60.2 },
+      ];
+
+      const geocodeSpy = jest
+        .spyOn(service['googleMapsRoutingService'], 'geocodeAsync')
+        .mockResolvedValueOnce(geocodeResults[0])
+        .mockResolvedValueOnce(geocodeResults[1]);
+
+      const batchOptimizeResult = {
+        routeLink: 'https://maps.google.com/optimized-route',
+        estimatedKm: 12.5,
+      };
+
+      const batchOptimizeSpy = jest
+        .spyOn(service['googleMapsRoutingService'], 'batchOptimizeToursAsync')
+        .mockResolvedValueOnce(batchOptimizeResult);
+
+      const updateShipmentSpy = jest
+        .spyOn(repository, 'updateShipmentAsync')
+        .mockResolvedValueOnce({} as Shipment);
+
+      const result = await service.getOrCreateShipmentRoute(shipmentId);
+
+      expect(repository.findByIdAsync).toHaveBeenCalledWith(shipmentId);
+      expect(geocodeSpy).toHaveBeenCalledTimes(2);
+      expect(batchOptimizeSpy).toHaveBeenCalledWith({
+        shipments: [
+          {
+            deliveries: [
+              {
+                arrivalLocation: {
+                  latitude: geocodeResults[0].lat,
+                  longitude: geocodeResults[0].lng,
+                },
+                duration: { seconds: 300 },
+              },
+            ],
+          },
+          {
+            deliveries: [
+              {
+                arrivalLocation: {
+                  latitude: geocodeResults[1].lat,
+                  longitude: geocodeResults[1].lng,
+                },
+                duration: { seconds: 300 },
+              },
+            ],
+          },
+        ],
+      });
+      expect(updateShipmentSpy).toHaveBeenCalledWith(shipmentId, {
+        routeLink: batchOptimizeResult.routeLink,
+        estimatedKm: batchOptimizeResult.estimatedKm,
+      });
+      expect(result).toBe(batchOptimizeResult.routeLink);
     });
   });
 });

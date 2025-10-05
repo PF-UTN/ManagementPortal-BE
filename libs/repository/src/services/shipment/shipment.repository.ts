@@ -39,6 +39,19 @@ export class ShipmentRepository {
           include: {
             client: {
               include: {
+                address: {
+                  include: {
+                    town: {
+                      include: {
+                        province: {
+                          include: {
+                            country: true,
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
                 user: {
                   select: {
                     email: true,

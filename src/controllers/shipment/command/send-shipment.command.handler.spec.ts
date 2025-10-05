@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Shipment } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { SendShipmentCommand } from './send-shipment.command';
@@ -8,51 +7,51 @@ import { ShipmentService } from '../../../domain/service/shipment/shipment.servi
 
 describe('SendShipmentCommandHandler', () => {
   let handler: SendShipmentCommandHandler;
-  let shipmentService: ShipmentService;
-  let shipment: ReturnType<typeof mockDeep<Shipment>>;
+  let shipmentService: jest.Mocked<ShipmentService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SendShipmentCommandHandler,
-        {
-          provide: ShipmentService,
-          useValue: mockDeep(ShipmentService),
-        },
+        { provide: ShipmentService, useValue: mockDeep<ShipmentService>() },
       ],
     }).compile();
 
-    shipmentService = module.get<ShipmentService>(ShipmentService);
-
-    handler = module.get<SendShipmentCommandHandler>(
-      SendShipmentCommandHandler,
-    );
-
-    shipment = mockDeep<Shipment>();
-
-    shipment.id = 1;
-    shipment.date = mockDeep<Date>(new Date('2025-01-15'));
-    shipment.vehicleId = 1;
-    shipment.statusId = 1;
+    shipmentService = module.get(ShipmentService);
+    handler = module.get(SendShipmentCommandHandler);
   });
 
   it('should be defined', () => {
     expect(handler).toBeDefined();
   });
 
-  it('should call sendShipmentAsync with correct parameters', async () => {
+  it('should call both shipmentService methods with correct parameters', async () => {
     // Arrange
-    const shipmentId = shipment.id;
+    const shipmentId = 1;
     const command = new SendShipmentCommand(shipmentId);
-    const sendShipmentAsyncSpy = jest.spyOn(
-      shipmentService,
-      'sendShipmentAsync',
+
+    shipmentService.getOrCreateShipmentRoute.mockResolvedValue(
+      'https://maps.google.com/test',
     );
+    shipmentService.sendShipmentAsync.mockResolvedValue(undefined);
 
     // Act
-    await handler.execute(command);
+    const result = await handler.execute(command);
 
     // Assert
-    expect(sendShipmentAsyncSpy).toHaveBeenCalledWith(command.id);
+    expect(shipmentService.getOrCreateShipmentRoute).toHaveBeenCalledWith(
+      shipmentId,
+    );
+    expect(shipmentService.sendShipmentAsync).toHaveBeenCalledWith(shipmentId);
+    expect(result).toEqual({ routeUrl: 'https://maps.google.com/test' });
+  });
+
+  it('should propagate errors from shipmentService', async () => {
+    const command = new SendShipmentCommand(1);
+    shipmentService.getOrCreateShipmentRoute.mockRejectedValue(
+      new Error('Route error'),
+    );
+
+    await expect(handler.execute(command)).rejects.toThrow('Route error');
   });
 });

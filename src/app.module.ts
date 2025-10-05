@@ -17,6 +17,7 @@ import { ShipmentModule } from './controllers/shipment/shipment.controller.modul
 import { SupplierModule } from './controllers/supplier/supplier.controller.module';
 import { TownModule } from './controllers/town/town.controller.module';
 import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
+import { ClientServiceModule } from './domain/service/client/client.service.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
     TownModule,
     ProductModule,
     ProductCategoryModule,
+    ClientServiceModule,
     SupplierModule,
     VehicleModule,
     PurchaseOrderModule,
