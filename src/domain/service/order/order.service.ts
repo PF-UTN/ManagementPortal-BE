@@ -152,7 +152,7 @@ export class OrderService {
       );
       return order;
     });
-    return order;
+    return order.id;
   }
 
   async updateOrderStatusAsync(id: number, newStatus: OrderStatusId) {

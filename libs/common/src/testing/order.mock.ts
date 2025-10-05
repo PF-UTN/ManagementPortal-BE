@@ -189,13 +189,6 @@ export const orderFullMock = {
   orderItems: [orderItemMock],
 };
 
-export const orderBasicDtoMock = {
+export const createOrderResponseMock = {
   id: 1,
-  clientId: 1,
-  orderStatusId: 1,
-  paymentDetailId: 1,
-  deliveryMethodId: 1,
-  shipmentId: null,
-  totalAmount: new Decimal(1000),
-  createdAt: new Date(),
 };

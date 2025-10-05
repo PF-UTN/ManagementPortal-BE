@@ -1,8 +1,8 @@
 import { Command } from '@nestjs/cqrs';
 
-import { OrderBasicDto, OrderCreationDto } from '@mp/common/dtos';
+import { CreateOrderResponseDto, OrderCreationDto } from '@mp/common/dtos';
 
-export class CreateOrderCommand extends Command<OrderBasicDto> {
+export class CreateOrderCommand extends Command<CreateOrderResponseDto> {
   constructor(public readonly orderCreationDto: OrderCreationDto) {
     super();
   }

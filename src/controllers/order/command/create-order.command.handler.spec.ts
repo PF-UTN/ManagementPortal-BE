@@ -1,7 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { mockDeep } from 'jest-mock-extended';
 
-import { orderBasicDtoMock, orderCreationDtoMock } from '@mp/common/testing';
+import {
+  createOrderResponseMock,
+  orderCreationDtoMock,
+} from '@mp/common/testing';
 
 import { OrderService } from './../../../domain/service/order/order.service';
 import { CreateOrderCommand } from './create-order.command';
@@ -48,7 +51,7 @@ describe('CreateOrderCommandHandler', () => {
 
     jest
       .spyOn(orderService, 'createOrderAsync')
-      .mockResolvedValueOnce(orderBasicDtoMock);
+      .mockResolvedValueOnce(createOrderResponseMock.id);
 
     // Act
     const result = await handler.execute(command);
@@ -57,6 +60,6 @@ describe('CreateOrderCommandHandler', () => {
     expect(orderService.createOrderAsync).toHaveBeenCalledWith(
       command.orderCreationDto,
     );
-    expect(result).toEqual(orderBasicDtoMock);
+    expect(result).toEqual(createOrderResponseMock);
   });
 });
