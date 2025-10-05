@@ -118,7 +118,7 @@ export class OrderService {
 
     const totalAmount = calculateTotalAmount(orderItems);
 
-    await this.unitOfWork.execute(async (tx) => {
+    const order = await this.unitOfWork.execute(async (tx) => {
       const paymentDetailCreated =
         await this.paymentDetailRepository.createPaymentDetailAsync(
           paymentDetail,
@@ -152,6 +152,7 @@ export class OrderService {
       );
       return order;
     });
+    return order.id;
   }
 
   async updateOrderStatusAsync(id: number, newStatus: OrderStatusId) {

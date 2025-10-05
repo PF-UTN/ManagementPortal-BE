@@ -188,3 +188,7 @@ export const orderFullMock = {
   createdAt: new Date(),
   orderItems: [orderItemMock],
 };
+
+export const createOrderResponseMock = {
+  id: 1,
+};
