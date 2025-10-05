@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { ClientCreationDto } from '@mp/common/dtos';
-import { newClientMock } from '@mp/common/testing';
+import { clientAddressMock, newClientMock } from '@mp/common/testing';
 
 import { ClientRepository } from './client.repository';
 import { PrismaService } from '../prisma.service';
@@ -116,6 +116,36 @@ describe('ClientRepository', () => {
         include: { taxCategory: true, user: true, address: true },
       });
       expect(result).toEqual(newClientMock);
+    });
+  });
+  describe('findClientAddressByUserIdAsync', () => {
+    it('should return client address with town, province and country by userId', async () => {
+      //Arrange
+      jest
+        .spyOn(prismaService.client, 'findUnique')
+        .mockResolvedValueOnce(clientAddressMock);
+
+      //Act
+      const result = await repository.findClientAddressByUserIdAsync(1);
+
+      //Assert
+      expect(prismaService.client.findUnique).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        include: {
+          address: {
+            include: {
+              town: {
+                include: {
+                  province: {
+                    include: { country: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      expect(result).toEqual(clientAddressMock);
     });
   });
 });

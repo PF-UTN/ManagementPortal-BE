@@ -58,3 +58,50 @@ export const clientMock = {
     };
   };
 }>;
+
+export const clientAddressMock = {
+  id: 1,
+  companyName: 'Test Company',
+  userId: 1,
+  taxCategoryId: 1,
+  addressId: 10,
+  address: {
+    id: 10,
+    townId: 100,
+    street: 'Calle Falsa',
+    streetNumber: 123,
+    town: {
+      id: 100,
+      name: 'Rosario',
+      zipCode: '2000',
+      provinceId: 200,
+      province: {
+        id: 200,
+        name: 'Santa Fe',
+        countryId: 300,
+        country: {
+          id: 300,
+          name: 'Argentina',
+        },
+      },
+    },
+  },
+};
+
+export const clientAddressMockInService = {
+  id: 1,
+  address: {
+    street: 'Calle Falsa',
+    streetNumber: 123,
+    town: {
+      name: 'Rosario',
+      zipCode: '2000',
+      province: {
+        name: 'Santa Fe',
+        country: {
+          name: 'Argentina',
+        },
+      },
+    },
+  },
+};

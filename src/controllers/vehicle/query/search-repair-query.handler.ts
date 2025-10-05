@@ -21,6 +21,7 @@ export class SearchRepairQueryHandler
         date: repair.date,
         description: repair.description,
         kmPerformed: repair.kmPerformed,
+        serviceSupplierId: repair.serviceSupplierId,
       };
     });
 

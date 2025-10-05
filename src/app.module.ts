@@ -6,6 +6,7 @@ import { RedisModule } from '@mp/common/services';
 
 import { AuthenticationModule } from './controllers/authentication/authentication.module';
 import { CartModule } from './controllers/cart/cart.module';
+import { ClientModule } from './controllers/client/client.module';
 import { MercadoPagoModule } from './controllers/mercadopago/mercadopago.controller.module';
 import { OrderModule } from './controllers/order/order.controller.module';
 import { ProductModule } from './controllers/product/product.module';
@@ -41,6 +42,7 @@ import { ClientServiceModule } from './domain/service/client/client.service.modu
     OrderModule,
     ShipmentModule,
     MercadoPagoModule,
+    ClientModule,
   ],
   controllers: [],
   providers: [],
