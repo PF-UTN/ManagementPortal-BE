@@ -9,10 +9,12 @@ import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
+import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
 import { ShipmentController } from './shipment.controller';
 
 describe('ShipmentController', () => {
   let controller: ShipmentController;
+  let queryBus: QueryBus;
   let commandBus: CommandBus;
   let shipment: ReturnType<typeof mockDeep<Shipment>>;
 
@@ -31,6 +33,7 @@ describe('ShipmentController', () => {
       ],
     }).compile();
 
+    queryBus = module.get<QueryBus>(QueryBus);
     commandBus = module.get<CommandBus>(CommandBus);
 
     controller = module.get<ShipmentController>(ShipmentController);
@@ -112,6 +115,23 @@ describe('ShipmentController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedCommand);
+    });
+  });
+
+  describe('getShipmentByIdAsync', () => {
+    it('should call execute on the queryBus with correct parameters', async () => {
+      // Arrange
+      const shipmentId = 1;
+      const executeSpy = jest
+        .spyOn(queryBus, 'execute')
+        .mockResolvedValue('result');
+      const expectedQuery = new GetShipmentByIdQuery(shipmentId);
+
+      // Act
+      await controller.getShipmentByIdAsync(shipmentId);
+
+      // Assert
+      expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
     });
   });
 });

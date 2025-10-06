@@ -1,13 +1,14 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   Param,
   ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
-import { CommandBus } from '@nestjs/cqrs';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   ApiOperation,
   ApiBearerAuth,
@@ -22,10 +23,14 @@ import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
+import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
 
 @Controller('shipment')
 export class ShipmentController {
-  constructor(private readonly commandBus: CommandBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   @Post('/')
   @RequiredPermissions(PermissionCodes.Shipment.CREATE)
@@ -79,5 +84,21 @@ export class ShipmentController {
     return this.commandBus.execute(
       new FinishShipmentCommand(id, finishShipmentDto),
     );
+  }
+
+  @Get(':id')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Shipment.READ)
+  @ApiOperation({
+    summary: 'Get shipment by ID',
+    description: 'Retrieve an shipment with the provided ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'ID of the shipment to retrieve',
+  })
+  getShipmentByIdAsync(@Param('id', ParseIntPipe) id: number) {
+    return this.queryBus.execute(new GetShipmentByIdQuery(id));
   }
 }
