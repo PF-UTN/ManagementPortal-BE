@@ -13,3 +13,4 @@ export * from './search-order-request.dto';
 export * from './search-order-response.dto';
 export * from './download-order-request.dto';
 export * from './download-order.dto';
+export * from './order-basic.dto';
