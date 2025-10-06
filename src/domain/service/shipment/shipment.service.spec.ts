@@ -239,6 +239,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -272,6 +286,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -312,6 +340,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -348,6 +390,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -426,6 +482,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -552,6 +622,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -585,6 +669,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -653,6 +751,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -743,6 +855,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -823,6 +949,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -901,6 +1041,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -995,6 +1149,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -1095,6 +1263,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -1199,6 +1381,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -1275,6 +1471,68 @@ describe('ShipmentService', () => {
         finishShipmentDtoMock.odometer,
         txMock,
       );
+    });
+  });
+
+  describe('createShipmentAsync', () => {
+    it('should throw NotFoundException if shipment does not exist', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.findByIdAsync(shipmentId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should call shipmentRepository.findByIdAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
+          };
+        }>
+      >();
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+
+      // Act
+      await service.findByIdAsync(shipmentId);
+
+      // Assert
+      expect(repository.findByIdAsync).toHaveBeenCalledWith(shipmentId);
     });
   });
 });

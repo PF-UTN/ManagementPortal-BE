@@ -305,4 +305,14 @@ export class ShipmentService {
       this.mailingService.sendMailAsync(email, subject, text);
     }
   }
+
+  async findByIdAsync(id: number) {
+    const shipment = await this.shipmentRepository.findByIdAsync(id);
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with id ${id} does not exists.`);
+    }
+
+    return shipment;
+  }
 }
