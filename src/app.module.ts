@@ -8,6 +8,7 @@ import { AuthenticationModule } from './controllers/authentication/authenticatio
 import { CartModule } from './controllers/cart/cart.module';
 import { ClientModule } from './controllers/client/client.module';
 import { MercadoPagoModule } from './controllers/mercadopago/mercadopago.controller.module';
+import { NotificationModule } from './controllers/notification/notification.controller.module';
 import { OrderModule } from './controllers/order/order.controller.module';
 import { ProductModule } from './controllers/product/product.module';
 import { ProductCategoryModule } from './controllers/product-category/product-category.module';
@@ -41,6 +42,7 @@ import { VehicleModule } from './controllers/vehicle/vehicle.controller.module';
     ShipmentModule,
     MercadoPagoModule,
     ClientModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [],
