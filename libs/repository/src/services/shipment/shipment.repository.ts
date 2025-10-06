@@ -48,6 +48,20 @@ export class ShipmentRepository {
             },
           },
         },
+        vehicle: {
+          select: {
+            id: true,
+            licensePlate: true,
+            brand: true,
+            model: true,
+          },
+        },
+        status: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
     return shipment;
