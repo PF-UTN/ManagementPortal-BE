@@ -177,7 +177,7 @@ describe('ShipmentController', () => {
     const buffer = Buffer.from('test');
     const expectedFilename = `${DateHelper.formatYYYYMMDD(
       new Date(),
-    )} - Listado Envíos`;
+    )} - Listado Envios`;
 
     beforeEach(async () => {
       jest
