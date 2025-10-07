@@ -3,3 +3,7 @@ export * from './shipment-creation-data.dto';
 export * from './finish-shipment-orders.dto';
 export * from './finish-shipment.dto';
 export * from './get-shipment-by-id.dto';
+export * from './search-shipment-filters.dto';
+export * from './search-shipment-request.dto';
+export * from './search-shipment-response.dto';
+export * from './search-shipment-return-data.dto';
