@@ -26,6 +26,7 @@ import {
 } from '@mp/repository';
 
 import { ShipmentService } from './shipment.service';
+import { DownloadShipmentQuery } from '../../../controllers/shipment/query/download-shipment.query';
 import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
 
 describe('ShipmentService', () => {
@@ -1563,6 +1564,31 @@ describe('ShipmentService', () => {
       expect(repository.searchWithFiltersAsync).toHaveBeenCalledWith(
         query.page,
         query.pageSize,
+        query.searchText,
+        query.filters,
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchShipmentFiltersDto = {
+        statusName: ['Pending'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+      };
+      const query = new DownloadShipmentQuery({
+        searchText,
+        filters,
+      });
+
+      // Act
+      await service.downloadWithFiltersAsync(query);
+
+      // Assert
+      expect(repository.downloadWithFiltersAsync).toHaveBeenCalledWith(
         query.searchText,
         query.filters,
       );
