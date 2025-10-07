@@ -7,3 +7,5 @@ export * from './search-shipment-filters.dto';
 export * from './search-shipment-request.dto';
 export * from './search-shipment-response.dto';
 export * from './search-shipment-return-data.dto';
+export * from './download-shipment.dto';
+export * from './download-shipment-request.dto';
