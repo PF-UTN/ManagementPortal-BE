@@ -143,7 +143,7 @@ export class ShipmentController {
     );
     const buffer = ExcelExportHelper.exportToExcelBuffer(shipments);
 
-    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Envíos`;
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Envios`;
 
     return new StreamableFile(buffer, {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
