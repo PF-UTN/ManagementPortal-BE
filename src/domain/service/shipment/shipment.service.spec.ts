@@ -11,6 +11,7 @@ import {
 } from '@mp/common/constants';
 import {
   FinishShipmentDto,
+  SearchShipmentFiltersDto,
   ShipmentCreationDataDto,
   ShipmentCreationDto,
   VehicleUsageCreationDataDto,
@@ -25,6 +26,7 @@ import {
 } from '@mp/repository';
 
 import { ShipmentService } from './shipment.service';
+import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
 
 describe('ShipmentService', () => {
   let service: ShipmentService;
@@ -1533,6 +1535,37 @@ describe('ShipmentService', () => {
 
       // Assert
       expect(repository.findByIdAsync).toHaveBeenCalledWith(shipmentId);
+    });
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchShipmentFiltersDto = {
+        statusName: ['Pending'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+      };
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchShipmentQuery({
+        searchText,
+        filters,
+        page,
+        pageSize,
+      });
+
+      // Act
+      await service.searchWithFiltersAsync(query);
+
+      // Assert
+      expect(repository.searchWithFiltersAsync).toHaveBeenCalledWith(
+        query.page,
+        query.pageSize,
+        query.searchText,
+        query.filters,
+      );
     });
   });
 });

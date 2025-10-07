@@ -26,6 +26,8 @@ import {
   VehicleUsageRepository,
 } from '@mp/repository';
 
+import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
+
 @Injectable()
 export class ShipmentService {
   constructor(
@@ -314,5 +316,14 @@ export class ShipmentService {
     }
 
     return shipment;
+  }
+
+  async searchWithFiltersAsync(query: SearchShipmentQuery) {
+    return this.shipmentRepository.searchWithFiltersAsync(
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+    );
   }
 }
