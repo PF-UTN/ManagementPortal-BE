@@ -11,6 +11,7 @@ import {
 } from '@mp/common/constants';
 import {
   FinishShipmentDto,
+  SearchShipmentFiltersDto,
   ShipmentCreationDataDto,
   ShipmentCreationDto,
   VehicleUsageCreationDataDto,
@@ -25,6 +26,8 @@ import {
 } from '@mp/repository';
 
 import { ShipmentService } from './shipment.service';
+import { DownloadShipmentQuery } from '../../../controllers/shipment/query/download-shipment.query';
+import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
 
 describe('ShipmentService', () => {
   let service: ShipmentService;
@@ -239,6 +242,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -272,6 +289,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -312,6 +343,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -348,6 +393,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -426,6 +485,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -552,6 +625,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -585,6 +672,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -653,6 +754,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -743,6 +858,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -823,6 +952,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -901,6 +1044,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -995,6 +1152,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -1095,6 +1266,20 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
               };
             };
           };
@@ -1199,6 +1384,20 @@ describe('ShipmentService', () => {
                 };
               };
             };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
           };
         }>
       >();
@@ -1274,6 +1473,124 @@ describe('ShipmentService', () => {
         shipmentMock.vehicleId,
         finishShipmentDtoMock.odometer,
         txMock,
+      );
+    });
+  });
+
+  describe('createShipmentAsync', () => {
+    it('should throw NotFoundException if shipment does not exist', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+
+      jest.spyOn(repository, 'findByIdAsync').mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.findByIdAsync(shipmentId)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should call shipmentRepository.findByIdAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
+          };
+        }>
+      >();
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+
+      // Act
+      await service.findByIdAsync(shipmentId);
+
+      // Assert
+      expect(repository.findByIdAsync).toHaveBeenCalledWith(shipmentId);
+    });
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    it('should call searchWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchShipmentFiltersDto = {
+        statusName: ['Pending'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+      };
+      const page = 1;
+      const pageSize = 10;
+      const query = new SearchShipmentQuery({
+        searchText,
+        filters,
+        page,
+        pageSize,
+      });
+
+      // Act
+      await service.searchWithFiltersAsync(query);
+
+      // Assert
+      expect(repository.searchWithFiltersAsync).toHaveBeenCalledWith(
+        query.page,
+        query.pageSize,
+        query.searchText,
+        query.filters,
+      );
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    it('should call downloadWithFiltersAsync on the repository with correct parameters', async () => {
+      // Arrange
+      const searchText = 'test';
+      const filters: SearchShipmentFiltersDto = {
+        statusName: ['Pending'],
+        fromDate: '2025-01-01',
+        toDate: '2025-12-31',
+      };
+      const query = new DownloadShipmentQuery({
+        searchText,
+        filters,
+      });
+
+      // Act
+      await service.downloadWithFiltersAsync(query);
+
+      // Assert
+      expect(repository.downloadWithFiltersAsync).toHaveBeenCalledWith(
+        query.searchText,
+        query.filters,
       );
     });
   });
