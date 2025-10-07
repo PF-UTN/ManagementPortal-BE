@@ -22,14 +22,14 @@ export const billReport = async (
         columns: [
           { image: 'logo', width: 80, alignment: 'left' },
           {
-            width: 'auto',
+            width: 60,
             table: {
               body: [
                 [
                   {
                     text: facturaTipo,
                     alignment: 'center',
-                    fontSize: 48,
+                    fontSize: 36,
                     bold: true,
                     margin: [0, 10, 0, 10],
                   },
@@ -37,175 +37,122 @@ export const billReport = async (
               ],
             },
             layout: {
-              hLineWidth: () => 2,
-              vLineWidth: () => 2,
+              hLineWidth: () => 1,
+              vLineWidth: () => 1,
               hLineColor: () => '#65558f',
               vLineColor: () => '#65558f',
             },
-            alignment: 'center',
+            margin: [10, 0, 10, 0],
           },
           {
             width: '*',
             text: [
+              { text: `${bill.clientCompanyName}\n`, bold: true, fontSize: 14 },
+              { text: `CUIT: ${bill.clientDocumentNumber}\n`, fontSize: 10 },
               {
-                text: `FACTURA #${bill.billId}\n`,
-                bold: true,
-                fontSize: 16,
+                text: `Categoría IVA: ${bill.clientTaxCategory}\n`,
+                fontSize: 10,
               },
+            ],
+            margin: [10, 0, 0, 0],
+          },
+          {
+            width: 'auto',
+            text: [
+              { text: `FACTURA Nº ${bill.billId}\n`, bold: true, fontSize: 14 },
               {
-                text: '\nFecha de emisión: ',
-                bold: true,
+                text: `Fecha: ${bill.createdAt.toLocaleDateString('es-AR')}\n`,
                 fontSize: 10,
               },
               {
-                text: bill.createdAt.toLocaleDateString('es-AR'),
-                fontSize: 10,
-              },
-              {
-                text: '\nMétodo de entrega: ',
-                bold: true,
-                fontSize: 10,
-              },
-              {
-                text: bill.deliveryMethod,
+                text: `Método de entrega: ${bill.deliveryMethod}\n`,
                 fontSize: 10,
               },
             ],
             alignment: 'right',
           },
         ],
-        columnGap: 150,
-        margin: [0, 0, 0, 20],
+        margin: [0, 0, 0, 10],
       },
       {
-        columns: [
-          {
-            text: [
-              {
-                text: '\nCliente: ',
-                bold: true,
-              },
-              {
-                text: `${bill.clientCompanyName}\n`,
-              },
-              {
-                text: 'CUIT/DNI: ',
-                bold: true,
-              },
-              {
-                text: `${bill.clientDocumentNumber}\n`,
-              },
-              {
-                text: 'IVA: ',
-                bold: true,
-              },
-              {
-                text: `${bill.clientTaxCategory}\n`,
-              },
-              {
-                text: 'Dirección: ',
-                bold: true,
-              },
-              {
-                text: `${bill.clientAddress}\n`,
-              },
-              {
-                text: 'Tipo de pago: ',
-                bold: true,
-              },
-              {
-                text: `${bill.paymentType}\n`,
-              },
-            ],
-          },
-        ],
-        columnGap: 20,
-        margin: [0, 0, 0, 20],
+        table: {
+          widths: ['auto', '*'],
+          body: [
+            [{ text: 'Señor(es):', bold: true }, bill.clientCompanyName],
+            [{ text: 'CUIT/DNI:', bold: true }, bill.clientDocumentNumber],
+            [{ text: 'IVA:', bold: true }, bill.clientTaxCategory],
+            [{ text: 'Dirección:', bold: true }, bill.clientAddress],
+            [{ text: 'Tipo de pago:', bold: true }, bill.paymentType],
+          ],
+        },
+        layout: 'noBorders',
+        margin: [0, 0, 0, 10],
       },
-
       {
-        margin: [0, 20],
         layout: {
-          fillColor: (rowIndex: number) => {
-            if (rowIndex === 0) {
-              return '#65558f';
-            }
-            return rowIndex % 2 === 0 ? '#f9f7fc' : null;
-          },
-          hLineWidth: () => 0.5,
-          vLineWidth: () => 0.5,
+          fillColor: (rowIndex: number) => (rowIndex === 0 ? '#65558f' : null),
           hLineColor: () => '#ddd',
           vLineColor: () => '#ddd',
-          paddingLeft: () => 5,
-          paddingRight: () => 5,
-          paddingTop: () => 3,
-          paddingBottom: () => 3,
         },
         table: {
-          widths: ['*', 'auto', 'auto', 'auto'],
+          widths: ['auto', '*', 'auto', 'auto'],
           headerRows: 1,
           body: [
             [
-              { text: 'Producto', bold: true, color: 'white' },
               {
-                text: 'Precio',
-                bold: true,
+                text: 'Cant.',
                 color: 'white',
+                bold: true,
+                alignment: 'center',
+              },
+              { text: 'Descripción', color: 'white', bold: true },
+              {
+                text: 'Precio Unit.',
+                color: 'white',
+                bold: true,
                 alignment: 'right',
               },
               {
-                text: 'Cantidad',
-                bold: true,
+                text: 'Importe',
                 color: 'white',
-                alignment: 'center',
+                bold: true,
+                alignment: 'right',
               },
-              { text: 'Total', bold: true, color: 'white', alignment: 'right' },
             ],
-
             ...bill.orderItems.map((item) => [
+              { text: item.quantity.toString(), alignment: 'center' },
               item.productName,
               { text: `$ ${item.unitPrice.toFixed(2)}`, alignment: 'right' },
-              { text: item.quantity.toString(), alignment: 'center' },
               {
                 text: `$ ${item.subtotalPrice.toFixed(2)}`,
                 alignment: 'right',
               },
             ]),
-
+          ],
+        },
+      },
+      {
+        alignment: 'right',
+        table: {
+          widths: ['*', 'auto'],
+          body: [
             [
-              { text: 'Subtotal', colSpan: 3, alignment: 'right', bold: true },
-              {},
-              {},
-              {
-                text: `$ ${bill.totalAmount.toFixed(2)}`,
-                alignment: 'right',
-                bold: true,
-              },
+              { text: 'Subtotal', bold: true },
+              `$ ${bill.totalAmount.toFixed(2)}`,
             ],
             [
-              { text: 'IVA', colSpan: 3, alignment: 'right', bold: true },
-              {},
-              {},
-              {
-                text: `$ ${(Number(bill.totalAmount) * 0.21).toFixed(2)}`,
-                alignment: 'right',
-                bold: true,
-              },
+              { text: 'IVA (21%)', bold: true },
+              `$ ${(Number(bill.totalAmount) * 0.21).toFixed(2)}`,
             ],
             [
               {
-                text: 'Total',
-                colSpan: 3,
-                alignment: 'right',
+                text: 'TOTAL',
                 bold: true,
                 fillColor: '#65558f',
                 color: 'white',
               },
-              {},
-              {},
               {
                 text: `$ ${(Number(bill.totalAmount) * 1.21).toFixed(2)}`,
-                alignment: 'right',
                 bold: true,
                 fillColor: '#65558f',
                 color: 'white',
@@ -213,17 +160,15 @@ export const billReport = async (
             ],
           ],
         },
+        layout: 'noBorders',
+        margin: [0, 10, 0, 0],
       },
 
-      bill.observation
-        ? {
-            text: `Observaciones: ${bill.observation}`,
-            italics: true,
-          }
-        : {
-            text: `Observaciones: No se realizaron observaciones.`,
-            italics: true,
-          },
+      {
+        text: `Observaciones: ${bill.observation || 'No se realizaron observaciones.'}`,
+        italics: true,
+        margin: [0, 20, 0, 0],
+      },
     ],
   };
 };
