@@ -148,6 +148,7 @@ describe('ShipmentRepository', () => {
       statusName: ['Pending'],
       fromDate: '2023-01-01',
       toDate: '2023-12-31',
+      vehicleId: 1,
     };
 
     const page = 1;
@@ -181,6 +182,7 @@ describe('ShipmentRepository', () => {
               filters.statusName?.length
                 ? { status: { name: { in: filters.statusName } } }
                 : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
               filters.fromDate
                 ? { date: { gte: new Date(filters.fromDate) } }
                 : {},
@@ -245,6 +247,7 @@ describe('ShipmentRepository', () => {
               filters.statusName?.length
                 ? { status: { name: { in: filters.statusName } } }
                 : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
               filters.fromDate
                 ? { date: { gte: new Date(filters.fromDate) } }
                 : {},
@@ -311,6 +314,7 @@ describe('ShipmentRepository', () => {
       statusName: ['Pending'],
       fromDate: '2023-01-01',
       toDate: '2023-12-31',
+      vehicleId: 1,
     };
 
     const searchText = 'Test';
@@ -335,6 +339,7 @@ describe('ShipmentRepository', () => {
               filters.statusName?.length
                 ? { status: { name: { in: filters.statusName } } }
                 : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
               filters.fromDate
                 ? { date: { gte: new Date(filters.fromDate) } }
                 : {},

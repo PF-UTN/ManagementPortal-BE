@@ -96,6 +96,7 @@ export class ShipmentRepository {
             filters.statusName?.length
               ? { status: { name: { in: filters.statusName } } }
               : {},
+            filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
             filters.fromDate
               ? { date: { gte: new Date(filters.fromDate) } }
               : {},
@@ -169,6 +170,7 @@ export class ShipmentRepository {
             filters.statusName?.length
               ? { status: { name: { in: filters.statusName } } }
               : {},
+            filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
             filters.fromDate
               ? { date: { gte: new Date(filters.fromDate) } }
               : {},
@@ -224,6 +226,7 @@ export class ShipmentRepository {
           filters.statusName?.length
             ? { status: { name: { in: filters.statusName } } }
             : {},
+          filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
           filters.fromDate ? { date: { gte: new Date(filters.fromDate) } } : {},
           filters.toDate
             ? {
