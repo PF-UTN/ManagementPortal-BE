@@ -4,12 +4,17 @@ import { Shipment } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import { OrderStatusId } from '@mp/common/constants';
-import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
+import {
+  FinishShipmentDto,
+  SearchShipmentRequest,
+  ShipmentCreationDto,
+} from '@mp/common/dtos';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
 import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
+import { SearchShipmentQuery } from './query/search-shipment.query';
 import { ShipmentController } from './shipment.controller';
 
 describe('ShipmentController', () => {
@@ -132,6 +137,28 @@ describe('ShipmentController', () => {
 
       // Assert
       expect(executeSpy).toHaveBeenCalledWith(expectedQuery);
+    });
+  });
+
+  describe('searcShipmentAsync', () => {
+    it('should call queryBus.execute with SearchShipmentQuery and correct params', async () => {
+      // Arrange
+      const request: SearchShipmentRequest = {
+        searchText: 'test',
+        page: 1,
+        pageSize: 10,
+        filters: {
+          statusName: ['Pending'],
+          fromDate: '2025-01-01',
+          toDate: '2025-12-31',
+        },
+      };
+      // Act
+      await controller.searchShipmentsAsync(request);
+      // Assert
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new SearchShipmentQuery(request),
+      );
     });
   });
 });

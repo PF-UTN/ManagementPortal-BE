@@ -18,12 +18,17 @@ import {
 
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
-import { FinishShipmentDto, ShipmentCreationDto } from '@mp/common/dtos';
+import {
+  FinishShipmentDto,
+  SearchShipmentRequest,
+  ShipmentCreationDto,
+} from '@mp/common/dtos';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
 import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
+import { SearchShipmentQuery } from './query/search-shipment.query';
 
 @Controller('shipment')
 export class ShipmentController {
@@ -100,5 +105,21 @@ export class ShipmentController {
   })
   getShipmentByIdAsync(@Param('id', ParseIntPipe) id: number) {
     return this.queryBus.execute(new GetShipmentByIdQuery(id));
+  }
+
+  @Post('search')
+  @RequiredPermissions(PermissionCodes.Shipment.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Search shipments',
+    description:
+      'Search for shipments based on the provided filters and search text.',
+  })
+  async searchShipmentsAsync(
+    @Body() searchShipmentRequestDto: SearchShipmentRequest,
+  ) {
+    return this.queryBus.execute(
+      new SearchShipmentQuery(searchShipmentRequestDto),
+    );
   }
 }

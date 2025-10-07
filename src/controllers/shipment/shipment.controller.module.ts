@@ -4,10 +4,11 @@ import { CreateShipmentCommandHandler } from './command/create-shipment.command.
 import { FinishShipmentCommandHandler } from './command/finish-shipment.command.handler';
 import { SendShipmentCommandHandler } from './command/send-shipment.command.handler';
 import { GetShipmentByIdQueryHandler } from './query/get-shipment-by-id.query.handler';
+import { SearchShipmentQueryHandler } from './query/search-shipment.query.handler';
 import { ShipmentController } from './shipment.controller';
 import { ShipmentServiceModule } from '../../domain/service/shipment/shipment.service.module';
 
-const queryHandlers = [GetShipmentByIdQueryHandler];
+const queryHandlers = [GetShipmentByIdQueryHandler, SearchShipmentQueryHandler];
 const commandHandlers = [
   CreateShipmentCommandHandler,
   SendShipmentCommandHandler,
