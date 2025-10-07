@@ -213,4 +213,80 @@ export class ShipmentRepository {
     ]);
     return { data, total };
   }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchShipmentFiltersDto,
+  ) {
+    const data = await this.prisma.shipment.findMany({
+      where: {
+        AND: [
+          filters.statusName?.length
+            ? { status: { name: { in: filters.statusName } } }
+            : {},
+          filters.fromDate ? { date: { gte: new Date(filters.fromDate) } } : {},
+          filters.toDate
+            ? {
+                date: {
+                  lte: endOfDay(parseISO(filters.toDate)),
+                },
+              }
+            : {},
+          {
+            OR: [
+              {
+                vehicle: {
+                  licensePlate: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                  brand: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                  model: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              isNaN(Number(searchText))
+                ? {}
+                : { orders: { some: { id: Number(searchText) } } },
+              isNaN(Number(searchText))
+                ? {}
+                : {
+                    id: Number(searchText),
+                  },
+            ],
+          },
+        ],
+      },
+      include: {
+        vehicle: {
+          select: {
+            id: true,
+            licensePlate: true,
+            brand: true,
+            model: true,
+          },
+        },
+        status: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        orders: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+    return data;
+  }
 }
