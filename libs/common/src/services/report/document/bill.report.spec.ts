@@ -1,8 +1,7 @@
 import { Decimal } from '@prisma/client/runtime/library';
 import { ContentColumns, Content, Table } from 'pdfmake/interfaces';
 
-import { BillReportGenerationDataDto } from '@mp/common/dtos';
-
+import { BillReportGenerationDataDto } from './../../../dtos/bill/bill-report-generation-data.dto';
 import { billReport } from './bill.report';
 
 jest.mock('../../../helpers', () => ({
