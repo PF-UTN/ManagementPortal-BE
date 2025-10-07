@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  StreamableFile,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
@@ -19,14 +20,17 @@ import {
 import { PermissionCodes } from '@mp/common/constants';
 import { RequiredPermissions } from '@mp/common/decorators';
 import {
+  DownloadShipmentRequest,
   FinishShipmentDto,
   SearchShipmentRequest,
   ShipmentCreationDto,
 } from '@mp/common/dtos';
+import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
+import { DownloadShipmentQuery } from './query/download-shipment.query';
 import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
 import { SearchShipmentQuery } from './query/search-shipment.query';
 
@@ -121,5 +125,30 @@ export class ShipmentController {
     return this.queryBus.execute(
       new SearchShipmentQuery(searchShipmentRequestDto),
     );
+  }
+
+  @Post('download')
+  @RequiredPermissions(PermissionCodes.Shipment.READ)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Download shipments',
+    description:
+      'Download shipments based on the provided filters and search text.',
+  })
+  async downloadShipmentsAsync(
+    @Body() downloadShipmentDto: DownloadShipmentRequest,
+  ): Promise<StreamableFile> {
+    const shipments = await this.queryBus.execute(
+      new DownloadShipmentQuery(downloadShipmentDto),
+    );
+    const buffer = ExcelExportHelper.exportToExcelBuffer(shipments);
+
+    const filename = `${DateHelper.formatYYYYMMDD(new Date())} - Listado Envíos`;
+
+    return new StreamableFile(buffer, {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      length: buffer.length,
+      disposition: `attachment; filename="${filename}"`,
+    });
   }
 }
