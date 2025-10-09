@@ -4,9 +4,14 @@ import { MailingServiceModule } from '@mp/common/services';
 import { RepositoryModule } from '@mp/repository';
 
 import { ShipmentService } from './shipment.service';
+import { GoogleMapsRoutingServiceModule } from '../../../services/google-maps-routing.service.module';
 
 @Module({
-  imports: [RepositoryModule, MailingServiceModule],
+  imports: [
+    RepositoryModule,
+    MailingServiceModule,
+    GoogleMapsRoutingServiceModule,
+  ],
   providers: [ShipmentService],
   exports: [ShipmentService],
 })

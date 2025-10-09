@@ -55,7 +55,7 @@ export class ShipmentController {
     );
   }
 
-  @HttpCode(204)
+  @HttpCode(200)
   @Patch('/:id/send')
   @RequiredPermissions(PermissionCodes.Shipment.UPDATE)
   @ApiBearerAuth()

@@ -70,6 +70,27 @@ describe('GetShipmentByIdQueryHandler', () => {
             user: {
               email: 'test-client@test.com',
             },
+            address: {
+              id: 1,
+              townId: 1,
+              street: 'Main St',
+              streetNumber: 456,
+              town: {
+                id: 1,
+                name: 'Sample Town',
+                zipCode: '1000',
+                provinceId: 1,
+                province: {
+                  id: 1,
+                  name: 'Sample Province',
+                  countryId: 1,
+                  country: {
+                    id: 1,
+                    name: 'Sample Country',
+                  },
+                },
+              },
+            },
           },
           createdAt: new Date('2025-10-06T09:00:00Z'),
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
@@ -90,6 +111,27 @@ describe('GetShipmentByIdQueryHandler', () => {
             user: {
               email: 'test-client@test.com',
             },
+            address: {
+              id: 1,
+              townId: 1,
+              street: 'Main St',
+              streetNumber: 456,
+              town: {
+                id: 1,
+                name: 'Sample Town',
+                zipCode: '1000',
+                provinceId: 1,
+                province: {
+                  id: 1,
+                  name: 'Sample Province',
+                  countryId: 1,
+                  country: {
+                    id: 1,
+                    name: 'Sample Country',
+                  },
+                },
+              },
+            },
           },
           createdAt: new Date('2025-10-06T09:15:00Z'),
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
@@ -109,6 +151,27 @@ describe('GetShipmentByIdQueryHandler', () => {
             userId: 1,
             user: {
               email: 'test-client@test.com',
+            },
+            address: {
+              id: 1,
+              townId: 1,
+              street: 'Main St',
+              streetNumber: 456,
+              town: {
+                id: 1,
+                name: 'Sample Town',
+                zipCode: '1000',
+                provinceId: 1,
+                province: {
+                  id: 1,
+                  name: 'Sample Province',
+                  countryId: 1,
+                  country: {
+                    id: 1,
+                    name: 'Sample Country',
+                  },
+                },
+              },
             },
           },
           createdAt: new Date('2025-10-06T09:30:00Z'),

@@ -10,6 +10,11 @@ export class SendShipmentCommandHandler
   constructor(private readonly shipmentService: ShipmentService) {}
 
   async execute(command: SendShipmentCommand) {
-    await this.shipmentService.sendShipmentAsync(command.id);
+    const [routeUrl] = await Promise.all([
+      this.shipmentService.getOrCreateShipmentRoute(command.id),
+      this.shipmentService.sendShipmentAsync(command.id),
+    ]);
+
+    return { routeUrl };
   }
 }
