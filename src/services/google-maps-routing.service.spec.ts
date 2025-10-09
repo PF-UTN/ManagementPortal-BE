@@ -25,8 +25,8 @@ describe('GoogleMapsRoutingService', () => {
   beforeEach(async () => {
     const configServiceMock = {
       get: jest.fn((key: string) => {
-        if (key === 'GOOGLE_APPLICATION_CREDENTIALS')
-          return '/path/to/credentials.json';
+        if (key === 'GOOGLE_CREDENTIALS_BASE64')
+          return 'ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudCIsCiAgInByb2plY3RfaWQiOiAibWFuYWdlbWVudHBvcnRhbC10ZXN0IiwKICAicHJpdmF0ZV9rZXlfaWQiOiAiMTIzNDU2Nzg5YWJjZGVmIiwKICAicHJpdmF0ZV9rZXkiOiAiLS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tXG5NSUlGZkFJQkFBS0NBUUVBM2pGZ2V5RHZGSU82dEd4UVJ6NXJzR3VoTG9SY3Z6L1Z4U0tId2NhOXZ0bVdzXG4yRmlMb3hNMFpUeTVVc1c0K2p4R3lyL2dNS2dxMnlXeXJMaU5PazF3VGdGZUV5Z2hkR1pzeGxWNHpsdEdHZW9XXG5pU1JrOExZV3U2bE1uNVNSK0FpQ2I1cFNZbUVvOTVDRHhYb1hJYjlHZlBWUmpqZXphdDF1K1pKZjRLRnQzXG41UGx2SzhJQ0FRRUFvTUtYdG1xQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBLVxuLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tIgp9';
         if (key === 'GOOGLE_PROJECT_ID') return 'test-project';
         return undefined;
       }),

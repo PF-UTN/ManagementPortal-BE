@@ -18,8 +18,14 @@ export class GoogleMapsRoutingService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
+    const credentials = JSON.parse(
+      Buffer.from(
+        configService.get('GOOGLE_CREDENTIALS_BASE64')!,
+        'base64',
+      ).toString('utf8'),
+    );
     this.routeOptimizationclient = new RouteOptimizationClient({
-      keyFilename: configService.get('GOOGLE_APPLICATION_CREDENTIALS'),
+      credentials: credentials,
     });
   }
 
