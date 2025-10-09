@@ -101,4 +101,10 @@ export const PermissionCodes = {
     UPDATE: 'client:update',
     DELETE: 'client:delete',
   },
+  Notification: {
+    READ: 'notification:read',
+    CREATE: 'notification:create',
+    UPDATE: 'notification:update',
+    DELETE: 'notification:delete',
+  },
 };

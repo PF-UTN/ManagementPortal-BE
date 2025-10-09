@@ -37,7 +37,7 @@ export class CheckoutOrderQueryHandler
     const shipments =
       order.deliveryMethodId == DeliveryMethodId.PickUpAtStore
         ? { cost: 0, mode: 'not_specified' }
-        : { cost: 3500, mode: 'not_specified' };
+        : { cost: 5000, mode: 'not_specified' };
 
     const baseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
     const checkout = await this.mercadoPagoService.createPreference({
@@ -52,9 +52,9 @@ export class CheckoutOrderQueryHandler
         })),
         shipments,
         back_urls: {
-          success: `${baseUrl}/pedidos/checkout/exito`,
-          failure: `${baseUrl}/pedidos/checkout/fallo`,
-          pending: `${baseUrl}/pedidos/checkout/pendiente`,
+          success: `${baseUrl}/pedidos/cliente`,
+          failure: `${baseUrl}/pedidos/cliente`,
+          pending: `${baseUrl}/pedidos/cliente`,
         },
         auto_return: 'approved',
         notification_url: this.configService.get<string>('MP_WEBHOOK_URL'),

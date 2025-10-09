@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, Shipment } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 
-import { ShipmentCreationDataDto } from '@mp/common/dtos';
+import {
+  SearchShipmentFiltersDto,
+  ShipmentCreationDataDto,
+} from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
 
@@ -61,6 +65,20 @@ export class ShipmentRepository {
             },
           },
         },
+        vehicle: {
+          select: {
+            id: true,
+            licensePlate: true,
+            brand: true,
+            model: true,
+          },
+        },
+        status: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
     return shipment;
@@ -76,5 +94,215 @@ export class ShipmentRepository {
       where: { id },
       data,
     });
+  }
+
+  async searchWithFiltersAsync(
+    page: number,
+    pageSize: number,
+    searchText: string,
+    filters: SearchShipmentFiltersDto,
+  ) {
+    const [data, total] = await Promise.all([
+      this.prisma.shipment.findMany({
+        where: {
+          AND: [
+            filters.statusName?.length
+              ? { status: { name: { in: filters.statusName } } }
+              : {},
+            filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+            filters.fromDate
+              ? { date: { gte: new Date(filters.fromDate) } }
+              : {},
+            filters.toDate
+              ? {
+                  date: {
+                    lte: endOfDay(parseISO(filters.toDate)),
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  vehicle: {
+                    licensePlate: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                    brand: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                    model: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                isNaN(Number(searchText))
+                  ? {}
+                  : { orders: { some: { id: Number(searchText) } } },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
+              ],
+            },
+          ],
+        },
+        include: {
+          vehicle: {
+            select: {
+              id: true,
+              licensePlate: true,
+              brand: true,
+              model: true,
+            },
+          },
+          status: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          orders: {
+            select: {
+              id: true,
+            },
+          },
+        },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+          date: 'desc',
+        },
+      }),
+      this.prisma.shipment.count({
+        where: {
+          AND: [
+            filters.statusName?.length
+              ? { status: { name: { in: filters.statusName } } }
+              : {},
+            filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+            filters.fromDate
+              ? { date: { gte: new Date(filters.fromDate) } }
+              : {},
+            filters.toDate
+              ? {
+                  date: {
+                    lte: endOfDay(parseISO(filters.toDate)),
+                  },
+                }
+              : {},
+            {
+              OR: [
+                {
+                  vehicle: {
+                    licensePlate: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                    brand: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                    model: {
+                      contains: searchText,
+                      mode: 'insensitive',
+                    },
+                  },
+                },
+                isNaN(Number(searchText))
+                  ? {}
+                  : { orders: { some: { id: Number(searchText) } } },
+                isNaN(Number(searchText))
+                  ? {}
+                  : {
+                      id: Number(searchText),
+                    },
+              ],
+            },
+          ],
+        },
+      }),
+    ]);
+    return { data, total };
+  }
+
+  async downloadWithFiltersAsync(
+    searchText: string,
+    filters: SearchShipmentFiltersDto,
+  ) {
+    const data = await this.prisma.shipment.findMany({
+      where: {
+        AND: [
+          filters.statusName?.length
+            ? { status: { name: { in: filters.statusName } } }
+            : {},
+          filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+          filters.fromDate ? { date: { gte: new Date(filters.fromDate) } } : {},
+          filters.toDate
+            ? {
+                date: {
+                  lte: endOfDay(parseISO(filters.toDate)),
+                },
+              }
+            : {},
+          {
+            OR: [
+              {
+                vehicle: {
+                  licensePlate: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                  brand: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                  model: {
+                    contains: searchText,
+                    mode: 'insensitive',
+                  },
+                },
+              },
+              isNaN(Number(searchText))
+                ? {}
+                : { orders: { some: { id: Number(searchText) } } },
+              isNaN(Number(searchText))
+                ? {}
+                : {
+                    id: Number(searchText),
+                  },
+            ],
+          },
+        ],
+      },
+      include: {
+        vehicle: {
+          select: {
+            id: true,
+            licensePlate: true,
+            brand: true,
+            model: true,
+          },
+        },
+        status: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        orders: {
+          select: {
+            id: true,
+          },
+        },
+      },
+      orderBy: {
+        date: 'desc',
+      },
+    });
+    return data;
   }
 }

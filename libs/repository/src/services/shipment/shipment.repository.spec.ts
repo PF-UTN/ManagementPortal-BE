@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Shipment } from '@prisma/client';
+import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
 import { ShipmentCreationDataDto } from '@mp/common/dtos';
@@ -139,6 +140,260 @@ describe('ShipmentRepository', () => {
 
       // Assert
       expect(updatedShipment).toEqual(shipment);
+    });
+  });
+
+  describe('searchWithFiltersAsync', () => {
+    const filters = {
+      statusName: ['Pending'],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+      vehicleId: 1,
+    };
+
+    const page = 1;
+    const pageSize = 10;
+    const searchText = 'Sprinter';
+
+    const mockData = [shipment];
+    const mockTotal = 1;
+
+    beforeEach(() => {
+      jest
+        .spyOn(prismaService.shipment, 'findMany')
+        .mockResolvedValue(mockData);
+      jest.spyOn(prismaService.shipment, 'count').mockResolvedValue(mockTotal);
+    });
+
+    it('should call prisma.shipment.findMany with correct filters, pagination and order', async () => {
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+      );
+
+      // Assert
+      expect(prismaService.shipment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: [
+              filters.statusName?.length
+                ? { status: { name: { in: filters.statusName } } }
+                : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+              filters.fromDate
+                ? { date: { gte: new Date(filters.fromDate) } }
+                : {},
+              filters.toDate
+                ? {
+                    date: {
+                      lte: endOfDay(parseISO(filters.toDate)),
+                    },
+                  }
+                : {},
+              {
+                OR: [
+                  {
+                    vehicle: {
+                      licensePlate: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      brand: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      model: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : { orders: { some: { id: Number(searchText) } } },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : {
+                        id: Number(searchText),
+                      },
+                ],
+              },
+            ],
+          }),
+          orderBy: { date: 'desc' },
+          skip: 0,
+          take: 10,
+        }),
+      );
+    });
+
+    it('should call prisma.shipment.count with same filters', async () => {
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+      );
+
+      // Assert
+      expect(prismaService.shipment.count).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: [
+              filters.statusName?.length
+                ? { status: { name: { in: filters.statusName } } }
+                : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+              filters.fromDate
+                ? { date: { gte: new Date(filters.fromDate) } }
+                : {},
+              filters.toDate
+                ? {
+                    date: {
+                      lte: endOfDay(parseISO(filters.toDate)),
+                    },
+                  }
+                : {},
+              {
+                OR: [
+                  {
+                    vehicle: {
+                      licensePlate: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      brand: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      model: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : { orders: { some: { id: Number(searchText) } } },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : {
+                        id: Number(searchText),
+                      },
+                ],
+              },
+            ],
+          }),
+        }),
+      );
+    });
+
+    it('should return data and total from prisma results', async () => {
+      // Act
+      const result = await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+      );
+
+      // Assert
+      expect(result).toEqual({
+        data: mockData,
+        total: mockTotal,
+      });
+    });
+  });
+
+  describe('downloadWithFiltersAsync', () => {
+    const filters = {
+      statusName: ['Pending'],
+      fromDate: '2023-01-01',
+      toDate: '2023-12-31',
+      vehicleId: 1,
+    };
+
+    const searchText = 'Test';
+
+    const mockData = [shipment];
+
+    beforeEach(() => {
+      jest
+        .spyOn(prismaService.shipment, 'findMany')
+        .mockResolvedValue(mockData);
+    });
+
+    it('should call prisma.shipment.findMany with correct filters and order', async () => {
+      // Act
+      await repository.downloadWithFiltersAsync(searchText, filters);
+
+      // Assert
+      expect(prismaService.shipment.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: [
+              filters.statusName?.length
+                ? { status: { name: { in: filters.statusName } } }
+                : {},
+              filters.vehicleId ? { vehicleId: filters.vehicleId } : {},
+              filters.fromDate
+                ? { date: { gte: new Date(filters.fromDate) } }
+                : {},
+              filters.toDate
+                ? {
+                    date: {
+                      lte: endOfDay(parseISO(filters.toDate)),
+                    },
+                  }
+                : {},
+              {
+                OR: [
+                  {
+                    vehicle: {
+                      licensePlate: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      brand: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                      model: {
+                        contains: searchText,
+                        mode: 'insensitive',
+                      },
+                    },
+                  },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : { orders: { some: { id: Number(searchText) } } },
+                  isNaN(Number(searchText))
+                    ? {}
+                    : {
+                        id: Number(searchText),
+                      },
+                ],
+              },
+            ],
+          }),
+          orderBy: { date: 'desc' },
+        }),
+      );
+    });
+
+    it('should return data from prisma results', async () => {
+      // Act
+      const result = await repository.downloadWithFiltersAsync(
+        searchText,
+        filters,
+      );
+
+      // Assert
+      expect(result).toEqual(mockData);
     });
   });
 });

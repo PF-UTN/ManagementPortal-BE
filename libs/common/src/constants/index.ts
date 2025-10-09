@@ -29,3 +29,4 @@ export * from './order-valid-transitions.constant';
 export * from './delivery-method-traslations.constant';
 export * from './payment-type-traslations.constant';
 export * from './order-status.constant';
+export * from './shipment-status-translations.constant';

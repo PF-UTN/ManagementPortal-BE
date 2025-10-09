@@ -27,6 +27,8 @@ import {
   VehicleUsageRepository,
 } from '@mp/repository';
 
+import { DownloadShipmentQuery } from '../../../controllers/shipment/query/download-shipment.query';
+import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
 import { GoogleMapsRoutingService } from '../../../services/google-maps-routing.service';
 
 @Injectable()
@@ -349,5 +351,31 @@ export class ShipmentService {
     });
 
     return routeLink!;
+  }
+
+  async findByIdAsync(id: number) {
+    const shipment = await this.shipmentRepository.findByIdAsync(id);
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with id ${id} does not exists.`);
+    }
+
+    return shipment;
+  }
+
+  async searchWithFiltersAsync(query: SearchShipmentQuery) {
+    return this.shipmentRepository.searchWithFiltersAsync(
+      query.page,
+      query.pageSize,
+      query.searchText,
+      query.filters,
+    );
+  }
+
+  async downloadWithFiltersAsync(query: DownloadShipmentQuery) {
+    return this.shipmentRepository.downloadWithFiltersAsync(
+      query.searchText,
+      query.filters,
+    );
   }
 }
