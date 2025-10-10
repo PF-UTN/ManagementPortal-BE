@@ -80,7 +80,7 @@ export class NotificationController {
     );
   }
 
-  @Patch(':id/mark-all-as-viewed')
+  @Patch('mark-all-as-viewed')
   @HttpCode(204)
   @RequiredPermissions(PermissionCodes.Notification.UPDATE)
   @ApiBearerAuth()
