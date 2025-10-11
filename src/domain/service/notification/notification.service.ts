@@ -68,7 +68,6 @@ export class NotificationService {
     const admins = await this.userRepository.findAdminsAsync();
 
     for (const maintenancePlanItem of maintenancePlanItems) {
-      console.log(maintenancePlanItem.maintenanceItem.description);
       const { vehicle, maintenanceItem, kmInterval, timeInterval } =
         maintenancePlanItem;
       const lastMaintenance = maintenancePlanItem.maintenances[0];
