@@ -38,6 +38,17 @@ export class MailingService {
     return await this.transporter.sendMail(mailOptions);
   }
 
+  async sendNewStatusMailAsync(to: string, subject: string, htmlBody: string) {
+    const mailOptions = {
+      from: MAIL_FROM,
+      to,
+      subject,
+      html: htmlBody,
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
+
   async sendRegistrationRequestApprovedEmailAsync(to: string) {
     const subject = 'Solicitud de Registro Aprobada';
     const text = 'Tu solicitud de registro ha sido aprobada.';
@@ -69,14 +80,14 @@ export class MailingService {
   async sendMailWithAttachmentAsync(
     to: string,
     subject: string,
-    text: string,
+    htmlBody: string,
     attachment: { filename: string; content: Buffer },
   ) {
     const mailOptions = {
       from: MAIL_FROM,
       to,
       subject,
-      text,
+      html: htmlBody,
       attachments: [attachment],
     };
 
