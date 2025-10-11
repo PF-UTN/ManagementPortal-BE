@@ -674,6 +674,8 @@ export class OrderService {
     order: OrderDetailsDto,
     newStatus: OrderStatusId,
   ) {
+    const clientEmail = order.client.user.email;
+    if (!clientEmail || clientEmail.trim() === '') return;
     const statusText =
       orderStatusTranslations[OrderStatusId[newStatus]] ?? String(newStatus);
     const htmlBody = orderStatusChangeReport(order, statusText);
