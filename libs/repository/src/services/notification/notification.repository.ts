@@ -39,4 +39,19 @@ export class NotificationRepository {
       data,
     });
   }
+
+  async createAsync(userId: number, message: string) {
+    return this.prisma.notification.create({
+      data: {
+        userId,
+        message,
+      },
+    });
+  }
+
+  async existsSimilarNotificationAsync(userId: number, message: string) {
+    return this.prisma.notification.findFirst({
+      where: { userId, message },
+    });
+  }
 }

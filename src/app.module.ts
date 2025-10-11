@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { CqrsModule } from '@nestjs/cqrs';
+import { ScheduleModule } from '@nestjs/schedule';
 
 import { RedisModule } from '@mp/common/services';
 
@@ -28,6 +29,7 @@ import { ClientServiceModule } from './domain/service/client/client.service.modu
       isGlobal: true,
       envFilePath: `${process.env.NODE_ENV ? '.' + process.env.NODE_ENV : ''}.env`,
     }),
+    ScheduleModule.forRoot(),
     AuthenticationModule,
     RegistrationRequestModule,
     TownModule,

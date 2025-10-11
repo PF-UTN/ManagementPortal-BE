@@ -274,4 +274,23 @@ describe('MaintenancePlanItemRepository', () => {
       expect(foundMaintenancePlanItem).toBe(null);
     });
   });
+
+  describe('findAllWithRelationsAsync?', () => {
+    it('should call prisma.findMany with correct parameters', async () => {
+      // Act
+      await repository.findAllWithRelationsAsync();
+
+      // Assert
+      expect(prismaService.maintenancePlanItem.findMany).toHaveBeenCalledWith({
+        include: {
+          maintenanceItem: true,
+          vehicle: true,
+          maintenances: {
+            orderBy: { date: 'desc' },
+            take: 1,
+          },
+        },
+      });
+    });
+  });
 });

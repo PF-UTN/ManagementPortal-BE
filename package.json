@@ -36,6 +36,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.10",
+    "@nestjs/schedule": "^6.0.1",
     "@nestjs/swagger": "^11.0.4",
     "@prisma/client": "^6.5.0",
     "@vercel/blob": "^1.1.1",
