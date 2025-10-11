@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { RoleIds } from '@mp/common/constants';
 import { PrismaServiceMock, userMock } from '@mp/common/testing';
 
 import { UserRepository } from './user.repository';
@@ -191,6 +192,18 @@ describe('UserRepository', () => {
       expect(result).toBe(false);
       expect(prismaServiceMock.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'nonexistent@email.com' },
+      });
+    });
+  });
+
+  describe('findAdminsAsync', () => {
+    it('should call prisma.findMany with correct parameters', async () => {
+      // Act
+      await repository.findAdminsAsync();
+
+      // Assert
+      expect(prismaServiceMock.user.findMany).toHaveBeenCalledWith({
+        where: { roleId: RoleIds.Admin },
       });
     });
   });
