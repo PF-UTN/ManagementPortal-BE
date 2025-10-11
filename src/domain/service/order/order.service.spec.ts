@@ -517,12 +517,19 @@ describe('OrderService', () => {
         orderId: orderMock.id,
       };
 
-      jest.spyOn(orderRepository, 'findOrderByIdAsync').mockResolvedValueOnce({
-        ...orderMock,
-        orderStatusId: OrderStatusId.Shipped,
-      });
+      jest
+        .spyOn(orderRepository, 'findOrderByIdAsync')
+        .mockResolvedValueOnce({
+          ...orderMock,
+          orderStatusId: OrderStatusId.Shipped,
+        })
+        .mockResolvedValueOnce({
+          ...orderMock,
+          orderStatusId: OrderStatusId.Finished,
+        });
       jest
         .spyOn(orderItemRepository, 'findByOrderIdAsync')
+        .mockResolvedValueOnce(orderItemsMock)
         .mockResolvedValueOnce(orderItemsMock);
       jest.spyOn(orderRepository, 'updateOrderAsync').mockResolvedValueOnce({
         ...orderMock,
@@ -1489,6 +1496,68 @@ describe('OrderService', () => {
   });
 
   describe('sendBillByEmailAsync', () => {
+    const orderDetailsDtoMock = {
+      id: 1,
+      client: {
+        companyName: 'Test Company',
+        user: {
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          phone: '123456789',
+        },
+        address: {
+          street: 'Calle Falsa',
+          streetNumber: 123,
+        },
+        taxCategory: {
+          name: 'Responsable Inscripto',
+          description: '',
+        },
+      },
+      deliveryMethodName: 'Delivery',
+      deliveryMethodId: 1,
+      orderStatus: {
+        name: 'Pendiente',
+      },
+      paymentDetail: {
+        paymentType: {
+          name: 'Efectivo',
+        },
+      },
+      orderItems: [
+        {
+          id: 1,
+          orderId: 1,
+          product: {
+            name: 'Test Product',
+            description: 'Producto de prueba',
+            price: 10,
+            weight: 1.5,
+            enabled: true,
+            imageUrl: 'https://test.com/image.jpg',
+            category: {
+              name: 'Test Category',
+            },
+            stock: {
+              quantityOrdered: 10,
+              quantityAvailable: 100,
+              quantityReserved: 5,
+            },
+            supplier: {
+              businessName: 'Proveedor S.A.',
+              email: 'proveedor@test.com',
+              phone: '123456789',
+            },
+          },
+          unitPrice: 10,
+          quantity: 5,
+          subtotalPrice: 50,
+        },
+      ],
+      totalAmount: 105,
+      createdAt: orderMock.createdAt,
+    };
     it('should call reportService.generateBillReport with the correct parameters', async () => {
       // Arrange
       const billReportGenerationDataDto = {
@@ -1516,6 +1585,7 @@ describe('OrderService', () => {
         observation: 'Test Observation',
       };
 
+      const newStatus = OrderStatusId.Finished;
       const clientEmail = 'client@test.com';
 
       const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
@@ -1533,6 +1603,8 @@ describe('OrderService', () => {
 
       // Act
       await service.sendBillByEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
         billReportGenerationDataDto,
         clientEmail,
       );
@@ -1569,7 +1641,7 @@ describe('OrderService', () => {
         paymentType: 'Efectivo',
         observation: 'Test Observation',
       };
-
+      const newStatus = OrderStatusId.Finished;
       const clientEmail = 'client@test.com';
 
       const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
@@ -1587,6 +1659,8 @@ describe('OrderService', () => {
 
       // Act
       await service.sendBillByEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
         billReportGenerationDataDto,
         clientEmail,
       );
@@ -1595,7 +1669,9 @@ describe('OrderService', () => {
       expect(mailingService.sendMailWithAttachmentAsync).toHaveBeenCalledWith(
         clientEmail,
         `Factura #${billReportGenerationDataDto.billId}`,
-        'Adjuntamos la factura en formato PDF.',
+        expect.stringContaining(
+          'Te dejamos tu factura en PDF adjunta a este correo.',
+        ),
         {
           filename: `MP-FC-${billReportGenerationDataDto.billId}.pdf`,
           content: expect.any(Buffer),

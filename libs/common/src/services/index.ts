@@ -14,3 +14,6 @@ export * from './redis/redis.service';
 export * from './report/document/purchase-order.report';
 export * from './report/report.service.module';
 export * from './report/report.service';
+export * from './report/document/order-status-change.report';
+export * from './report/document/bill.report';
+export * from './report/document/bill-html.report';
