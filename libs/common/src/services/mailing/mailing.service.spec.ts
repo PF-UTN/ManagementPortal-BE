@@ -70,4 +70,30 @@ describe('MailingService', () => {
     );
     expect(result).toBe(mockResult);
   });
+  it('should send a mail with HTML body using sendNewStatusMailAsync', async () => {
+    // Arrange
+    const mockResult = { accepted: ['test@correo.com'] };
+    const sendMailMock = jest
+      .spyOn(service['transporter'], 'sendMail')
+      .mockResolvedValueOnce(mockResult);
+
+    const htmlBody = '<div>Estado actualizado</div>';
+
+    // Act
+    const result = await service.sendNewStatusMailAsync(
+      'test@correo.com',
+      'Estado actualizado',
+      htmlBody,
+    );
+
+    // Assert
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'test@correo.com',
+        subject: 'Estado actualizado',
+        html: htmlBody,
+      }),
+    );
+    expect(result).toBe(mockResult);
+  });
 });
