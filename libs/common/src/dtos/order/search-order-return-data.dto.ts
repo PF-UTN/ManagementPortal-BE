@@ -4,4 +4,5 @@ export class SearchOrderReturnDataDto {
   clientName: string;
   orderStatus: string;
   totalAmount: number;
+  shipmentId: number | null;
 }

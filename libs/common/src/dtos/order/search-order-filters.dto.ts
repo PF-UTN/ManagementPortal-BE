@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsDateString, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class SearchOrderFiltersDto {
   @ApiProperty({
@@ -30,4 +36,13 @@ export class SearchOrderFiltersDto {
   @IsOptional()
   @IsDateString()
   toCreatedAtDate?: string;
+
+  @ApiProperty({
+    example: '1',
+    description: 'Filter by shipment ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  shipmentId?: number;
 }

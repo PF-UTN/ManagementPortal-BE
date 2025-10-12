@@ -245,6 +245,7 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      shipmentId: 99,
     };
 
     const page = 1;
@@ -292,6 +293,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               {
                 OR: [
                   {
@@ -346,6 +352,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               {
                 OR: [
                   {
@@ -392,6 +403,7 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      shipmentId: 99,
     };
 
     const searchText = 'Test Client';
@@ -429,6 +441,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               {
                 OR: [
                   {

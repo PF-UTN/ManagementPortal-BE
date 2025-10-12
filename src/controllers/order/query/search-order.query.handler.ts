@@ -23,6 +23,7 @@ export class SearchOrderQueryHandler
         orderStatus: orderStatusTranslations[order.orderStatus.name],
         createdAt: order.createdAt,
         totalAmount: order.totalAmount.toNumber(),
+        shipmentId: order.shipmentId,
       };
     });
 

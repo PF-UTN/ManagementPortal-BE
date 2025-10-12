@@ -165,7 +165,9 @@ export class OrderRepository {
   ) {
     const prismaOrderBy =
       orderBy &&
-      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
+      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(
+        orderBy.field,
+      ) &&
       [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
@@ -187,6 +189,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             {
               OR: [
                 {
@@ -239,6 +246,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             {
               OR: [
                 {
@@ -299,6 +311,11 @@ export class OrderRepository {
                 },
               }
             : {},
+          filters.shipmentId === null
+            ? { shipmentId: null }
+            : typeof filters.shipmentId === 'number'
+              ? { shipmentId: filters.shipmentId }
+              : {},
           {
             OR: [
               {
