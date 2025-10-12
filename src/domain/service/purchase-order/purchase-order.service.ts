@@ -25,7 +25,11 @@ import {
   StockDto,
 } from '@mp/common/dtos';
 import { calculateTotalAmount, pdfToBuffer } from '@mp/common/helpers';
-import { MailingService, ReportService } from '@mp/common/services';
+import {
+  MailingService,
+  purchaseOrderHtmlReport,
+  ReportService,
+} from '@mp/common/services';
 import {
   PrismaUnitOfWork,
   ProductRepository,
@@ -724,15 +728,21 @@ export class PurchaseOrderService {
     purchaseOrder: PurchaseOrderReportGenerationDataDto,
     supplierEmail: string,
   ) {
+    if (!supplierEmail || supplierEmail.trim() === '') {
+      console.warn('No se envía la orden de compra: email de proveedor vacío.');
+      return;
+    }
+
     const pdfDoc =
       await this.reportService.generatePurchaseOrderReport(purchaseOrder);
-
     const buffer = await pdfToBuffer(pdfDoc);
+
+    const htmlBody = purchaseOrderHtmlReport(purchaseOrder);
 
     return this.mailingService.sendMailWithAttachmentAsync(
       supplierEmail,
       `Orden de compra #${purchaseOrder.purchaseOrderId}`,
-      'Adjuntamos la orden de compra en formato PDF.',
+      htmlBody,
       {
         filename: `MP-OC-${purchaseOrder.purchaseOrderId}.pdf`,
         content: buffer,

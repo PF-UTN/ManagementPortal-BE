@@ -17,3 +17,4 @@ export * from './report/report.service';
 export * from './report/document/order-status-change.report';
 export * from './report/document/bill.report';
 export * from './report/document/bill-html.report';
+export * from './report/document/purchase-order-html.report';
