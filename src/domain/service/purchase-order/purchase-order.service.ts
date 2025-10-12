@@ -728,11 +728,6 @@ export class PurchaseOrderService {
     purchaseOrder: PurchaseOrderReportGenerationDataDto,
     supplierEmail: string,
   ) {
-    if (!supplierEmail || supplierEmail.trim() === '') {
-      console.warn('No se envía la orden de compra: email de proveedor vacío.');
-      return;
-    }
-
     const pdfDoc =
       await this.reportService.generatePurchaseOrderReport(purchaseOrder);
     const buffer = await pdfToBuffer(pdfDoc);
