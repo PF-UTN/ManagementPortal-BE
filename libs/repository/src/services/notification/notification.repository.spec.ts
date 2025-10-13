@@ -183,4 +183,92 @@ describe('NotificationRepository', () => {
       });
     });
   });
+
+  describe('createAsync', () => {
+    it('should create a notification', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const message = notification.message;
+      const notificationMock = { ...notification, id: 2 };
+
+      jest
+        .spyOn(prismaService.notification, 'create')
+        .mockResolvedValueOnce(notificationMock);
+
+      // Act
+      const createdNotification = await repository.createAsync(userId, message);
+
+      // Assert
+      expect(createdNotification).toEqual(notificationMock);
+    });
+
+    it('should call prisma.create with correct data', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const message = notification.message;
+
+      // Act
+      await repository.createAsync(userId, message);
+
+      // Assert
+      expect(prismaService.notification.create).toHaveBeenCalledWith({
+        data: {
+          userId,
+          message,
+        },
+      });
+    });
+  });
+
+  describe('existsSimilarNotificationAsync', () => {
+    it('should return a notification if a similar one exists', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const message = notification.message;
+      jest
+        .spyOn(prismaService.notification, 'findFirst')
+        .mockResolvedValueOnce(notification);
+
+      // Act
+      const foundNotification = await repository.existsSimilarNotificationAsync(
+        userId,
+        message,
+      );
+
+      // Assert
+      expect(foundNotification).toEqual(notification);
+    });
+
+    it('should return null if a similar notification does not exist', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const message = notification.message;
+      jest
+        .spyOn(prismaService.notification, 'findFirst')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const foundNotification = await repository.existsSimilarNotificationAsync(
+        userId,
+        message,
+      );
+
+      // Assert
+      expect(foundNotification).toBeNull();
+    });
+
+    it('should call prisma.findFirst with correct parameters', async () => {
+      // Arrange
+      const userId = notification.userId;
+      const message = notification.message;
+
+      // Act
+      await repository.existsSimilarNotificationAsync(userId, message);
+
+      // Assert
+      expect(prismaService.notification.findFirst).toHaveBeenCalledWith({
+        where: { userId, message },
+      });
+    });
+  });
 });
