@@ -24,18 +24,22 @@ import {
   OrderDetailsDto,
   OrderDetailsToClientDto,
   BillReportGenerationDataDto,
+  OrderItemDataDto,
+  OrderItemDataToClientDto,
 } from '@mp/common/dtos';
-import { OrderItemDataDto, OrderItemDataToClientDto } from '@mp/common/dtos';
 import { calculateTotalAmount, pdfToBuffer } from '@mp/common/helpers';
-import { MailingService, ReportService } from '@mp/common/services';
-import { BillRepository } from '@mp/repository';
 import {
+  orderStatusChangeReport,
+  orderStatusChangeImage,
+  MailingService,
+  ReportService,
+} from '@mp/common/services';
+import {
+  BillRepository,
   BillItemRepository,
   PrismaUnitOfWork,
   ProductRepository,
   StockChangeRepository,
-} from '@mp/repository';
-import {
   PaymentDetailRepository,
   OrderItemRepository,
   OrderRepository,
@@ -190,6 +194,11 @@ export class OrderService {
       );
       return orderUpdated;
     });
+    const orderDetails = await this.findOrderByIdAsync(id);
+
+    if (newStatus !== OrderStatusId.Finished) {
+      await this.sendOrderStatusChangeEmailAsync(orderDetails, newStatus);
+    }
 
     if (newStatus === OrderStatusId.Finished) {
       const createBill = await this.unitOfWork.execute(
@@ -241,6 +250,8 @@ export class OrderService {
         createdAt: new Date(),
       };
       this.sendBillByEmailAsync(
+        orderDetails,
+        newStatus,
         billReportGenerationDataDto,
         order.client.user.email,
       );
@@ -637,21 +648,42 @@ export class OrderService {
   }
 
   async sendBillByEmailAsync(
+    order: OrderDetailsDto,
+    newStatus: OrderStatusId,
     bill: BillReportGenerationDataDto,
     clientEmail: string,
   ) {
+    const statusText =
+      orderStatusTranslations[OrderStatusId[newStatus]] ?? String(newStatus);
     const pdfDoc = await this.reportService.generateBillReport(bill);
-
     const buffer = await pdfToBuffer(pdfDoc);
+    const htmlBody = orderStatusChangeImage(order, statusText);
 
     return this.mailingService.sendMailWithAttachmentAsync(
       clientEmail,
       `Factura #${bill.billId}`,
-      'Adjuntamos la factura en formato PDF.',
+      htmlBody,
       {
         filename: `MP-FC-${bill.billId}.pdf`,
         content: buffer,
       },
+    );
+  }
+
+  async sendOrderStatusChangeEmailAsync(
+    order: OrderDetailsDto,
+    newStatus: OrderStatusId,
+  ) {
+    const clientEmail = order.client.user.email;
+    if (!clientEmail || clientEmail.trim() === '') return;
+    const statusText =
+      orderStatusTranslations[OrderStatusId[newStatus]] ?? String(newStatus);
+    const htmlBody = orderStatusChangeReport(order, statusText);
+
+    await this.mailingService.sendNewStatusMailAsync(
+      order.client.user.email,
+      `Estado actualizado: ${statusText}`,
+      htmlBody,
     );
   }
 }

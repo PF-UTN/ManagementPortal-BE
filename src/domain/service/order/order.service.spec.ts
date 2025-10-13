@@ -517,12 +517,19 @@ describe('OrderService', () => {
         orderId: orderMock.id,
       };
 
-      jest.spyOn(orderRepository, 'findOrderByIdAsync').mockResolvedValueOnce({
-        ...orderMock,
-        orderStatusId: OrderStatusId.Shipped,
-      });
+      jest
+        .spyOn(orderRepository, 'findOrderByIdAsync')
+        .mockResolvedValueOnce({
+          ...orderMock,
+          orderStatusId: OrderStatusId.Shipped,
+        })
+        .mockResolvedValueOnce({
+          ...orderMock,
+          orderStatusId: OrderStatusId.Finished,
+        });
       jest
         .spyOn(orderItemRepository, 'findByOrderIdAsync')
+        .mockResolvedValueOnce(orderItemsMock)
         .mockResolvedValueOnce(orderItemsMock);
       jest.spyOn(orderRepository, 'updateOrderAsync').mockResolvedValueOnce({
         ...orderMock,
@@ -1489,6 +1496,92 @@ describe('OrderService', () => {
   });
 
   describe('sendBillByEmailAsync', () => {
+    const billReportGenerationDataDto = {
+      billId: 1,
+      createdAt: new Date('1990-01-31'),
+      orderId: 1,
+      clientCompanyName: 'Test Client',
+      clientAddress: 'Calle Falsa 123',
+      clientDocumentType: 'DNI',
+      clientDocumentNumber: '12345678',
+      clientTaxCategory: 'Responsable Inscripto',
+      deliveryMethod: 'Delivery',
+      orderStatus: 'Prepared',
+      totalAmount: new Decimal(20.0),
+      orderItems: [
+        {
+          productName: 'Test Product',
+          quantity: 2,
+          unitPrice: new Decimal(10.0),
+          subtotalPrice: new Decimal(20.0),
+        },
+      ],
+      paid: true,
+      paymentType: 'Efectivo',
+      observation: 'Test Observation',
+    };
+    const orderDetailsDtoMock = {
+      id: 1,
+      client: {
+        companyName: 'Test Company',
+        user: {
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          phone: '123456789',
+        },
+        address: {
+          street: 'Calle Falsa',
+          streetNumber: 123,
+        },
+        taxCategory: {
+          name: 'Responsable Inscripto',
+          description: '',
+        },
+      },
+      deliveryMethodName: 'Delivery',
+      deliveryMethodId: 1,
+      orderStatus: {
+        name: 'Pendiente',
+      },
+      paymentDetail: {
+        paymentType: {
+          name: 'Efectivo',
+        },
+      },
+      orderItems: [
+        {
+          id: 1,
+          orderId: 1,
+          product: {
+            name: 'Test Product',
+            description: 'Producto de prueba',
+            price: 10,
+            weight: 1.5,
+            enabled: true,
+            imageUrl: 'https://test.com/image.jpg',
+            category: {
+              name: 'Test Category',
+            },
+            stock: {
+              quantityOrdered: 10,
+              quantityAvailable: 100,
+              quantityReserved: 5,
+            },
+            supplier: {
+              businessName: 'Proveedor S.A.',
+              email: 'proveedor@test.com',
+              phone: '123456789',
+            },
+          },
+          unitPrice: 10,
+          quantity: 5,
+          subtotalPrice: 50,
+        },
+      ],
+      totalAmount: 105,
+      createdAt: orderMock.createdAt,
+    };
     it('should call reportService.generateBillReport with the correct parameters', async () => {
       // Arrange
       const billReportGenerationDataDto = {
@@ -1516,6 +1609,7 @@ describe('OrderService', () => {
         observation: 'Test Observation',
       };
 
+      const newStatus = OrderStatusId.Finished;
       const clientEmail = 'client@test.com';
 
       const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
@@ -1533,6 +1627,8 @@ describe('OrderService', () => {
 
       // Act
       await service.sendBillByEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
         billReportGenerationDataDto,
         clientEmail,
       );
@@ -1569,7 +1665,7 @@ describe('OrderService', () => {
         paymentType: 'Efectivo',
         observation: 'Test Observation',
       };
-
+      const newStatus = OrderStatusId.Finished;
       const clientEmail = 'client@test.com';
 
       const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
@@ -1587,6 +1683,8 @@ describe('OrderService', () => {
 
       // Act
       await service.sendBillByEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
         billReportGenerationDataDto,
         clientEmail,
       );
@@ -1595,12 +1693,187 @@ describe('OrderService', () => {
       expect(mailingService.sendMailWithAttachmentAsync).toHaveBeenCalledWith(
         clientEmail,
         `Factura #${billReportGenerationDataDto.billId}`,
-        'Adjuntamos la factura en formato PDF.',
+        expect.stringContaining(
+          'Te dejamos tu factura en PDF adjunta a este correo.',
+        ),
         {
           filename: `MP-FC-${billReportGenerationDataDto.billId}.pdf`,
           content: expect.any(Buffer),
         },
       );
+    });
+    it('should throw if reportService.generateBillReport fails', async () => {
+      // Arrange
+      jest
+        .spyOn(reportService, 'generateBillReport')
+        .mockRejectedValueOnce(new Error('PDF error'));
+
+      // Act & Assert
+      await expect(
+        service.sendBillByEmailAsync(
+          orderDetailsDtoMock,
+          OrderStatusId.Finished,
+          billReportGenerationDataDto,
+          'client@test.com',
+        ),
+      ).rejects.toThrow('PDF error');
+    });
+    it('should throw if mailingService.sendMailWithAttachmentAsync fails', async () => {
+      // Arrange
+      const fakePdfStream = new PassThrough() as unknown as PDFKit.PDFDocument;
+      setImmediate(() => fakePdfStream.end());
+      jest
+        .spyOn(reportService, 'generateBillReport')
+        .mockResolvedValueOnce(fakePdfStream);
+      jest
+        .spyOn(mailingService, 'sendMailWithAttachmentAsync')
+        .mockRejectedValueOnce(new Error('Mail error'));
+
+      // Act & Assert
+      await expect(
+        service.sendBillByEmailAsync(
+          orderDetailsDtoMock,
+          OrderStatusId.Finished,
+          billReportGenerationDataDto,
+          'client@test.com',
+        ),
+      ).rejects.toThrow('Mail error');
+    });
+  });
+  describe('sendOrderStatusChangeEmailAsync', () => {
+    const orderDetailsDtoMock = {
+      id: 1,
+      client: {
+        companyName: 'Test Company',
+        user: {
+          firstName: 'Juan',
+          lastName: 'Perez',
+          email: 'juan@mail.com',
+          phone: '123456789',
+        },
+        address: {
+          street: 'Calle Falsa',
+          streetNumber: 123,
+        },
+        taxCategory: {
+          name: 'Responsable Inscripto',
+          description: '',
+        },
+      },
+      deliveryMethodName: 'Delivery',
+      deliveryMethodId: 1,
+      orderStatus: {
+        name: 'Pendiente',
+      },
+      paymentDetail: {
+        paymentType: {
+          name: 'Efectivo',
+        },
+      },
+      orderItems: [
+        {
+          id: 1,
+          orderId: 1,
+          product: {
+            name: 'Test Product',
+            description: 'Producto de prueba',
+            price: 10,
+            weight: 1.5,
+            enabled: true,
+            imageUrl: 'https://test.com/image.jpg',
+            category: {
+              name: 'Test Category',
+            },
+            stock: {
+              quantityOrdered: 10,
+              quantityAvailable: 100,
+              quantityReserved: 5,
+            },
+            supplier: {
+              businessName: 'Proveedor S.A.',
+              email: 'proveedor@test.com',
+              phone: '123456789',
+            },
+          },
+          unitPrice: 10,
+          quantity: 5,
+          subtotalPrice: 50,
+        },
+      ],
+      totalAmount: 105,
+      createdAt: new Date(),
+    };
+
+    it('should send a mail with correct HTML and subject', async () => {
+      // Arrange
+      const newStatus = OrderStatusId.Shipped;
+      const sendMailSpy = jest
+        .spyOn(mailingService, 'sendNewStatusMailAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendOrderStatusChangeEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
+      );
+
+      // Assert
+      expect(sendMailSpy).toHaveBeenCalledWith(
+        orderDetailsDtoMock.client.user.email,
+        `Estado actualizado: Enviado`,
+        expect.stringContaining('<div class="estado">Enviado</div>'),
+      );
+    });
+
+    it('should not send mail if client email is missing', async () => {
+      // Arrange
+      jest.clearAllMocks();
+      const orderWithoutEmail = JSON.parse(JSON.stringify(orderDetailsDtoMock));
+      orderWithoutEmail.client.user.email = '';
+      const newStatus = OrderStatusId.Shipped;
+      const sendMailSpy = jest.spyOn(mailingService, 'sendNewStatusMailAsync');
+
+      // Act
+      await service.sendOrderStatusChangeEmailAsync(
+        orderWithoutEmail,
+        newStatus,
+      );
+
+      // Assert
+      expect(sendMailSpy).not.toHaveBeenCalled();
+    });
+    it('should throw if mailingService.sendNewStatusMailAsync fails', async () => {
+      // Arrange
+      const newStatus = OrderStatusId.Shipped;
+      jest
+        .spyOn(mailingService, 'sendNewStatusMailAsync')
+        .mockRejectedValueOnce(new Error('Mail error'));
+
+      // Act & Assert
+      await expect(
+        service.sendOrderStatusChangeEmailAsync(orderDetailsDtoMock, newStatus),
+      ).rejects.toThrow('Mail error');
+    });
+
+    it('should include the correct status in the HTML', async () => {
+      // Arrange
+      const newStatus = OrderStatusId.Shipped;
+      jest
+        .spyOn(mailingService, 'sendNewStatusMailAsync')
+        .mockResolvedValueOnce(undefined);
+
+      // Act
+      await service.sendOrderStatusChangeEmailAsync(
+        orderDetailsDtoMock,
+        newStatus,
+      );
+
+      // Assert
+      const htmlArg = (mailingService.sendNewStatusMailAsync as jest.Mock).mock
+        .calls[0][2];
+      expect(htmlArg).toContain('<div class="estado">Enviado</div>');
+      expect(htmlArg).toContain('Test Company');
+      expect(htmlArg).toContain('#1');
     });
   });
 });
