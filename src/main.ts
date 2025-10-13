@@ -6,8 +6,10 @@ import {
   GlobalExceptionFilterConfiguration,
   SwaggerConfiguration,
   GlobalPipesConfiguration,
+  IngestConfiguration,
 } from './configuration';
 import { AuthenticationConfiguration } from './configuration/authentication.configuration';
+
 async function bootstrap() {
   dotenv.config();
 
@@ -21,6 +23,7 @@ async function bootstrap() {
   SwaggerConfiguration(app);
   GlobalExceptionFilterConfiguration(app);
   GlobalPipesConfiguration(app);
+  IngestConfiguration(app);
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
