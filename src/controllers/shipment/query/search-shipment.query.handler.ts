@@ -30,7 +30,10 @@ export class SearchShipmentQueryHandler
           model: shipment.vehicle.model,
         },
         status: shipmentStatusTranslations[shipment.status.name],
-        orders: shipment.orders.map((order) => order.id),
+        orders: shipment.orders.map((order) => ({
+          id: order.id,
+          status: order.orderStatus.name,
+        })),
         estimatedKm: shipment.estimatedKm ? Number(shipment.estimatedKm) : null,
         effectiveKm: shipment.effectiveKm ? Number(shipment.effectiveKm) : null,
         routeLink: shipment.routeLink,

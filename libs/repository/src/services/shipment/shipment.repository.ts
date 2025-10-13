@@ -168,6 +168,7 @@ export class ShipmentRepository {
           orders: {
             select: {
               id: true,
+              orderStatus: true,
             },
           },
         },
