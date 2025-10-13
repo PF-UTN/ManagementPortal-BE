@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { SendEventOutput } from 'inngest/types';
 
 import { MercadoPagoController } from './mercadopago.controller';
 import { MercadoPagoWebhookRequest } from '../../../libs/common/src/dtos';
@@ -13,6 +14,11 @@ describe('MercadoPagoController', () => {
     }).compile();
 
     controller = module.get<MercadoPagoController>(MercadoPagoController);
+
+    // Mock inngest.send globally for this test suite
+    jest
+      .spyOn(inngest, 'send')
+      .mockResolvedValue({} as SendEventOutput<{ id: string }>);
   });
 
   it('should be defined', () => {
@@ -33,12 +39,9 @@ describe('MercadoPagoController', () => {
 
     const request = { body } as unknown as Request;
 
-    // Spy on inngest.send
-    const sendSpy = jest.spyOn(inngest, 'send');
-
     const result = await controller.handleWebhook(request);
 
-    expect(sendSpy).toHaveBeenCalledWith({
+    expect(inngest.send).toHaveBeenCalledWith({
       name: 'mercadopago.webhook.received',
       data: body,
     });
