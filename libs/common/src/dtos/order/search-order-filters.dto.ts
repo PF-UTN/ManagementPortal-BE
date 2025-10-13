@@ -44,5 +44,5 @@ export class SearchOrderFiltersDto {
   })
   @IsOptional()
   @IsNumber()
-  shipmentId?: number;
+  shipmentId?: number | null;
 }
