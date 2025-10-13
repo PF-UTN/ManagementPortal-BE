@@ -1,6 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { orderStatusTranslations } from '@mp/common/constants';
+import {
+  deliveryMethodTranslations,
+  orderStatusTranslations,
+} from '@mp/common/constants';
 import { SearchOrderReturnDataDto, SearchOrderResponse } from '@mp/common/dtos';
 
 import { SearchOrderQuery } from './search-order.query';
@@ -23,7 +26,7 @@ export class SearchOrderQueryHandler
         orderStatus: orderStatusTranslations[order.orderStatus.name],
         createdAt: order.createdAt,
         totalAmount: order.totalAmount.toNumber(),
-        deliveryMethod: order.deliveryMethod.name,
+        deliveryMethod: deliveryMethodTranslations[order.deliveryMethod.name],
       };
     });
 
