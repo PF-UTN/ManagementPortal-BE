@@ -245,6 +245,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -253,6 +259,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -294,6 +301,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -302,6 +315,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -346,6 +360,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -354,6 +374,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -398,6 +419,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -406,6 +433,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -439,6 +467,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: shipment.id,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -490,6 +522,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -498,6 +536,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -531,6 +570,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: shipment.id,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -628,6 +671,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -636,6 +685,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -677,6 +727,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -685,6 +741,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -718,6 +775,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -759,6 +820,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -767,6 +834,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -800,6 +868,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
         {
           id: 4,
@@ -820,6 +892,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -861,6 +937,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -869,6 +951,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -902,6 +985,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -955,6 +1042,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -963,6 +1056,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -996,6 +1090,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -1049,6 +1147,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1057,6 +1161,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1090,6 +1195,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Finished,
+            name: 'Finished',
+          },
         },
       ];
 
@@ -1157,6 +1266,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1165,6 +1280,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1198,6 +1314,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -1271,6 +1391,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1279,6 +1405,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1313,6 +1440,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -1387,6 +1518,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1395,6 +1532,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1429,6 +1567,10 @@ describe('ShipmentService', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ];
 
@@ -1500,6 +1642,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1508,6 +1656,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1582,6 +1731,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1590,6 +1745,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
@@ -1702,6 +1858,12 @@ describe('ShipmentService', () => {
                     };
                   };
                 };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
               };
             };
             vehicle: {
@@ -1710,6 +1872,7 @@ describe('ShipmentService', () => {
                 licensePlate: true;
                 brand: true;
                 model: true;
+                kmTraveled: true;
               };
             };
             status: {
