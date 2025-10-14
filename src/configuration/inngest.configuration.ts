@@ -34,6 +34,7 @@ export const IngestConfiguration = (app: INestApplication) => {
     serve({
       client: inngest,
       functions: inngestFunctions,
+      streaming: 'force',
     }),
   );
 

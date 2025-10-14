@@ -19,7 +19,10 @@ describe('processMercadoPagoWebhook', () => {
     });
 
     expect(inngest.createFunction).toHaveBeenCalledWith(
-      { id: 'process-mercadopago-webhook' },
+      {
+        id: 'process-mercadopago-webhook',
+        timeouts: { start: '5m' },
+      },
       { event: 'mercadopago.webhook.received' },
       expect.any(Function),
     );

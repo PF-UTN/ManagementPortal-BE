@@ -17,7 +17,10 @@ export const processMercadoPagoWebhook = (dependencies: {
   commandBus: CommandBus;
 }) => {
   return inngest.createFunction(
-    { id: 'process-mercadopago-webhook' },
+    {
+      id: 'process-mercadopago-webhook',
+      timeouts: { start: '5m' },
+    },
     { event: 'mercadopago.webhook.received' },
     async ({ event, step }) => {
       await step.run('process-payment', async () => {
