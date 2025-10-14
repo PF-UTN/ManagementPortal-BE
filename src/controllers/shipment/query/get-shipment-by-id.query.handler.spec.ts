@@ -50,6 +50,7 @@ describe('GetShipmentByIdQueryHandler', () => {
         licensePlate: 'AB123CD',
         brand: 'Toyota',
         model: 'Hilux',
+        kmTraveled: 12000,
       },
       statusId: 3,
       status: {
@@ -97,6 +98,10 @@ describe('GetShipmentByIdQueryHandler', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(200.5),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
         {
           id: 102,
@@ -138,6 +143,10 @@ describe('GetShipmentByIdQueryHandler', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(300.75),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
         {
           id: 103,
@@ -179,6 +188,10 @@ describe('GetShipmentByIdQueryHandler', () => {
           paymentDetailId: 1,
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(150.25),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
         },
       ],
     };
@@ -219,9 +232,14 @@ describe('GetShipmentByIdQueryHandler', () => {
           licensePlate: 'AB123CD',
           brand: 'Toyota',
           model: 'Hilux',
+          kmTraveled: 12000,
         },
         status: 'Finished',
-        orders: [101, 102, 103],
+        orders: [
+          { id: 101, status: 'Prepared' },
+          { id: 102, status: 'Prepared' },
+          { id: 103, status: 'Prepared' },
+        ],
       };
 
       //Act
