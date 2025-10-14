@@ -221,7 +221,11 @@ describe('OrderRepository', () => {
         where: { id: orderId },
         include: {
           orderItems: {
-            include: { product: true },
+            include: {
+              product: {
+                include: { category: true, supplier: true, stock: true },
+              },
+            },
           },
           orderStatus: true,
           client: {
