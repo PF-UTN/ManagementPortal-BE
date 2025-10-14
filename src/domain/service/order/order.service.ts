@@ -172,32 +172,31 @@ export class OrderService {
         `Invalid status transition from ${OrderStatusId[currentStatus]} to ${OrderStatusId[newStatus]}`,
       );
     }
-    const orderItems = await this.orderItemRepository.findByOrderIdAsync(
-      order.id,
-    );
 
     await this.unitOfWork.execute(async (tx) => {
-      const orderUpdated = await this.orderRepository.updateOrderAsync(
-        order.id,
-        {
-          orderStatusId: newStatus,
-        },
-      );
+      const updateOrderTask = this.orderRepository.updateOrderAsync(order.id, {
+        orderStatusId: newStatus,
+      });
 
-      await this.manageStockChanges(
+      const manageStockChangesTask = this.manageStockChanges(
         order,
-        orderItems,
+        order.orderItems,
         order.paymentDetail.paymentTypeId,
         currentStatus,
         newStatus,
         tx,
       );
+
+      Promise.all([updateOrderTask, manageStockChangesTask]);
+      const orderUpdated = await updateOrderTask;
       return orderUpdated;
     });
     const orderDetails = await this.findOrderByIdAsync(id);
 
     if (newStatus !== OrderStatusId.Finished) {
+      console.log('Sending status change email...');
       await this.sendOrderStatusChangeEmailAsync(orderDetails, newStatus);
+      console.log('Status change email sent.');
     }
 
     if (newStatus === OrderStatusId.Finished) {
@@ -212,7 +211,7 @@ export class OrderService {
             tx,
           );
 
-          const billItemsToCreate = orderItems.map((item) => ({
+          const billItemsToCreate = order.orderItems.map((item) => ({
             subTotalPrice: item.subtotalPrice,
             billId: bill.id,
           }));
@@ -237,7 +236,7 @@ export class OrderService {
           deliveryMethodTranslations[order.deliveryMethod.name] ||
           order.deliveryMethod.name,
         totalAmount: order.totalAmount,
-        orderItems: orderItems.map((item) => ({
+        orderItems: order.orderItems.map((item) => ({
           productName: item.product.name,
           unitPrice: item.unitPrice,
           quantity: item.quantity,
@@ -486,9 +485,7 @@ export class OrderService {
       throw new NotFoundException(`Order with ID ${id} does not exist.`);
     }
 
-    const items = await this.orderItemRepository.findByOrderIdAsync(order.id);
-
-    const itemsDto: OrderItemDataDto[] = items.map((item) => ({
+    const itemsDto: OrderItemDataDto[] = order.orderItems.map((item) => ({
       id: item.id,
       product: {
         name: item.product.name,
