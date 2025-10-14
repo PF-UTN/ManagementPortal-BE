@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
 import {
+  deliveryMethodTranslations,
   OrderDirection,
   OrderField,
   orderStatusTranslations,
@@ -93,6 +94,11 @@ describe('SearchOrderQueryHandler', () => {
             name: true;
           };
         };
+        deliveryMethod: {
+          select: {
+            name: true;
+          };
+        };
       };
     }>[] = [
       {
@@ -103,6 +109,9 @@ describe('SearchOrderQueryHandler', () => {
         clientId: 1,
         paymentDetailId: 1,
         deliveryMethodId: 1,
+        deliveryMethod: {
+          name: 'HomeDelivery',
+        },
         shipmentId: 1,
         client: {
           id: 1,
@@ -124,6 +133,7 @@ describe('SearchOrderQueryHandler', () => {
         orderStatus: orderStatusTranslations[order.orderStatus.name],
         createdAt: order.createdAt,
         totalAmount: order.totalAmount.toNumber(),
+        deliveryMethod: deliveryMethodTranslations[order.deliveryMethod.name],
       })),
     });
 

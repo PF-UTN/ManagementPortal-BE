@@ -165,7 +165,9 @@ export class OrderRepository {
   ) {
     const prismaOrderBy =
       orderBy &&
-      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(orderBy.field) &&
+      [OrderField.CREATED_AT, OrderField.TOTAL_AMOUNT].includes(
+        orderBy.field,
+      ) &&
       [OrderDirection.ASC, OrderDirection.DESC].includes(orderBy.direction)
         ? { [orderBy.field]: orderBy.direction }
         : { createdAt: 'desc' as const };
@@ -214,6 +216,11 @@ export class OrderRepository {
             },
           },
           orderStatus: {
+            select: {
+              name: true,
+            },
+          },
+          deliveryMethod: {
             select: {
               name: true,
             },
