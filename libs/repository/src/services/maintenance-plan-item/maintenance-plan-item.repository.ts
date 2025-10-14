@@ -99,4 +99,17 @@ export class MaintenancePlanItemRepository {
       });
     return maintenancePlanItem;
   }
+
+  async findAllWithRelationsAsync() {
+    return this.prisma.maintenancePlanItem.findMany({
+      include: {
+        maintenanceItem: true,
+        vehicle: true,
+        maintenances: {
+          orderBy: { date: 'desc' },
+          take: 1,
+        },
+      },
+    });
+  }
 }

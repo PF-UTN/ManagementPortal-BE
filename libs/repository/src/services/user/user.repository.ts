@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { User, Prisma } from '@prisma/client';
 
+import { RoleIds } from '@mp/common/constants';
+
 import { PrismaService } from '../prisma.service';
 
 @Injectable()
@@ -94,5 +96,11 @@ export class UserRepository {
       where: { email },
     });
     return !!user;
+  }
+
+  async findAdminsAsync() {
+    return this.prisma.user.findMany({
+      where: { roleId: RoleIds.Admin },
+    });
   }
 }
