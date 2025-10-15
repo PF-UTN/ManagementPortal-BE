@@ -18,6 +18,7 @@ import { MercadoPagoWebhookService } from '../services/mercadopago-webhook.servi
 
 export const inngest = new Inngest({
   id: 'Management Portal',
+  eventKey: process.env.INNGEST_EVENT_KEY,
 });
 
 export const IngestConfiguration = (app: INestApplication) => {
@@ -47,12 +48,20 @@ export const IngestConfiguration = (app: INestApplication) => {
   const router = express.Router();
 
   router.use(bodyParser.json());
+  const signingKey = process.env.INNGEST_SIGNING_KEY;
+
+  if (!signingKey) {
+    throw new Error(
+      'INNGEST_SIGNING_KEY is required. Please set it in your environment variables.',
+    );
+  }
 
   router.use(
     serve({
       client: inngest,
       functions: inngestFunctions,
       streaming: 'force',
+      signingKey,
     }),
   );
 
