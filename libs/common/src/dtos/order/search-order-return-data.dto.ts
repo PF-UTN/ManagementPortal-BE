@@ -5,4 +5,5 @@ export class SearchOrderReturnDataDto {
   orderStatus: string;
   totalAmount: number;
   deliveryMethod: string;
+  shipmentId: number | null;
 }

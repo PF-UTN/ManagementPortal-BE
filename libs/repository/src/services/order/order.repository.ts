@@ -191,6 +191,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             {
               OR: [
                 {
@@ -248,6 +253,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             {
               OR: [
                 {
@@ -308,6 +318,11 @@ export class OrderRepository {
                 },
               }
             : {},
+          filters.shipmentId === null
+            ? { shipmentId: null }
+            : typeof filters.shipmentId === 'number'
+              ? { shipmentId: filters.shipmentId }
+              : {},
           {
             OR: [
               {
