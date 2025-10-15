@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { mockDeep } from 'jest-mock-extended';
 
-import { shipmentStatusTranslations } from '@mp/common/constants';
+import {
+  OrderStatusId,
+  orderStatusTranslations,
+  shipmentStatusTranslations,
+} from '@mp/common/constants';
 import { SearchShipmentResponse } from '@mp/common/dtos';
 
 import { SearchShipmentQuery } from './search-shipment.query';
@@ -90,6 +94,7 @@ describe('SearchShipmentQueryHandler', () => {
         orders: {
           select: {
             id: true;
+            orderStatus: true;
           };
         };
       };
@@ -113,7 +118,29 @@ describe('SearchShipmentQueryHandler', () => {
           id: 3,
           name: 'Finished',
         },
-        orders: [{ id: 101 }, { id: 102 }, { id: 103 }],
+        orders: [
+          {
+            id: 101,
+            orderStatus: {
+              id: OrderStatusId.InPreparation,
+              name: orderStatusTranslations[OrderStatusId.InPreparation],
+            },
+          },
+          {
+            id: 102,
+            orderStatus: {
+              id: OrderStatusId.InPreparation,
+              name: orderStatusTranslations[OrderStatusId.InPreparation],
+            },
+          },
+          {
+            id: 103,
+            orderStatus: {
+              id: OrderStatusId.Finished,
+              name: orderStatusTranslations[OrderStatusId.Finished],
+            },
+          },
+        ],
       },
     ];
 
@@ -131,7 +158,10 @@ describe('SearchShipmentQueryHandler', () => {
           model: shipment.vehicle.model,
         },
         status: shipmentStatusTranslations[shipment.status.name],
-        orders: shipment.orders.map((order) => order.id),
+        orders: shipment.orders.map((order) => ({
+          id: order.id,
+          status: orderStatusTranslations[order.orderStatus.name],
+        })),
         estimatedKm: shipment.estimatedKm ? Number(shipment.estimatedKm) : null,
         effectiveKm: shipment.effectiveKm ? Number(shipment.effectiveKm) : null,
         routeLink: shipment.routeLink,

@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Order, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import {
   StockChangedField,
@@ -24,23 +24,26 @@ import {
   OrderDetailsDto,
   OrderDetailsToClientDto,
   BillReportGenerationDataDto,
+  OrderItemDataDto,
+  OrderItemDataToClientDto,
 } from '@mp/common/dtos';
-import { OrderItemDataDto, OrderItemDataToClientDto } from '@mp/common/dtos';
 import { calculateTotalAmount, pdfToBuffer } from '@mp/common/helpers';
-import { MailingService, ReportService } from '@mp/common/services';
-import { BillRepository } from '@mp/repository';
 import {
-  BillItemRepository,
+  orderStatusChangeReport,
+  orderStatusChangeImage,
+  MailingService,
+  ReportService,
+} from '@mp/common/services';
+import {
   PrismaUnitOfWork,
   ProductRepository,
   StockChangeRepository,
-} from '@mp/repository';
-import {
   PaymentDetailRepository,
   OrderItemRepository,
   OrderRepository,
 } from '@mp/repository';
 
+import { inngest } from '../../../configuration';
 import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
 import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
@@ -59,8 +62,6 @@ export class OrderService {
     private readonly clientService: ClientService,
     private readonly reportService: ReportService,
     private readonly mailingService: MailingService,
-    private readonly billRepository: BillRepository,
-    private readonly billItemRepository: BillItemRepository,
   ) {}
 
   async createOrderAsync(orderCreationDto: OrderCreationDto) {
@@ -142,7 +143,7 @@ export class OrderService {
         tx,
       );
 
-      await this.manageStockChanges(
+      await this.manageStockChangesAsync(
         order,
         orderItemsToCreate,
         paymentDetail.paymentTypeId,
@@ -168,83 +169,15 @@ export class OrderService {
         `Invalid status transition from ${OrderStatusId[currentStatus]} to ${OrderStatusId[newStatus]}`,
       );
     }
-    const orderItems = await this.orderItemRepository.findByOrderIdAsync(
-      order.id,
-    );
 
-    await this.unitOfWork.execute(async (tx) => {
-      const orderUpdated = await this.orderRepository.updateOrderAsync(
-        order.id,
-        {
-          orderStatusId: newStatus,
-        },
-      );
-
-      await this.manageStockChanges(
-        order,
-        orderItems,
-        order.paymentDetail.paymentTypeId,
+    await inngest.send({
+      name: 'order.status.change',
+      data: {
+        orderId: order.id,
         currentStatus,
         newStatus,
-        tx,
-      );
-      return orderUpdated;
+      },
     });
-
-    if (newStatus === OrderStatusId.Finished) {
-      const createBill = await this.unitOfWork.execute(
-        async (tx: Prisma.TransactionClient) => {
-          const bill = await this.billRepository.createBillAsync(
-            {
-              beforeTaxPrice: order.totalAmount,
-              totalPrice: order.totalAmount,
-              orderId: order.id,
-            },
-            tx,
-          );
-
-          const billItemsToCreate = orderItems.map((item) => ({
-            subTotalPrice: item.subtotalPrice,
-            billId: bill.id,
-          }));
-
-          await this.billItemRepository.createManyBillItemAsync(
-            billItemsToCreate,
-            tx,
-          );
-
-          return bill;
-        },
-      );
-      const billReportGenerationDataDto: BillReportGenerationDataDto = {
-        billId: createBill.id,
-        orderId: order.id,
-        clientCompanyName: order.client.companyName,
-        clientAddress: `${order.client.address.street} ${order.client.address.streetNumber}`,
-        clientDocumentType: order.client.user.documentType,
-        clientDocumentNumber: order.client.user.documentNumber,
-        clientTaxCategory: order.client.taxCategory.name,
-        deliveryMethod:
-          deliveryMethodTranslations[order.deliveryMethod.name] ||
-          order.deliveryMethod.name,
-        totalAmount: order.totalAmount,
-        orderItems: orderItems.map((item) => ({
-          productName: item.product.name,
-          unitPrice: item.unitPrice,
-          quantity: item.quantity,
-          subtotalPrice: item.subtotalPrice,
-        })),
-        paymentType:
-          PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
-          order.paymentDetail.paymentType.name,
-        observation: '',
-        createdAt: new Date(),
-      };
-      this.sendBillByEmailAsync(
-        billReportGenerationDataDto,
-        order.client.user.email,
-      );
-    }
   }
 
   async validateOrderItemsAsync(productIds: number[]) {
@@ -282,8 +215,8 @@ export class OrderService {
     }
   }
 
-  private async manageStockChanges(
-    order: Order,
+  public async manageStockChangesAsync(
+    order: Prisma.OrderGetPayload<{ select: { id: true } }>,
     orderItems: { productId: number; quantity: number }[],
     paymentTypeId: PaymentTypeEnum | null,
     oldStatus: OrderStatusId | null,
@@ -469,15 +402,13 @@ export class OrderService {
     );
   }
 
-  async findOrderByIdAsync(id: number) {
+  async findOrderByIdAsync(id: number): Promise<OrderDetailsDto> {
     const order = await this.orderRepository.findOrderByIdAsync(id);
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} does not exist.`);
     }
 
-    const items = await this.orderItemRepository.findByOrderIdAsync(order.id);
-
-    const itemsDto: OrderItemDataDto[] = items.map((item) => ({
+    const itemsDto: OrderItemDataDto[] = order.orderItems.map((item) => ({
       id: item.id,
       product: {
         name: item.product.name,
@@ -637,21 +568,42 @@ export class OrderService {
   }
 
   async sendBillByEmailAsync(
+    order: OrderDetailsDto,
+    newStatus: OrderStatusId,
     bill: BillReportGenerationDataDto,
     clientEmail: string,
   ) {
+    const statusText =
+      orderStatusTranslations[OrderStatusId[newStatus]] ?? String(newStatus);
     const pdfDoc = await this.reportService.generateBillReport(bill);
-
     const buffer = await pdfToBuffer(pdfDoc);
+    const htmlBody = orderStatusChangeImage(order, statusText);
 
     return this.mailingService.sendMailWithAttachmentAsync(
       clientEmail,
       `Factura #${bill.billId}`,
-      'Adjuntamos la factura en formato PDF.',
+      htmlBody,
       {
         filename: `MP-FC-${bill.billId}.pdf`,
         content: buffer,
       },
+    );
+  }
+
+  async sendOrderStatusChangeEmailAsync(
+    order: OrderDetailsDto,
+    newStatus: OrderStatusId,
+  ) {
+    const clientEmail = order.client.user.email;
+    if (!clientEmail || clientEmail.trim() === '') return;
+    const statusText =
+      orderStatusTranslations[OrderStatusId[newStatus]] ?? String(newStatus);
+    const htmlBody = orderStatusChangeReport(order, statusText);
+
+    await this.mailingService.sendNewStatusMailAsync(
+      order.client.user.email,
+      `Estado actualizado: ${statusText}`,
+      htmlBody,
     );
   }
 }

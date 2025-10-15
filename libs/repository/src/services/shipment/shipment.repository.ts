@@ -63,6 +63,12 @@ export class ShipmentRepository {
                 },
               },
             },
+            orderStatus: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         vehicle: {
@@ -71,6 +77,7 @@ export class ShipmentRepository {
             licensePlate: true,
             brand: true,
             model: true,
+            kmTraveled: true,
           },
         },
         status: {
@@ -168,6 +175,7 @@ export class ShipmentRepository {
           orders: {
             select: {
               id: true,
+              orderStatus: true,
             },
           },
         },

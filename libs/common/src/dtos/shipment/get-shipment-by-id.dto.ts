@@ -10,7 +10,8 @@ export class GetShipmentByIdDto {
     licensePlate: string;
     brand: string;
     model: string;
+    kmTraveled: number;
   };
   status: string;
-  orders: number[];
+  orders: { id: number; status: string }[];
 }

@@ -1593,7 +1593,7 @@ describe('PurchaseOrderService', () => {
       expect(mailingService.sendMailWithAttachmentAsync).toHaveBeenCalledWith(
         supplierEmail,
         `Orden de compra #${purchaseOrderReportGenerationDataDto.purchaseOrderId}`,
-        'Adjuntamos la orden de compra en formato PDF.',
+        expect.stringContaining('Orden de compra generada'),
         {
           filename: `MP-OC-${purchaseOrderReportGenerationDataDto.purchaseOrderId}.pdf`,
           content: expect.any(Buffer),

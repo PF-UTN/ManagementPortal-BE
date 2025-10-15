@@ -1,6 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { shipmentStatusTranslations } from '@mp/common/constants';
+import {
+  orderStatusTranslations,
+  shipmentStatusTranslations,
+} from '@mp/common/constants';
 import {
   SearchShipmentReturnDataDto,
   SearchShipmentResponse,
@@ -30,7 +33,10 @@ export class SearchShipmentQueryHandler
           model: shipment.vehicle.model,
         },
         status: shipmentStatusTranslations[shipment.status.name],
-        orders: shipment.orders.map((order) => order.id),
+        orders: shipment.orders.map((order) => ({
+          id: order.id,
+          status: orderStatusTranslations[order.orderStatus.name],
+        })),
         estimatedKm: shipment.estimatedKm ? Number(shipment.estimatedKm) : null,
         effectiveKm: shipment.effectiveKm ? Number(shipment.effectiveKm) : null,
         routeLink: shipment.routeLink,

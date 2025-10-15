@@ -137,7 +137,9 @@ export class OrderRepository {
       include: {
         orderItems: {
           include: {
-            product: true,
+            product: {
+              include: { category: true, supplier: true, stock: true },
+            },
           },
         },
         orderStatus: true,
@@ -221,6 +223,11 @@ export class OrderRepository {
             },
           },
           orderStatus: {
+            select: {
+              name: true,
+            },
+          },
+          deliveryMethod: {
             select: {
               name: true,
             },

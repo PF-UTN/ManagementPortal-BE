@@ -8,7 +8,7 @@ export class SearchShipmentReturnDataDto {
     model: string;
   };
   status: string;
-  orders: number[];
+  orders: { id: number; status: string }[];
   estimatedKm: number | null;
   effectiveKm: number | null;
   routeLink: string | null;
