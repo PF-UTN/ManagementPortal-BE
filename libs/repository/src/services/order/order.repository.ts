@@ -191,6 +191,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             filters.deliveryMethodId?.length
               ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
               : {},
@@ -251,6 +256,11 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.shipmentId === null
+              ? { shipmentId: null }
+              : typeof filters.shipmentId === 'number'
+                ? { shipmentId: filters.shipmentId }
+                : {},
             filters.deliveryMethodId?.length
               ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
               : {},
@@ -314,6 +324,11 @@ export class OrderRepository {
                 },
               }
             : {},
+          filters.shipmentId === null
+            ? { shipmentId: null }
+            : typeof filters.shipmentId === 'number'
+              ? { shipmentId: filters.shipmentId }
+              : {},
           {
             OR: [
               {

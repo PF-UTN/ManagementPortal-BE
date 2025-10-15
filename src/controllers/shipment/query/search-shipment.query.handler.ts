@@ -1,6 +1,9 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 
-import { orderStatusTranslations, shipmentStatusTranslations } from '@mp/common/constants';
+import {
+  orderStatusTranslations,
+  shipmentStatusTranslations,
+} from '@mp/common/constants';
 import {
   SearchShipmentReturnDataDto,
   SearchShipmentResponse,

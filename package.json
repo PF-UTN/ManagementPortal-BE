@@ -128,7 +128,8 @@
   "lint-staged": {
     "**/*.{ts,scss,html}": [
       "prettier --write",
-      "eslint --fix"
+      "eslint --fix",
+      "git add"
     ]
   }
 }

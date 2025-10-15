@@ -40,6 +40,15 @@ export class SearchOrderFiltersDto {
   @IsDateString()
   toCreatedAtDate?: string;
 
+  @ApiProperty({
+    example: '1',
+    description: 'Filter by shipment ID',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  shipmentId?: number | null;
+
   @ApiProperty({ example: [1, 2], required: false })
   @IsOptional()
   @IsNumber({}, { each: true })

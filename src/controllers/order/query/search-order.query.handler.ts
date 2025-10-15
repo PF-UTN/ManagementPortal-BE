@@ -27,6 +27,7 @@ export class SearchOrderQueryHandler
         createdAt: order.createdAt,
         totalAmount: order.totalAmount.toNumber(),
         deliveryMethod: deliveryMethodTranslations[order.deliveryMethod.name],
+        shipmentId: order.shipmentId,
       };
     });
 

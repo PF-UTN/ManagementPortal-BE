@@ -232,6 +232,14 @@ describe('OrderRepository', () => {
         },
       });
     });
+    it('should return null if order does not exist', async () => {
+      // Arrange
+      jest.spyOn(prismaService.order, 'findUnique').mockResolvedValueOnce(null);
+      // Act
+      const result = await repository.findOrderByIdAsync(999);
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
   describe('searchWithFiltersAsync', () => {
@@ -239,6 +247,7 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      shipmentId: 99,
       deliveryMethodId: [1, 2],
     };
 
@@ -287,6 +296,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               filters.deliveryMethodId?.length
                 ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
                 : {},
@@ -344,6 +358,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               filters.deliveryMethodId?.length
                 ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
                 : {},
@@ -385,6 +404,46 @@ describe('OrderRepository', () => {
         data: mockData,
         total: mockTotal,
       });
+    });
+
+    it('should filter orders with shipmentId null when shipmentId is null', async () => {
+      // Arrange
+      const filters = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2023-01-01',
+        toCreatedAtDate: '2023-12-31',
+        shipmentId: null,
+      };
+      // Act
+      await repository.searchWithFiltersAsync(1, 10, 'Test', filters, orderBy);
+      // Assert
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([{ shipmentId: null }]),
+          }),
+        }),
+      );
+    });
+    it('should not filter by shipmentId when shipmentId is undefined', async () => {
+      // Arrange
+      const filters = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2023-01-01',
+        toCreatedAtDate: '2023-12-31',
+      };
+      // Act
+      await repository.searchWithFiltersAsync(1, 10, 'Test', filters, orderBy);
+      // Assert
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.not.arrayContaining([
+              { shipmentId: expect.anything() },
+            ]),
+          }),
+        }),
+      );
     });
     it('should filter orders by deliveryMethod when provided', async () => {
       // Arrange
@@ -500,6 +559,7 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      shipmentId: 99,
       deliveryMethodId: [
         DeliveryMethodId.HomeDelivery,
         DeliveryMethodId.PickUpAtStore,
@@ -541,6 +601,11 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.shipmentId === null
+                ? { shipmentId: null }
+                : typeof filters.shipmentId === 'number'
+                  ? { shipmentId: filters.shipmentId }
+                  : {},
               {
                 OR: [
                   {
@@ -688,6 +753,14 @@ describe('OrderRepository', () => {
       // Assert
       expect(exists).toBe(false);
     });
+    it('should return true if ids array is empty', async () => {
+      // Arrange
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([]);
+      // Act
+      const result = await repository.existsManyPendingUnassignedAsync([]);
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
   describe('updateManyOrderStatusAsync', () => {
@@ -795,6 +868,14 @@ describe('OrderRepository', () => {
       // Act
       const result = await repository.findOrdersByShipmentIdAsync(shipmentId);
 
+      // Assert
+      expect(result).toEqual([]);
+    });
+    it('should return empty array if shipmentId does not match any order', async () => {
+      // Arrange
+      jest.spyOn(prismaService.order, 'findMany').mockResolvedValueOnce([]);
+      // Act
+      const result = await repository.findOrdersByShipmentIdAsync(999);
       // Assert
       expect(result).toEqual([]);
     });
