@@ -44,5 +44,5 @@ export class SearchOrderFiltersDto {
   @IsOptional()
   @IsNumber({}, { each: true })
   @IsEnum(DeliveryMethodId, { each: true })
-  deliveryMethodId: DeliveryMethodId[];
+  deliveryMethodId?: DeliveryMethodId[];
 }

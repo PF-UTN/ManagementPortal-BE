@@ -21,11 +21,11 @@ export class SearchOrderFromClientFiltersDto {
   @IsString({ each: true })
   statusName?: string[];
 
-  @ApiProperty({ example: [1, 2], required: true })
+  @ApiProperty({ example: [1, 2], required: false })
   @IsOptional()
   @IsNumber({}, { each: true })
   @IsEnum(DeliveryMethodId, { each: true })
-  deliveryMethodId: DeliveryMethodId[];
+  deliveryMethodId?: DeliveryMethodId[];
 
   @ApiProperty({
     example: '2024-07-01',
