@@ -12,8 +12,6 @@ export class GetShipmentByIdQueryHandler {
   async execute(query: GetShipmentByIdQuery): Promise<GetShipmentByIdDto> {
     const shipment = await this.shipmentService.findByIdAsync(query.id);
 
-    const orderIds = shipment.orders.map((order) => order.id);
-
     const mappedResponse: GetShipmentByIdDto = {
       id: shipment.id,
       date: shipment.date,
@@ -26,9 +24,13 @@ export class GetShipmentByIdQueryHandler {
         licensePlate: shipment.vehicle.licensePlate,
         brand: shipment.vehicle.brand,
         model: shipment.vehicle.model,
+        kmTraveled: shipment.vehicle.kmTraveled,
       },
       status: shipment.status.name,
-      orders: orderIds,
+      orders: shipment.orders.map((order) => ({
+        id: order.id,
+        status: order.orderStatus.name,
+      })),
     };
 
     return mappedResponse;
