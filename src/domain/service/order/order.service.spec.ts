@@ -1435,6 +1435,7 @@ describe('OrderService', () => {
         statusName: ['Pending'],
         fromCreatedAtDate: '2025-01-01',
         toCreatedAtDate: '2025-12-31',
+        deliveryMethodId: [1, 2],
       };
       const orderBy = {
         field: OrderField.CREATED_AT,
@@ -1472,6 +1473,7 @@ describe('OrderService', () => {
         statusName: ['Pending'],
         fromCreatedAtDate: '2025-01-01',
         toCreatedAtDate: '2025-12-31',
+        deliveryMethodId: [1, 2],
       };
       const orderBy = {
         field: OrderField.CREATED_AT,
