@@ -427,6 +427,72 @@ describe('OrderRepository', () => {
         }),
       );
     });
+    it('should filter orders by a single deliveryMethodId', async () => {
+      const filters = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2023-01-01',
+        toCreatedAtDate: '2023-12-31',
+        deliveryMethodId: [1],
+      };
+      const page = 1;
+      const pageSize = 10;
+      const searchText = 'Test Supplier';
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.DESC,
+      };
+
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              { deliveryMethod: { id: { in: expect.arrayContaining([1]) } } },
+            ]),
+          }),
+        }),
+      );
+    });
+    it('should not filter by deliveryMethod when deliveryMethodId is empty', async () => {
+      const filters = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2023-01-01',
+        toCreatedAtDate: '2023-12-31',
+        deliveryMethodId: [],
+      };
+      const page = 1;
+      const pageSize = 10;
+      const searchText = 'Test Supplier';
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.DESC,
+      };
+
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.not.arrayContaining([
+              { deliveryMethod: expect.anything() },
+            ]),
+          }),
+        }),
+      );
+    });
   });
 
   describe('downloadWithFiltersAsync', () => {
