@@ -26,8 +26,6 @@ import {
   txMock,
 } from '@mp/common/testing';
 import {
-  BillItemRepository,
-  BillRepository,
   OrderItemRepository,
   OrderRepository,
   PaymentDetailRepository,
@@ -54,8 +52,6 @@ describe('OrderService', () => {
   let clientService: ClientService;
   let reportService: ReportService;
   let mailingService: MailingService;
-  let billRepository: BillRepository;
-  let billItemRepository: BillItemRepository;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -80,8 +76,6 @@ describe('OrderService', () => {
         { provide: ClientService, useValue: mockDeep(ClientService) },
         { provide: ReportService, useValue: mockDeep(ReportService) },
         { provide: MailingService, useValue: mockDeep(MailingService) },
-        { provide: BillRepository, useValue: mockDeep(BillRepository) },
-        { provide: BillItemRepository, useValue: mockDeep(BillItemRepository) },
       ],
     }).compile();
 
@@ -100,8 +94,6 @@ describe('OrderService', () => {
     clientService = module.get<ClientService>(ClientService);
     reportService = module.get<ReportService>(ReportService);
     mailingService = module.get<MailingService>(MailingService);
-    billRepository = module.get<BillRepository>(BillRepository);
-    billItemRepository = module.get<BillItemRepository>(BillItemRepository);
   });
 
   describe('createOrderAsync', () => {
@@ -507,67 +499,8 @@ describe('OrderService', () => {
         service.updateOrderStatusAsync(orderMock.id, OrderStatusId.Finished),
       ).rejects.toThrow(BadRequestException);
     });
-
-    it('should update order status and create bill when status is Finished', async () => {
-      // Arrange
-      const bill = {
-        id: 1,
-        beforeTaxPrice: new Decimal(100),
-        totalPrice: new Decimal(121),
-        orderId: orderMock.id,
-      };
-
-      jest
-        .spyOn(orderRepository, 'findOrderByIdAsync')
-        .mockResolvedValueOnce({
-          ...orderMock,
-          orderStatusId: OrderStatusId.Shipped,
-        })
-        .mockResolvedValueOnce({
-          ...orderMock,
-          orderStatusId: OrderStatusId.Finished,
-        });
-      jest
-        .spyOn(orderItemRepository, 'findByOrderIdAsync')
-        .mockResolvedValueOnce(orderItemsMock)
-        .mockResolvedValueOnce(orderItemsMock);
-      jest.spyOn(orderRepository, 'updateOrderAsync').mockResolvedValueOnce({
-        ...orderMock,
-        orderStatusId: OrderStatusId.Finished,
-      });
-
-      jest
-        .spyOn(unitOfWork, 'execute')
-        .mockImplementation(async (cb) => cb(txMock));
-      jest.spyOn(billRepository, 'createBillAsync').mockResolvedValueOnce(bill);
-      jest.spyOn(billItemRepository, 'createManyBillItemAsync');
-      jest
-        .spyOn(service, 'sendBillByEmailAsync')
-        .mockResolvedValueOnce(undefined);
-
-      // Act
-      await service.updateOrderStatusAsync(
-        orderMock.id,
-        OrderStatusId.Finished,
-      );
-
-      // Assert
-      expect(orderRepository.updateOrderAsync).toHaveBeenCalledWith(
-        orderMock.id,
-        { orderStatusId: OrderStatusId.Finished },
-      );
-      expect(billRepository.createBillAsync).toHaveBeenCalledWith(
-        {
-          beforeTaxPrice: orderMock.totalAmount,
-          totalPrice: orderMock.totalAmount,
-          orderId: orderMock.id,
-        },
-        txMock,
-      );
-      expect(billItemRepository.createManyBillItemAsync).toHaveBeenCalled();
-      expect(service.sendBillByEmailAsync).toHaveBeenCalled();
-    });
   });
+
   describe('validateOrderItemsAsync', () => {
     it('should throw BadRequestException if there are not products', async () => {
       // Arrange
@@ -692,7 +625,7 @@ describe('OrderService', () => {
         .mockResolvedValueOnce(null);
       // Act & Assert
       await expect(
-        service['manageStockChanges'](
+        service['manageStockChangesAsync'](
           orderMock,
           [{ ...mockOrderItem, productId: 1, quantity: 5 }],
           null,
@@ -710,7 +643,7 @@ describe('OrderService', () => {
         'createManyStockChangeAsync',
       );
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
         null,
@@ -735,7 +668,7 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
         null,
@@ -768,7 +701,7 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 10 }],
         null,
@@ -801,7 +734,7 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         orderMock,
         [{ ...mockOrderItem, productId: 1, quantity: 5 }],
         null,
@@ -841,7 +774,7 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         order,
         orderItems,
         PaymentTypeEnum.CreditDebitCard,
@@ -892,7 +825,7 @@ describe('OrderService', () => {
         .mockResolvedValue(undefined);
 
       // Act
-      await service['manageStockChanges'](
+      await service['manageStockChangesAsync'](
         order,
         orderItems,
         PaymentTypeEnum.UponDelivery,

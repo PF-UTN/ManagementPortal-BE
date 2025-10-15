@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Order, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 import {
   StockChangedField,
@@ -35,8 +35,6 @@ import {
   ReportService,
 } from '@mp/common/services';
 import {
-  BillRepository,
-  BillItemRepository,
   PrismaUnitOfWork,
   ProductRepository,
   StockChangeRepository,
@@ -45,6 +43,7 @@ import {
   OrderRepository,
 } from '@mp/repository';
 
+import { inngest } from '../../../configuration';
 import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
 import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
 import { ClientService } from '../client/client.service';
@@ -63,8 +62,6 @@ export class OrderService {
     private readonly clientService: ClientService,
     private readonly reportService: ReportService,
     private readonly mailingService: MailingService,
-    private readonly billRepository: BillRepository,
-    private readonly billItemRepository: BillItemRepository,
   ) {}
 
   async createOrderAsync(orderCreationDto: OrderCreationDto) {
@@ -146,7 +143,7 @@ export class OrderService {
         tx,
       );
 
-      await this.manageStockChanges(
+      await this.manageStockChangesAsync(
         order,
         orderItemsToCreate,
         paymentDetail.paymentTypeId,
@@ -173,88 +170,14 @@ export class OrderService {
       );
     }
 
-    await this.unitOfWork.execute(async (tx) => {
-      const updateOrderTask = this.orderRepository.updateOrderAsync(order.id, {
-        orderStatusId: newStatus,
-      });
-
-      const manageStockChangesTask = this.manageStockChanges(
-        order,
-        order.orderItems,
-        order.paymentDetail.paymentTypeId,
+    await inngest.send({
+      name: 'order.status.change',
+      data: {
+        orderId: order.id,
         currentStatus,
         newStatus,
-        tx,
-      );
-
-      Promise.all([updateOrderTask, manageStockChangesTask]);
-      const orderUpdated = await updateOrderTask;
-      return orderUpdated;
+      },
     });
-    const orderDetails = await this.findOrderByIdAsync(id);
-
-    if (newStatus !== OrderStatusId.Finished) {
-      console.log('Sending status change email...');
-      await this.sendOrderStatusChangeEmailAsync(orderDetails, newStatus);
-      console.log('Status change email sent.');
-    }
-
-    if (newStatus === OrderStatusId.Finished) {
-      const createBill = await this.unitOfWork.execute(
-        async (tx: Prisma.TransactionClient) => {
-          const bill = await this.billRepository.createBillAsync(
-            {
-              beforeTaxPrice: order.totalAmount,
-              totalPrice: order.totalAmount,
-              orderId: order.id,
-            },
-            tx,
-          );
-
-          const billItemsToCreate = order.orderItems.map((item) => ({
-            subTotalPrice: item.subtotalPrice,
-            billId: bill.id,
-          }));
-
-          await this.billItemRepository.createManyBillItemAsync(
-            billItemsToCreate,
-            tx,
-          );
-
-          return bill;
-        },
-      );
-      const billReportGenerationDataDto: BillReportGenerationDataDto = {
-        billId: createBill.id,
-        orderId: order.id,
-        clientCompanyName: order.client.companyName,
-        clientAddress: `${order.client.address.street} ${order.client.address.streetNumber}`,
-        clientDocumentType: order.client.user.documentType,
-        clientDocumentNumber: order.client.user.documentNumber,
-        clientTaxCategory: order.client.taxCategory.name,
-        deliveryMethod:
-          deliveryMethodTranslations[order.deliveryMethod.name] ||
-          order.deliveryMethod.name,
-        totalAmount: order.totalAmount,
-        orderItems: order.orderItems.map((item) => ({
-          productName: item.product.name,
-          unitPrice: item.unitPrice,
-          quantity: item.quantity,
-          subtotalPrice: item.subtotalPrice,
-        })),
-        paymentType:
-          PaymentTypeTranslations[order.paymentDetail.paymentType.name] ||
-          order.paymentDetail.paymentType.name,
-        observation: '',
-        createdAt: new Date(),
-      };
-      this.sendBillByEmailAsync(
-        orderDetails,
-        newStatus,
-        billReportGenerationDataDto,
-        order.client.user.email,
-      );
-    }
   }
 
   async validateOrderItemsAsync(productIds: number[]) {
@@ -292,8 +215,8 @@ export class OrderService {
     }
   }
 
-  private async manageStockChanges(
-    order: Order,
+  public async manageStockChangesAsync(
+    order: Prisma.OrderGetPayload<{ select: { id: true } }>,
     orderItems: { productId: number; quantity: number }[],
     paymentTypeId: PaymentTypeEnum | null,
     oldStatus: OrderStatusId | null,
@@ -479,7 +402,7 @@ export class OrderService {
     );
   }
 
-  async findOrderByIdAsync(id: number) {
+  async findOrderByIdAsync(id: number): Promise<OrderDetailsDto> {
     const order = await this.orderRepository.findOrderByIdAsync(id);
     if (!order) {
       throw new NotFoundException(`Order with ID ${id} does not exist.`);
