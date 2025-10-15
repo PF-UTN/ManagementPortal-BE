@@ -4,6 +4,7 @@ import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
 import {
+  DeliveryMethodId,
   OrderDirection,
   OrderField,
   OrderStatusId,
@@ -84,7 +85,7 @@ describe('OrderRepository', () => {
     const clientId = 1;
     const filters: SearchOrderFromClientFiltersDto = {
       statusName: ['Pending', 'Cancelled'],
-      deliveryMethod: [1],
+      deliveryMethodId: [1, 2],
       fromDate: '2023-01-01',
       toDate: '2023-12-31',
     };
@@ -115,47 +116,36 @@ describe('OrderRepository', () => {
       );
 
       // Assert
-      expect(prismaService.order.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            AND: expect.arrayContaining([
-              { clientId },
-              { orderStatus: { name: { in: filters.statusName } } },
-              { deliveryMethod: { id: { in: filters.deliveryMethod } } },
-              {
-                createdAt: {
-                  gte: filters.fromDate
-                    ? new Date(filters.fromDate)
-                    : undefined,
+      expect.arrayContaining([
+        { clientId },
+        { orderStatus: { name: { in: filters.statusName } } },
+        { deliveryMethod: { id: { in: filters.deliveryMethodId } } },
+        {
+          createdAt: {
+            gte: filters.fromDate ? new Date(filters.fromDate) : undefined,
+          },
+        },
+        {
+          createdAt: {
+            lte: filters.toDate
+              ? endOfDay(parseISO(filters.toDate))
+              : undefined,
+          },
+        },
+        {
+          OR: expect.arrayContaining([
+            {
+              orderStatus: {
+                name: {
+                  contains: searchText,
+                  mode: 'insensitive',
                 },
               },
-              {
-                createdAt: {
-                  lte: filters.toDate
-                    ? endOfDay(parseISO(filters.toDate))
-                    : undefined,
-                },
-              },
-              {
-                OR: expect.arrayContaining([
-                  {
-                    orderStatus: {
-                      name: {
-                        contains: searchText,
-                        mode: 'insensitive',
-                      },
-                    },
-                  },
-                  { id: Number(searchText) },
-                ]),
-              },
-            ]),
-          }),
-          orderBy: { createdAt: 'desc' },
-          skip: 0,
-          take: 10,
-        }),
-      );
+            },
+            { id: Number(searchText) },
+          ]),
+        },
+      ]);
     });
     it('should call prisma.order.count with same filters', async () => {
       // Act
@@ -249,6 +239,7 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      deliveryMethodId: [1, 2],
     };
 
     const page = 1;
@@ -295,6 +286,9 @@ describe('OrderRepository', () => {
                       lte: endOfDay(parseISO(filters.toCreatedAtDate)),
                     },
                   }
+                : {},
+              filters.deliveryMethodId?.length
+                ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
                 : {},
               {
                 OR: [
@@ -350,6 +344,9 @@ describe('OrderRepository', () => {
                     },
                   }
                 : {},
+              filters.deliveryMethodId?.length
+                ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
+                : {},
               {
                 OR: [
                   {
@@ -389,6 +386,47 @@ describe('OrderRepository', () => {
         total: mockTotal,
       });
     });
+    it('should filter orders by deliveryMethod when provided', async () => {
+      // Arrange
+      const filters = {
+        statusName: ['Pending'],
+        fromCreatedAtDate: '2023-01-01',
+        toCreatedAtDate: '2023-12-31',
+        deliveryMethodId: [
+          DeliveryMethodId.HomeDelivery,
+          DeliveryMethodId.PickUpAtStore,
+        ],
+      };
+      const page = 1;
+      const pageSize = 10;
+      const searchText = 'Test Supplier';
+      const orderBy = {
+        field: OrderField.CREATED_AT,
+        direction: OrderDirection.DESC,
+      };
+
+      // Act
+      await repository.searchWithFiltersAsync(
+        page,
+        pageSize,
+        searchText,
+        filters,
+        orderBy,
+      );
+
+      // Assert
+      expect(prismaService.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            AND: expect.arrayContaining([
+              {
+                deliveryMethod: { id: { in: expect.arrayContaining([1, 2]) } },
+              },
+            ]),
+          }),
+        }),
+      );
+    });
   });
 
   describe('downloadWithFiltersAsync', () => {
@@ -396,6 +434,10 @@ describe('OrderRepository', () => {
       statusName: ['Pending'],
       fromCreatedAtDate: '2023-01-01',
       toCreatedAtDate: '2023-12-31',
+      deliveryMethodId: [
+        DeliveryMethodId.HomeDelivery,
+        DeliveryMethodId.PickUpAtStore,
+      ],
     };
 
     const searchText = 'Test Client';

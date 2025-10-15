@@ -55,8 +55,8 @@ export class OrderRepository {
             filters.statusName?.length
               ? { orderStatus: { name: { in: filters.statusName } } }
               : {},
-            filters.deliveryMethod?.length
-              ? { deliveryMethod: { id: { in: filters.deliveryMethod } } }
+            filters.deliveryMethodId?.length
+              ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
               : {},
             filters.fromDate
               ? { createdAt: { gte: new Date(filters.fromDate) } }
@@ -98,8 +98,8 @@ export class OrderRepository {
             filters.statusName?.length
               ? { orderStatus: { name: { in: filters.statusName } } }
               : {},
-            filters.deliveryMethod?.length
-              ? { deliveryMethod: { id: { in: filters.deliveryMethod } } }
+            filters.deliveryMethodId?.length
+              ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
               : {},
             filters.fromDate
               ? { createdAt: { gte: new Date(filters.fromDate) } }
@@ -191,6 +191,9 @@ export class OrderRepository {
                   },
                 }
               : {},
+            filters.deliveryMethodId?.length
+              ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
+              : {},
             {
               OR: [
                 {
@@ -247,6 +250,9 @@ export class OrderRepository {
                     lte: endOfDay(parseISO(filters.toCreatedAtDate)),
                   },
                 }
+              : {},
+            filters.deliveryMethodId?.length
+              ? { deliveryMethod: { id: { in: filters.deliveryMethodId } } }
               : {},
             {
               OR: [
