@@ -437,11 +437,18 @@ export class OrderRepository {
             paymentTypeId: true,
           },
         },
+        deliveryMethod: {
+          select: {
+            name: true,
+          }
+        },
         client: {
           include: {
             user: {
               select: {
                 email: true,
+                documentType: true,
+                documentNumber: true,
               },
             },
           },
