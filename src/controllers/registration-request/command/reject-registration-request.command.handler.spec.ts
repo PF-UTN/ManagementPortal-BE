@@ -173,6 +173,6 @@ describe('RejectRegistrationRequestCommandHandler', () => {
     // Assert
     expect(
       mailingServiceMock.sendRegistrationRequestRejectedEmailAsync,
-    ).toHaveBeenCalledWith('test@example.com', 'Test note');
+    ).toHaveBeenCalledWith('test@example.com', expect.any(String), 'Test note');
   });
 });
