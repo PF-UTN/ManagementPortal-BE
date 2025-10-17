@@ -7,6 +7,7 @@ import { MailingService } from '@mp/common/services';
 import { RejectRegistrationRequestCommand } from './reject-registration-request.command';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
+import { rejectRegistrationRequestHtmlReport } from './../../../../libs/common/src/services/report/document/reject-registration-request-html.report';
 
 @CommandHandler(RejectRegistrationRequestCommand)
 export class RejectRegistrationRequestCommandHandler
@@ -55,8 +56,16 @@ export class RejectRegistrationRequestCommandHandler
       );
     }
 
+    const htmlBody = rejectRegistrationRequestHtmlReport({
+      applicantName: `${user.firstName} ${user.lastName}`,
+      requestId: updatedRegistrationRequest.id,
+      rejectionDate: new Date(),
+      rejectionReason: command.rejectRegistrationRequestDto.note,
+    });
+
     await this.mailingService.sendRegistrationRequestRejectedEmailAsync(
       user.email,
+      htmlBody,
       command.rejectRegistrationRequestDto.note!,
     );
   }

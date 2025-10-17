@@ -38,6 +38,23 @@ export class MailingService {
     return await this.transporter.sendMail(mailOptions);
   }
 
+  async sendRegistrationRequestStatusMailAsync(
+    to: string,
+    subject: string,
+    text: string,
+    htmlBody: string,
+  ) {
+    const mailOptions = {
+      from: MAIL_FROM,
+      to,
+      subject,
+      text,
+      html: htmlBody,
+    };
+
+    return await this.transporter.sendMail(mailOptions);
+  }
+
   async sendNewStatusMailAsync(to: string, subject: string, htmlBody: string) {
     const mailOptions = {
       from: MAIL_FROM,
@@ -49,18 +66,35 @@ export class MailingService {
     return await this.transporter.sendMail(mailOptions);
   }
 
-  async sendRegistrationRequestApprovedEmailAsync(to: string) {
+  async sendRegistrationRequestApprovedEmailAsync(
+    to: string,
+    htmlBody: string,
+  ) {
     const subject = 'Solicitud de Registro Aprobada';
     const text = 'Tu solicitud de registro ha sido aprobada.';
 
-    return await this.sendMailAsync(to, subject, text);
+    return await this.sendRegistrationRequestStatusMailAsync(
+      to,
+      subject,
+      text,
+      htmlBody,
+    );
   }
 
-  async sendRegistrationRequestRejectedEmailAsync(to: string, note: string) {
+  async sendRegistrationRequestRejectedEmailAsync(
+    to: string,
+    htmlBody: string,
+    note: string,
+  ) {
     const subject = 'Solicitud de Registro Rechazada';
     const text = `Tu solicitud de registro ha sido rechazada por el siguiente motivo: ${note}. Si crees que se trata de un error, por favor contactate con nosotros al email: ${SUPPORT_EMAIL}`;
 
-    return await this.sendMailAsync(to, subject, text);
+    return await this.sendRegistrationRequestStatusMailAsync(
+      to,
+      subject,
+      text,
+      htmlBody,
+    );
   }
 
   async sendPasswordResetEmailAsync(to: string, url: string) {
