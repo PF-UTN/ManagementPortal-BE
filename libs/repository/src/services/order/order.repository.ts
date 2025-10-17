@@ -426,6 +426,17 @@ export class OrderRepository {
         shipmentId,
       },
       include: {
+        orderItems: {
+          select: {
+            productId: true,
+            quantity: true,
+          },
+        },
+        paymentDetail: {
+          select: {
+            paymentTypeId: true,
+          },
+        },
         client: {
           include: {
             user: {
@@ -438,6 +449,7 @@ export class OrderRepository {
       },
     });
   }
+  
   async updateOrderAsync(
     id: number,
     data: Prisma.OrderUncheckedUpdateInput,
