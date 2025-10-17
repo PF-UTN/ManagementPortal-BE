@@ -10,9 +10,11 @@ import {
   BillRepository,
   OrderRepository,
   PrismaUnitOfWork,
+  ShipmentRepository,
 } from '../../libs/repository/src';
 import { processMercadoPagoWebhook } from '../controllers/inngest/mercadopago.function';
 import { processOrderStatusChange } from '../controllers/inngest/order-status.function';
+import { processSendShipment } from '../controllers/inngest/send-shipment.function';
 import { OrderService } from '../domain/service/order/order.service';
 import { MercadoPagoWebhookService } from '../services/mercadopago-webhook.service';
 
@@ -25,6 +27,7 @@ export const IngestConfiguration = (app: INestApplication) => {
   const webhookService = app.get(MercadoPagoWebhookService);
   const orderService = app.get(OrderService);
   const orderRepository = app.get(OrderRepository);
+  const shipmentRepository = app.get(ShipmentRepository);
   const billItemRepository = app.get(BillItemRepository);
   const billRepository = app.get(BillRepository);
   const unitOfWork = app.get(PrismaUnitOfWork);
@@ -41,6 +44,12 @@ export const IngestConfiguration = (app: INestApplication) => {
       orderRepository,
       billItemRepository,
       billRepository,
+      unitOfWork,
+    }),
+    processSendShipment({
+      orderService,
+      orderRepository,
+      shipmentRepository,
       unitOfWork,
     }),
   ];

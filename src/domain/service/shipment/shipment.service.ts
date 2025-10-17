@@ -27,6 +27,7 @@ import {
   VehicleUsageRepository,
 } from '@mp/repository';
 
+import { inngest } from '../../../configuration';
 import { DownloadShipmentQuery } from '../../../controllers/shipment/query/download-shipment.query';
 import { SearchShipmentQuery } from '../../../controllers/shipment/query/search-shipment.query';
 import { GoogleMapsRoutingService } from '../../../services/google-maps-routing.service';
@@ -131,25 +132,14 @@ export class ShipmentService {
       );
     }
 
-    const orderIds = shipment.orders.map((order) => order.id);
-
-    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const orderStatusUpdateTask =
-        this.orderRepository.updateManyOrderStatusAsync(
-          orderIds,
-          OrderStatusId.Shipped,
-          tx,
-        );
-      const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
-        id,
-        { statusId: ShipmentStatusId.Shipped },
-        tx,
-      );
-
-      await Promise.all([orderStatusUpdateTask, shipmentUpdateTask]);
+    await inngest.send({
+      name: 'send.shipment',
+      data: {
+        shipment,
+        newStatus: OrderStatusId.Shipped,
+        currentStatus: OrderStatusId.Prepared,
+      },
     });
-
-    this.sendShipmentOrdersStatusEmail(shipment.orders, OrderStatusId.Shipped);
   }
 
   async finishShipmentAsync(id: number, finishShipmentDto: FinishShipmentDto) {
