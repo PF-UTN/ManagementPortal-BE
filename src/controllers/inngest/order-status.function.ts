@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Decimal } from '@prisma/client/runtime/library';
 
 import {
@@ -63,26 +64,15 @@ export const processOrderStatusChange = (dependencies: {
       });
 
       // 🧩 STEP 3 — Get order
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const orderDetails: any = await step.run(
-        'load-order-details',
-        async () => {
-          return await orderService.findOrderByIdAsync(orderId);
-        },
-      );
-
-      if (
-        orderDetails?.createdAt &&
-        typeof orderDetails.createdAt === 'string'
-      ) {
-        orderDetails.createdAt = new Date(orderDetails.createdAt);
-      }
+      const orderDetails = (await step.run('load-order-details', async () => {
+        return await orderService.findOrderByIdAsync(orderId);
+      })) as any as OrderDetailsDto;
 
       // 🧩 STEP 4 — Conditional flow
       if (newStatus !== OrderStatusId.Finished) {
         await step.run('send-status-change-email', async () => {
           await orderService.sendOrderStatusChangeEmailAsync(
-            orderDetails as OrderDetailsDto,
+            orderDetails,
             newStatus,
           );
         });
