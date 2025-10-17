@@ -1,5 +1,7 @@
 import { DOG_URL } from '@mp/common/constants';
 
+import { SUPPORT_EMAIL } from '../../mailing/mailing.constants';
+
 export function rejectRegistrationRequestHtmlReport(params: {
   applicantName: string;
   requestId: number | string;
@@ -11,7 +13,7 @@ export function rejectRegistrationRequestHtmlReport(params: {
     applicantName,
     requestId,
     rejectionReason,
-    contactEmail = 'managementportal2025@gmail.com',
+    contactEmail = SUPPORT_EMAIL,
     rejectionDate,
   } = params;
 
