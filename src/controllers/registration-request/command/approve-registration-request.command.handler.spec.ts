@@ -197,6 +197,6 @@ describe('ApproveRegistrationRequestCommandHandler', () => {
     expect(userServiceMock.findByIdAsync).toHaveBeenCalledWith(123);
     expect(
       mailingServiceMock.sendRegistrationRequestApprovedEmailAsync,
-    ).toHaveBeenCalledWith('test@example.com');
+    ).toHaveBeenCalledWith('test@example.com', expect.any(String));
   });
 });

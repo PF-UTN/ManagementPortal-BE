@@ -7,6 +7,7 @@ import { MailingService } from '@mp/common/services';
 import { ApproveRegistrationRequestCommand } from './approve-registration-request.command';
 import { RegistrationRequestDomainService } from '../../../domain/service/registration-request/registration-request-domain.service';
 import { UserService } from '../../../domain/service/user/user.service';
+import { approveRegistrationRequestHtmlReport } from './../../../../libs/common/src/services/report/document/approve-registration-request-html.report';
 
 @CommandHandler(ApproveRegistrationRequestCommand)
 export class ApproveRegistrationRequestCommandHandler
@@ -54,9 +55,15 @@ export class ApproveRegistrationRequestCommandHandler
         `No se puede encontrar un usuario con ID ${updatedRegistrationRequest.userId}.`,
       );
     }
+    const htmlBody = approveRegistrationRequestHtmlReport({
+      applicantName: `${user.firstName} ${user.lastName}`,
+      requestId: updatedRegistrationRequest.id,
+      approvalDate: new Date(),
+    });
 
     await this.mailingService.sendRegistrationRequestApprovedEmailAsync(
       user.email,
+      htmlBody,
     );
   }
 }

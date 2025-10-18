@@ -123,6 +123,44 @@ describe('RejectRegistrationRequestCommandHandler', () => {
     });
   });
 
+  it('should throw NotFoundException if user is not found after updating the request', async () => {
+    // Arrange
+    jest
+      .spyOn(registrationRequestServiceMock, 'findRegistrationRequestByIdAsync')
+      .mockResolvedValue({
+        id: 42,
+        statusId: 1,
+        status: { id: 1, code: RegistrationRequestStatus.Pending },
+        userId: 999,
+        note: 'Test note',
+        requestDate: new Date(),
+      });
+
+    jest
+      .spyOn(registrationRequestStatusServiceMock, 'findByCodeAsync')
+      .mockResolvedValue({ id: 3, code: RegistrationRequestStatus.Rejected });
+
+    jest
+      .spyOn(
+        registrationRequestServiceMock,
+        'updateRegistrationRequestStatusAsync',
+      )
+      .mockResolvedValue({
+        id: 42,
+        statusId: 3,
+        userId: 999,
+      });
+
+    jest.spyOn(userServiceMock, 'findByIdAsync').mockResolvedValue(null);
+
+    const command = new RejectRegistrationRequestCommand(42, {
+      note: 'Reason',
+    });
+
+    // Act / Assert
+    await expect(handler.execute(command)).rejects.toThrow(NotFoundException);
+  });
+
   it('should send email to user when registration request is rejected', async () => {
     // Arrange
     jest
@@ -173,6 +211,6 @@ describe('RejectRegistrationRequestCommandHandler', () => {
     // Assert
     expect(
       mailingServiceMock.sendRegistrationRequestRejectedEmailAsync,
-    ).toHaveBeenCalledWith('test@example.com', 'Test note');
+    ).toHaveBeenCalledWith('test@example.com', expect.any(String), 'Test note');
   });
 });
