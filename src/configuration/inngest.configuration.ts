@@ -12,6 +12,7 @@ import {
   PrismaUnitOfWork,
   ShipmentRepository,
 } from '../../libs/repository/src';
+import { processCreateShipment } from '../controllers/inngest/create-shipment.function';
 import { processMercadoPagoWebhook } from '../controllers/inngest/mercadopago.function';
 import { processOrderStatusChange } from '../controllers/inngest/order-status.function';
 import { processSendShipment } from '../controllers/inngest/send-shipment.function';
@@ -47,6 +48,12 @@ export const IngestConfiguration = (app: INestApplication) => {
       unitOfWork,
     }),
     processSendShipment({
+      orderService,
+      orderRepository,
+      shipmentRepository,
+      unitOfWork,
+    }),
+    processCreateShipment({
       orderService,
       orderRepository,
       shipmentRepository,

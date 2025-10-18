@@ -73,34 +73,13 @@ export class ShipmentService {
       orderIds: shipmentCreationDto.orderIds,
     };
 
-    const shipment = await this.unitOfWork.execute(
-      async (tx: Prisma.TransactionClient) => {
-        const orderStatusUpdateTask =
-          this.orderRepository.updateManyOrderStatusAsync(
-            shipmentCreationDto.orderIds,
-            OrderStatusId.InPreparation,
-            tx,
-          );
-        const shipmentCreationTask =
-          this.shipmentRepository.createShipmentAsync(
-            shipmentCreationDataDto,
-            tx,
-          );
-
-        const [, shipment] = await Promise.all([
-          orderStatusUpdateTask,
-          shipmentCreationTask,
-        ]);
-
-        return shipment;
+    await inngest.send({
+      name: 'create.shipment',
+      data: {
+        shipment: shipmentCreationDataDto,
+        newStatus: OrderStatusId.InPreparation,
       },
-    );
-
-    const orders = await this.orderRepository.findOrdersByShipmentIdAsync(
-      shipment.id,
-    );
-
-    this.sendShipmentOrdersStatusEmail(orders, OrderStatusId.InPreparation);
+    });
   }
 
   async sendShipmentAsync(id: number) {
