@@ -4,12 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 
 import {
   DeliveryMethodId,
   OrderStatusId,
-  orderStatusTranslations,
   ShipmentStatusId,
 } from '@mp/common/constants';
 import {
@@ -18,12 +16,10 @@ import {
   ShipmentCreationDto,
   VehicleUsageCreationDataDto,
 } from '@mp/common/dtos';
-import { MailingService } from '@mp/common/services';
 import {
   ShipmentRepository,
   VehicleRepository,
   OrderRepository,
-  PrismaUnitOfWork,
   VehicleUsageRepository,
 } from '@mp/repository';
 
@@ -39,8 +35,6 @@ export class ShipmentService {
     private readonly vehicleRepository: VehicleRepository,
     private readonly orderRepository: OrderRepository,
     private readonly vehicleUsageRepository: VehicleUsageRepository,
-    private readonly mailingService: MailingService,
-    private readonly unitOfWork: PrismaUnitOfWork,
     private readonly googleMapsRoutingService: GoogleMapsRoutingService,
   ) {}
 
@@ -190,95 +184,15 @@ export class ShipmentService {
       kmUsed: finishShipmentDto.odometer - Number(lastOdometer),
     };
 
-    const orders = await this.orderRepository.findOrdersByShipmentIdAsync(id);
-
-    await this.unitOfWork.execute(async (tx: Prisma.TransactionClient) => {
-      const orderUpdateTasks = finishShipmentDto.orders.map((order) => {
-        const data: Prisma.OrderUncheckedUpdateInput = {
-          orderStatusId: order.orderStatusId,
-        };
-
-        if (order.orderStatusId === OrderStatusId.Pending) {
-          data.shipmentId = null;
-        }
-
-        return this.orderRepository.updateOrderAsync(order.orderId, data, tx);
-      });
-
-      const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
-        id,
-        {
-          statusId: ShipmentStatusId.Finished,
-          finishedAt: finishShipmentDto.finishedAt,
-          effectiveKm: finishShipmentDto.odometer - Number(lastOdometer),
-        },
-        tx,
-      );
-
-      const vehicleUsageCreationTask =
-        this.vehicleUsageRepository.createVehicleUsageAsync(
-          vehicleUsageCreationDataDto,
-          tx,
-        );
-
-      const vehicleUpdateTask =
-        this.vehicleRepository.updateVehicleKmTraveledAsync(
-          shipment.vehicleId,
-          finishShipmentDto.odometer,
-          tx,
-        );
-
-      await Promise.all([
-        ...orderUpdateTasks,
-        shipmentUpdateTask,
-        vehicleUsageCreationTask,
-        vehicleUpdateTask,
-      ]);
+    await inngest.send({
+      name: 'finish.shipment',
+      data: {
+        shipment,
+        finishShipmentDto,
+        lastOdometer,
+        vehicleUsageCreationDataDto,
+      },
     });
-
-    const finishedOrders = orders.filter((o) =>
-      finishShipmentDto.orders.some(
-        (dto) =>
-          dto.orderId === o.id && dto.orderStatusId === OrderStatusId.Finished,
-      ),
-    );
-
-    const pendingOrders = orders.filter((o) =>
-      finishShipmentDto.orders.some(
-        (dto) =>
-          dto.orderId === o.id && dto.orderStatusId === OrderStatusId.Pending,
-      ),
-    );
-
-    if (finishedOrders.length > 0) {
-      await this.sendShipmentOrdersStatusEmail(
-        finishedOrders,
-        OrderStatusId.Finished,
-      );
-    }
-
-    if (pendingOrders.length > 0) {
-      await this.sendShipmentOrdersStatusEmail(
-        pendingOrders,
-        OrderStatusId.Pending,
-      );
-    }
-  }
-
-  async sendShipmentOrdersStatusEmail(
-    orders: Prisma.OrderGetPayload<{
-      include: { client: { include: { user: { select: { email: true } } } } };
-    }>[],
-    newStatus: OrderStatusId,
-  ) {
-    for (const order of orders) {
-      const email = order.client?.user?.email;
-
-      const subject = 'Actualización de estado de su pedido';
-      const text = `Su pedido #${order.id} se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`;
-
-      this.mailingService.sendMailAsync(email, subject, text);
-    }
   }
 
   async getOrCreateShipmentRoute(shipmentId: number) {

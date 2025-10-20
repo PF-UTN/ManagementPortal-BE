@@ -429,18 +429,30 @@ export class OrderRepository {
         orderItems: {
           select: {
             productId: true,
+            product: {
+              select: {
+                name: true,
+              },
+            },
             quantity: true,
+            unitPrice: true,
+            subtotalPrice: true,
           },
         },
         paymentDetail: {
           select: {
             paymentTypeId: true,
+            paymentType: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         deliveryMethod: {
           select: {
             name: true,
-          }
+          },
         },
         client: {
           include: {
@@ -451,12 +463,23 @@ export class OrderRepository {
                 documentNumber: true,
               },
             },
+            address: {
+              select: {
+                street: true,
+                streetNumber: true,
+              },
+            },
+            taxCategory: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
     });
   }
-  
+
   async updateOrderAsync(
     id: number,
     data: Prisma.OrderUncheckedUpdateInput,
