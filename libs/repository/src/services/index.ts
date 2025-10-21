@@ -27,3 +27,4 @@ export * from './bill/bill.repository';
 export * from './bill-item/bill-item.repository';
 export * from './vehicle-usage/vehicle-usage.repository';
 export * from './notification/notification.repository';
+export * from './cart/cart.repository';
