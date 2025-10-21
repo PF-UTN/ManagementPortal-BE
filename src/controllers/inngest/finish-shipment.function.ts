@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
+import { addMonths, subMonths } from 'date-fns';
 
 import { mapOrderToOrderDetailsDto } from '@mp/common/helpers';
 
@@ -13,14 +14,16 @@ import {
 import {
   BillItemRepository,
   BillRepository,
+  MaintenancePlanItemRepository,
+  NotificationRepository,
   OrderRepository,
   PrismaUnitOfWork,
   ShipmentRepository,
+  UserRepository,
   VehicleRepository,
   VehicleUsageRepository,
 } from '../../../libs/repository/src';
 import { inngest } from '../../configuration';
-import { NotificationService } from '../../domain/service/notification/notification.service';
 import { OrderService } from '../../domain/service/order/order.service';
 
 export const processFinishShipment = (dependencies: {
@@ -31,7 +34,9 @@ export const processFinishShipment = (dependencies: {
   vehicleRepository: VehicleRepository;
   billRepository: BillRepository;
   billItemRepository: BillItemRepository;
-  notificationService: NotificationService;
+  maintenancePlanItemRepository: MaintenancePlanItemRepository;
+  userRepository: UserRepository;
+  notificationRepository: NotificationRepository;
   unitOfWork: PrismaUnitOfWork;
 }) => {
   return inngest.createFunction(
@@ -46,7 +51,9 @@ export const processFinishShipment = (dependencies: {
         vehicleRepository,
         billItemRepository,
         billRepository,
-        notificationService,
+        maintenancePlanItemRepository,
+        userRepository,
+        notificationRepository,
         unitOfWork,
       } = dependencies;
       const {
@@ -80,8 +87,8 @@ export const processFinishShipment = (dependencies: {
       // 🧩 STEP 3 — Perform unit of work (status update + stock changes + shipment update + vehicle update + vehicleUsage creation)
       await step.run('update-order-stock-and-shipment', async () => {
         return unitOfWork.execute(async (tx) => {
-          const orderUpdateTasks = finishShipmentDto.orders.map(
-            (order: any) => {
+          const orderUpdategenerateMaintenanceNotificationsTasks =
+            finishShipmentDto.orders.map((order: any) => {
               const data: Prisma.OrderUncheckedUpdateInput = {
                 orderStatusId: order.orderStatusId,
               };
@@ -91,22 +98,22 @@ export const processFinishShipment = (dependencies: {
               }
 
               return orderRepository.updateOrderAsync(order.orderId, data, tx);
-            },
-          );
+            });
 
-          const manageStockChangesTasks = shipment.orders.map((order: any) => {
-            const oldStatus = order.orderStatusId;
-            const newStatus = newOrderStatusMap.get(order.id);
+          const manageStockChangesgenerateMaintenanceNotificationsTasks =
+            shipment.orders.map((order: any) => {
+              const oldStatus = order.orderStatusId;
+              const newStatus = newOrderStatusMap.get(order.id);
 
-            return orderService.manageStockChangesAsync(
-              order,
-              order.orderItems,
-              order.paymentDetail.paymentTypeId,
-              oldStatus,
-              newStatus!,
-              tx,
-            );
-          });
+              return orderService.manageStockChangesAsync(
+                order,
+                order.orderItems,
+                order.paymentDetail.paymentTypeId,
+                oldStatus,
+                newStatus!,
+                tx,
+              );
+            });
 
           const shipmentUpdateTask = shipmentRepository.updateShipmentAsync(
             shipment.id,
@@ -132,8 +139,8 @@ export const processFinishShipment = (dependencies: {
             );
 
           await Promise.all([
-            ...orderUpdateTasks,
-            ...manageStockChangesTasks,
+            ...orderUpdategenerateMaintenanceNotificationsTasks,
+            ...manageStockChangesgenerateMaintenanceNotificationsTasks,
             shipmentUpdateTask,
             vehicleUsageCreationTask,
             vehicleUpdateTask,
@@ -228,10 +235,120 @@ export const processFinishShipment = (dependencies: {
         }),
       );
 
-      // 🧩 STEP 5 — Generate maintenance notifications
-      await step.run('generate-maintenance-notifications', async () => {
-        await notificationService.generateMaintenanceNotificationsAsync();
+      // 🧩 STEP 5 — Find admins
+      const findAdminstask = step.run('find-admins', async () => {
+        const admins = await userRepository.findAdminsAsync();
+        return admins;
       });
+
+      // 🧩 STEP 6 — Find maintenancePlanItems
+      const findMaintenancePlanItemsTask = step.run(
+        'find-maintenance-plan-items',
+        async () => {
+          return await maintenancePlanItemRepository.findAllWithRelationsAsync();
+        },
+      );
+
+      const [admins, maintenancePlanItems] = await Promise.all([
+        findAdminstask,
+        findMaintenancePlanItemsTask,
+      ]);
+
+      // 🧩 STEP 7 — Generate notifications
+      await step.run('generate-maintenance-notifications', async () => {
+        const generateMaintenanceNotificationsTasks = [];
+
+        for (const maintenancePlanItem of maintenancePlanItems) {
+          const generateMaintenanceNotificationTask = (async () => {
+            const { vehicle, maintenanceItem, kmInterval, timeInterval } =
+              maintenancePlanItem;
+            const lastMaintenance = maintenancePlanItem.maintenances[0];
+            const currentKm = vehicle.kmTraveled;
+            const currentDate = new Date();
+
+            const lastKm = lastMaintenance ? lastMaintenance.kmPerformed : 0;
+            const lastDate = lastMaintenance
+              ? lastMaintenance.date
+              : vehicle.createdAt;
+
+            let nextKm: number | null = null;
+            let nextDate: Date | null = null;
+            let kmThreshold: number | null = null;
+            let dateThreshold: Date | null = null;
+
+            if (kmInterval !== null) {
+              nextKm = lastKm + kmInterval;
+              kmThreshold = nextKm - kmInterval * 0.05;
+            }
+
+            if (timeInterval !== null) {
+              nextDate = addMonths(lastDate, timeInterval);
+              dateThreshold = subMonths(nextDate, timeInterval * 0.05);
+            }
+
+            let shouldNotify = false;
+
+            if (
+              kmInterval !== null &&
+              nextKm !== null &&
+              kmThreshold !== null
+            ) {
+              if (currentKm >= kmThreshold) {
+                shouldNotify = true;
+              }
+            }
+
+            if (
+              timeInterval !== null &&
+              nextDate !== null &&
+              dateThreshold !== null
+            ) {
+              if (currentDate >= dateThreshold) {
+                shouldNotify = true;
+              }
+            }
+
+            if (!shouldNotify) return;
+
+            let message: string;
+
+            if (kmInterval !== null && timeInterval !== null) {
+              message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} cuando se llegue a los ${nextKm} km o en la fecha ${nextDate!.toLocaleDateString()}.`;
+            } else if (kmInterval !== null) {
+              message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} cuando se llegue a los ${nextKm} km.`;
+            } else {
+              message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} en la fecha ${nextDate!.toLocaleDateString()}.`;
+            }
+
+            for (const admin of admins) {
+              const generateMaintenanceNotificationTask = (async () => {
+                const alreadyExists =
+                  await notificationRepository.existsSimilarNotificationAsync(
+                    admin.id,
+                    message,
+                  );
+
+                if (!alreadyExists) {
+                  return notificationRepository.createAsync(admin.id, message);
+                }
+              })();
+
+              generateMaintenanceNotificationsTasks.push(
+                generateMaintenanceNotificationTask,
+              );
+            }
+
+            await Promise.all(generateMaintenanceNotificationsTasks);
+          })();
+
+          generateMaintenanceNotificationsTasks.push(
+            generateMaintenanceNotificationTask,
+          );
+        }
+        await Promise.all(generateMaintenanceNotificationsTasks);
+      });
+
+      // 🧩 STEP 6 — Create notifications in database
 
       return { results };
     },
