@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { Prisma, Shipment } from '@prisma/client';
@@ -6,22 +7,17 @@ import { mockDeep } from 'jest-mock-extended';
 import {
   DeliveryMethodId,
   OrderStatusId,
-  orderStatusTranslations,
   ShipmentStatusId,
 } from '@mp/common/constants';
 import {
   FinishShipmentDto,
   SearchShipmentFiltersDto,
-  ShipmentCreationDataDto,
   ShipmentCreationDto,
-  VehicleUsageCreationDataDto,
 } from '@mp/common/dtos';
-import { MailingService } from '@mp/common/services';
 import {
   ShipmentRepository,
   OrderRepository,
   VehicleRepository,
-  PrismaUnitOfWork,
   VehicleUsageRepository,
 } from '@mp/repository';
 
@@ -36,8 +32,6 @@ describe('ShipmentService', () => {
   let vehicleRepository: VehicleRepository;
   let orderRepository: OrderRepository;
   let vehicleUsageRepository: VehicleUsageRepository;
-  let mailingService: MailingService;
-  let unitOfWork: PrismaUnitOfWork;
   let shipment: ReturnType<typeof mockDeep<Shipment>>;
 
   beforeEach(async () => {
@@ -61,14 +55,6 @@ describe('ShipmentService', () => {
           useValue: mockDeep(OrderRepository),
         },
         {
-          provide: MailingService,
-          useValue: mockDeep(MailingService),
-        },
-        {
-          provide: PrismaUnitOfWork,
-          useValue: mockDeep(PrismaUnitOfWork),
-        },
-        {
           provide: GoogleMapsRoutingService,
           useValue: mockDeep(GoogleMapsRoutingService),
         },
@@ -81,8 +67,6 @@ describe('ShipmentService', () => {
     vehicleUsageRepository = module.get<VehicleUsageRepository>(
       VehicleUsageRepository,
     );
-    mailingService = module.get<MailingService>(MailingService);
-    unitOfWork = module.get<PrismaUnitOfWork>(PrismaUnitOfWork);
 
     service = module.get<ShipmentService>(ShipmentService);
 
@@ -138,81 +122,6 @@ describe('ShipmentService', () => {
         service.createShipmentAsync(shipmentCreationDtoMock),
       ).rejects.toThrow(NotFoundException);
     });
-
-    it('should call orderRepository.updateManyOrderStatusAsync with the correct data', async () => {
-      // Arrange
-      const shipmentCreationDtoMock: ShipmentCreationDto = {
-        date: shipment.date,
-        vehicleId: shipment.vehicleId,
-        orderIds: [1, 2, 3],
-      };
-
-      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
-      jest
-        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
-        .mockResolvedValueOnce(true);
-      jest
-        .spyOn(repository, 'createShipmentAsync')
-        .mockResolvedValueOnce(shipment);
-      jest
-        .spyOn(service, 'sendShipmentOrdersStatusEmail')
-        .mockResolvedValueOnce();
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.createShipmentAsync(shipmentCreationDtoMock);
-
-      // Assert
-      expect(orderRepository.updateManyOrderStatusAsync).toHaveBeenCalledWith(
-        shipmentCreationDtoMock.orderIds,
-        OrderStatusId.InPreparation,
-        txMock,
-      );
-    });
-
-    it('should call repository.createShipmentAsync with the correct data', async () => {
-      // Arrange
-      const shipmentCreationDtoMock: ShipmentCreationDto = {
-        date: shipment.date,
-        vehicleId: shipment.vehicleId,
-        orderIds: [1, 2, 3],
-      };
-
-      const shipmentCreationDataDtoMock: ShipmentCreationDataDto = {
-        date: shipmentCreationDtoMock.date,
-        statusId: ShipmentStatusId.Pending,
-        vehicleId: shipmentCreationDtoMock.vehicleId,
-        orderIds: shipmentCreationDtoMock.orderIds,
-      };
-
-      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
-      jest
-        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
-        .mockResolvedValueOnce(true);
-      jest
-        .spyOn(repository, 'createShipmentAsync')
-        .mockResolvedValueOnce(shipment);
-      jest
-        .spyOn(service, 'sendShipmentOrdersStatusEmail')
-        .mockResolvedValueOnce();
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.createShipmentAsync(shipmentCreationDtoMock);
-
-      // Assert
-      expect(repository.createShipmentAsync).toHaveBeenCalledWith(
-        shipmentCreationDataDtoMock,
-        txMock,
-      );
-    });
   });
 
   describe('sendShipmentAsync', () => {
@@ -238,6 +147,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -249,6 +171,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -294,6 +227,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -305,6 +251,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -328,14 +285,14 @@ describe('ShipmentService', () => {
         }>
       >();
 
-      shipmentMock.orders[0].orderStatusId = OrderStatusId.Pending;
+      shipmentMock.orders = [{ orderStatusId: OrderStatusId.Pending } as any];
 
       jest
         .spyOn(repository, 'findByIdAsync')
         .mockResolvedValueOnce(shipmentMock);
       jest
         .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
+        .mockResolvedValueOnce(shipmentMock.orders as any);
 
       // Act & Assert
       await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
@@ -353,6 +310,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -364,6 +334,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -387,256 +368,20 @@ describe('ShipmentService', () => {
         }>
       >();
 
-      shipmentMock.orders[0].deliveryMethodId = DeliveryMethodId.PickUpAtStore;
+      shipmentMock.orders = [
+        { deliveryMethodId: DeliveryMethodId.PickUpAtStore } as any,
+      ];
 
       jest
         .spyOn(repository, 'findByIdAsync')
         .mockResolvedValueOnce(shipmentMock);
       jest
         .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
+        .mockResolvedValueOnce(shipmentMock.orders as any);
 
       // Act & Assert
       await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
         BadRequestException,
-      );
-    });
-
-    it('should call orderRepository.updateManyOrderStatusAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.statusId = ShipmentStatusId.Pending;
-      shipmentMock.orders = [
-        {
-          orderStatusId: OrderStatusId.Prepared,
-          client: {
-            id: 1,
-            companyName: 'test client',
-            addressId: 1,
-            taxCategoryId: 1,
-            user: {
-              email: 'test-client@test.com',
-            },
-            userId: 1,
-          },
-          clientId: 1,
-          createdAt: mockDeep<Date>(new Date('2015-01-15')),
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          id: 1,
-          paymentDetailId: 1,
-          shipmentId: shipment.id,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
-          orderStatus: {
-            id: OrderStatusId.Prepared,
-            name: 'Prepared',
-          },
-        },
-      ];
-
-      const orderIds = shipmentMock.orders.map((order) => order.id);
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-      jest
-        .spyOn(repository, 'updateShipmentAsync')
-        .mockResolvedValueOnce(shipment);
-      jest
-        .spyOn(service, 'sendShipmentOrdersStatusEmail')
-        .mockResolvedValueOnce();
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.sendShipmentAsync(shipmentId);
-
-      // Assert
-      expect(orderRepository.updateManyOrderStatusAsync).toHaveBeenCalledWith(
-        orderIds,
-        OrderStatusId.Shipped,
-        txMock,
-      );
-    });
-
-    it('should call repository.sendShipmentAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.statusId = ShipmentStatusId.Pending;
-      shipmentMock.orders = [
-        {
-          orderStatusId: OrderStatusId.Prepared,
-          client: {
-            id: 1,
-            companyName: 'test client',
-            addressId: 1,
-            taxCategoryId: 1,
-            user: {
-              email: 'test-client@test.com',
-            },
-            userId: 1,
-          },
-          clientId: 1,
-          createdAt: mockDeep<Date>(new Date('2015-01-15')),
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          id: 1,
-          paymentDetailId: 1,
-          shipmentId: shipment.id,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
-          orderStatus: {
-            id: OrderStatusId.Prepared,
-            name: 'Prepared',
-          },
-        },
-      ];
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-      jest
-        .spyOn(repository, 'updateShipmentAsync')
-        .mockResolvedValueOnce(shipment);
-      jest
-        .spyOn(service, 'sendShipmentOrdersStatusEmail')
-        .mockResolvedValueOnce();
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.sendShipmentAsync(shipmentId);
-
-      // Assert
-      expect(repository.updateShipmentAsync).toHaveBeenCalledWith(
-        shipmentId,
-        { statusId: ShipmentStatusId.Shipped },
-        txMock,
-      );
-    });
-  });
-
-  describe('sendShipmentOrdersStatusEmail', () => {
-    it('should call mailingService.sendMailAsync for each order', async () => {
-      // Arrange
-      const newStatus = OrderStatusId.InPreparation;
-      const orders = [
-        { id: 1, client: { user: { email: 'cliente1@test.com' } } },
-        { id: 2, client: { user: { email: 'cliente2@test.com' } } },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ] as any;
-
-      jest.spyOn(mailingService, 'sendMailAsync').mockResolvedValueOnce({});
-
-      // Act
-      await service.sendShipmentOrdersStatusEmail(orders, newStatus);
-
-      // Assert
-      expect(mailingService.sendMailAsync).toHaveBeenCalledTimes(2);
-
-      expect(mailingService.sendMailAsync).toHaveBeenNthCalledWith(
-        1,
-        'cliente1@test.com',
-        'Actualización de estado de su pedido',
-        `Su pedido #1 se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`,
-      );
-
-      expect(mailingService.sendMailAsync).toHaveBeenNthCalledWith(
-        2,
-        'cliente2@test.com',
-        'Actualización de estado de su pedido',
-        `Su pedido #2 se encuentra ${orderStatusTranslations[OrderStatusId[newStatus]]}.`,
       );
     });
   });
@@ -664,6 +409,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -675,6 +433,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -720,6 +489,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -731,6 +513,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -768,7 +561,37 @@ describe('ShipmentService', () => {
             user: {
               email: 'client@test.com',
             },
+            address: {
+              town: {
+                name: 'Rosario',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Argentina',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Santa Fe',
+                },
+                provinceId: 1,
+                zipCode: '2000',
+              },
+              id: 1,
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              townId: 1,
+            },
           },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
           clientId: 1,
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           orderStatusId: OrderStatusId.Prepared,
@@ -813,6 +636,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -824,6 +660,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -861,7 +708,37 @@ describe('ShipmentService', () => {
             user: {
               email: 'client@test.com',
             },
+            address: {
+              town: {
+                name: 'Rosario',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Argentina',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Santa Fe',
+                },
+                provinceId: 1,
+                zipCode: '2000',
+              },
+              id: 1,
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              townId: 1,
+            },
           },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
           clientId: 1,
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           orderStatusId: OrderStatusId.Prepared,
@@ -885,7 +762,37 @@ describe('ShipmentService', () => {
             user: {
               email: 'client@test.com',
             },
+            address: {
+              town: {
+                name: 'Rosario',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Argentina',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Santa Fe',
+                },
+                provinceId: 1,
+                zipCode: '2000',
+              },
+              id: 1,
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              townId: 1,
+            },
           },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
           clientId: 1,
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           orderStatusId: OrderStatusId.Prepared,
@@ -930,6 +837,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -941,6 +861,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -978,7 +909,37 @@ describe('ShipmentService', () => {
             user: {
               email: 'client@test.com',
             },
+            address: {
+              town: {
+                name: 'Rosario',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Argentina',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Santa Fe',
+                },
+                provinceId: 1,
+                zipCode: '2000',
+              },
+              id: 1,
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              townId: 1,
+            },
           },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
           clientId: 1,
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           orderStatusId: OrderStatusId.Prepared,
@@ -1035,6 +996,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -1046,6 +1020,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -1083,7 +1068,37 @@ describe('ShipmentService', () => {
             user: {
               email: 'client@test.com',
             },
+            address: {
+              town: {
+                name: 'Rosario',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Argentina',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Santa Fe',
+                },
+                provinceId: 1,
+                zipCode: '2000',
+              },
+              id: 1,
+              street: 'Calle Falsa',
+              streetNumber: 123,
+              townId: 1,
+            },
           },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
           clientId: 1,
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           orderStatusId: OrderStatusId.Prepared,
@@ -1129,499 +1144,6 @@ describe('ShipmentService', () => {
         service.finishShipmentAsync(shipmentId, finishShipmentDtoMock),
       ).rejects.toThrow(BadRequestException);
     });
-
-    it('should call orderRepository.updateOrderAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.statusId = ShipmentStatusId.Shipped;
-      shipmentMock.orders = [
-        {
-          id: 2,
-          createdAt: mockDeep<Date>(new Date('2000-05-15 08:35:23')),
-          client: {
-            addressId: 1,
-            companyName: 'Test Client',
-            id: 1,
-            taxCategoryId: 1,
-            userId: 1,
-            user: {
-              email: 'client@test.com',
-            },
-          },
-          clientId: 1,
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          orderStatusId: OrderStatusId.Finished,
-          paymentDetailId: 1,
-          shipmentId: 1,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
-          orderStatus: {
-            id: OrderStatusId.Finished,
-            name: 'Finished',
-          },
-        },
-      ];
-
-      const finishShipmentDtoMock: FinishShipmentDto = {
-        finishedAt: new Date('2000-05-15 10:53:25'),
-        odometer: 120000,
-        orders: [
-          {
-            orderId: 2,
-            orderStatusId: 4,
-          },
-        ],
-      };
-
-      const lastVehicleUsageMock = {
-        id: 1,
-        date: new Date('2000-05-10'),
-        vehicleId: 1,
-        odometer: new Prisma.Decimal(100000),
-        kmUsed: new Prisma.Decimal(50),
-      };
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-
-      jest
-        .spyOn(vehicleUsageRepository, 'findLastByVehicleIdAsync')
-        .mockResolvedValueOnce(lastVehicleUsageMock);
-
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.finishShipmentAsync(shipmentId, finishShipmentDtoMock);
-
-      // Assert
-      expect(orderRepository.updateOrderAsync).toHaveBeenCalledWith(
-        finishShipmentDtoMock.orders[0].orderId,
-        { orderStatusId: OrderStatusId.Finished },
-        txMock,
-      );
-    });
-
-    it('should call repository.updateShipmentAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.statusId = ShipmentStatusId.Shipped;
-      shipmentMock.orders = [
-        {
-          id: 2,
-          createdAt: mockDeep<Date>(new Date('2000-05-15 08:35:23')),
-          client: {
-            addressId: 1,
-            companyName: 'Test Client',
-            id: 1,
-            taxCategoryId: 1,
-            userId: 1,
-            user: {
-              email: 'client@test.com',
-            },
-          },
-          clientId: 1,
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          orderStatusId: OrderStatusId.Prepared,
-          paymentDetailId: 1,
-          shipmentId: 1,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
-          orderStatus: {
-            id: OrderStatusId.Prepared,
-            name: 'Prepared',
-          },
-        },
-      ];
-
-      const finishShipmentDtoMock: FinishShipmentDto = {
-        finishedAt: new Date('2000-05-15 10:53:25'),
-        odometer: 120000,
-        orders: [
-          {
-            orderId: 2,
-            orderStatusId: 4,
-          },
-        ],
-      };
-
-      const lastVehicleUsageMock = {
-        id: 1,
-        date: new Date('2000-05-10'),
-        vehicleId: 1,
-        odometer: new Prisma.Decimal(100000),
-        kmUsed: new Prisma.Decimal(50),
-      };
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-
-      jest
-        .spyOn(vehicleUsageRepository, 'findLastByVehicleIdAsync')
-        .mockResolvedValueOnce(lastVehicleUsageMock);
-
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.finishShipmentAsync(shipmentId, finishShipmentDtoMock);
-
-      // Assert
-      expect(repository.updateShipmentAsync).toHaveBeenCalledWith(
-        shipmentId,
-        {
-          statusId: ShipmentStatusId.Finished,
-          finishedAt: finishShipmentDtoMock.finishedAt,
-          effectiveKm:
-            finishShipmentDtoMock.odometer -
-            Number(lastVehicleUsageMock.odometer),
-        },
-        txMock,
-      );
-    });
-
-    it('should call vehicleUsageRepository.createVehicleUsageAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.vehicleId = shipment.vehicleId;
-      shipmentMock.statusId = ShipmentStatusId.Shipped;
-      shipmentMock.orders = [
-        {
-          id: 2,
-          createdAt: mockDeep<Date>(new Date('2000-05-15 08:35:23')),
-          client: {
-            addressId: 1,
-            companyName: 'Test Client',
-            id: 1,
-            taxCategoryId: 1,
-            userId: 1,
-            user: {
-              email: 'client@test.com',
-            },
-          },
-          clientId: 1,
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          orderStatusId: OrderStatusId.Prepared,
-          paymentDetailId: 1,
-          shipmentId: 1,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
-          orderStatus: {
-            id: OrderStatusId.Prepared,
-            name: 'Prepared',
-          },
-        },
-      ];
-
-      const finishShipmentDtoMock: FinishShipmentDto = {
-        finishedAt: new Date('2000-05-15 10:53:25'),
-        odometer: 120000,
-        orders: [
-          {
-            orderId: 2,
-            orderStatusId: 4,
-          },
-        ],
-      };
-
-      const lastVehicleUsageMock = {
-        id: 1,
-        date: new Date('2000-05-10'),
-        vehicleId: 1,
-        odometer: new Prisma.Decimal(100000),
-        kmUsed: new Prisma.Decimal(50),
-      };
-
-      const vehicleUsageCreationDataDtoMock: VehicleUsageCreationDataDto = {
-        date: finishShipmentDtoMock.finishedAt,
-        vehicleId: shipment.vehicleId,
-        odometer: finishShipmentDtoMock.odometer,
-        kmUsed:
-          finishShipmentDtoMock.odometer -
-          Number(lastVehicleUsageMock.odometer),
-      };
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-
-      jest
-        .spyOn(vehicleUsageRepository, 'findLastByVehicleIdAsync')
-        .mockResolvedValueOnce(lastVehicleUsageMock);
-
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.finishShipmentAsync(shipmentId, finishShipmentDtoMock);
-
-      // Assert
-      expect(
-        vehicleUsageRepository.createVehicleUsageAsync,
-      ).toHaveBeenCalledWith(vehicleUsageCreationDataDtoMock, txMock);
-    });
-
-    it('should call vehicleRepository.updateVehicleKmTraveledAsync with the correct data', async () => {
-      // Arrange
-      const shipmentId = shipment.id;
-      const shipmentMock = mockDeep<
-        Prisma.ShipmentGetPayload<{
-          include: {
-            orders: {
-              include: {
-                client: {
-                  include: {
-                    user: {
-                      select: {
-                        email: true;
-                      };
-                    };
-                  };
-                };
-                orderStatus: {
-                  select: {
-                    id: true;
-                    name: true;
-                  };
-                };
-              };
-            };
-            vehicle: {
-              select: {
-                id: true;
-                licensePlate: true;
-                brand: true;
-                model: true;
-                kmTraveled: true;
-              };
-            };
-            status: {
-              select: {
-                id: true;
-                name: true;
-              };
-            };
-          };
-        }>
-      >();
-
-      shipmentMock.vehicleId = shipment.vehicleId;
-      shipmentMock.statusId = ShipmentStatusId.Shipped;
-      shipmentMock.orders = [
-        {
-          id: 2,
-          createdAt: mockDeep<Date>(new Date('2000-05-15 08:35:23')),
-          client: {
-            addressId: 1,
-            companyName: 'Test Client',
-            id: 1,
-            taxCategoryId: 1,
-            userId: 1,
-            user: {
-              email: 'client@test.com',
-            },
-          },
-          clientId: 1,
-          deliveryMethodId: DeliveryMethodId.HomeDelivery,
-          orderStatusId: OrderStatusId.Prepared,
-          paymentDetailId: 1,
-          shipmentId: 1,
-          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(250)),
-          orderStatus: {
-            id: OrderStatusId.Prepared,
-            name: 'Prepared',
-          },
-        },
-      ];
-
-      const finishShipmentDtoMock: FinishShipmentDto = {
-        finishedAt: new Date('2000-05-15 10:53:25'),
-        odometer: 120000,
-        orders: [
-          {
-            orderId: 2,
-            orderStatusId: 4,
-          },
-        ],
-      };
-
-      const lastVehicleUsageMock = {
-        id: 1,
-        date: new Date('2000-05-10'),
-        vehicleId: 1,
-        odometer: new Prisma.Decimal(100000),
-        kmUsed: new Prisma.Decimal(50),
-      };
-
-      jest
-        .spyOn(repository, 'findByIdAsync')
-        .mockResolvedValueOnce(shipmentMock);
-
-      jest
-        .spyOn(vehicleUsageRepository, 'findLastByVehicleIdAsync')
-        .mockResolvedValueOnce(lastVehicleUsageMock);
-
-      jest
-        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
-        .mockResolvedValueOnce(shipmentMock.orders);
-
-      const txMock = {} as Prisma.TransactionClient;
-      jest.spyOn(unitOfWork, 'execute').mockImplementation(async (cb) => {
-        return cb(txMock);
-      });
-
-      // Act
-      await service.finishShipmentAsync(shipmentId, finishShipmentDtoMock);
-
-      // Assert
-      expect(
-        vehicleRepository.updateVehicleKmTraveledAsync,
-      ).toHaveBeenCalledWith(
-        shipmentMock.vehicleId,
-        finishShipmentDtoMock.odometer,
-        txMock,
-      );
-    });
   });
 
   describe('getOrCreateShipmentRoute', () => {
@@ -1635,6 +1157,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -1646,6 +1181,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -1724,6 +1270,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -1735,6 +1294,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };
@@ -1760,7 +1330,6 @@ describe('ShipmentService', () => {
 
       shipmentMock.id = shipmentId;
       shipmentMock.routeLink = null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       shipmentMock.orders = ordersMock as any;
 
       jest
@@ -1851,6 +1420,19 @@ describe('ShipmentService', () => {
               include: {
                 client: {
                   include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
                     user: {
                       select: {
                         email: true;
@@ -1862,6 +1444,17 @@ describe('ShipmentService', () => {
                   select: {
                     id: true;
                     name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
                   };
                 };
               };

@@ -69,6 +69,17 @@ export class ShipmentRepository {
                 name: true,
               },
             },
+            orderItems: {
+              select: {
+                productId: true,
+                quantity: true,
+              },
+            },
+            paymentDetail: {
+              select: {
+                paymentTypeId: true,
+              },
+            },
           },
         },
         vehicle: {

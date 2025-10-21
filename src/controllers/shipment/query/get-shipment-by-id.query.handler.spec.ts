@@ -96,6 +96,15 @@ describe('GetShipmentByIdQueryHandler', () => {
           createdAt: new Date('2025-10-06T09:00:00Z'),
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           paymentDetailId: 1,
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 2,
+            },
+          ],
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(200.5),
           orderStatus: {
@@ -141,6 +150,15 @@ describe('GetShipmentByIdQueryHandler', () => {
           createdAt: new Date('2025-10-06T09:15:00Z'),
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           paymentDetailId: 1,
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 2,
+            },
+          ],
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(300.75),
           orderStatus: {
@@ -186,6 +204,15 @@ describe('GetShipmentByIdQueryHandler', () => {
           createdAt: new Date('2025-10-06T09:30:00Z'),
           deliveryMethodId: DeliveryMethodId.HomeDelivery,
           paymentDetailId: 1,
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 2,
+            },
+          ],
           shipmentId: 1,
           totalAmount: new Prisma.Decimal(150.25),
           orderStatus: {
