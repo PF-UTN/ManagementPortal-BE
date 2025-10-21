@@ -42,14 +42,11 @@ export const processOrderStatusChange = (dependencies: {
       });
 
       const order = orderFromRepo!;
+
       // 🧩 STEP 2 — Perform unit of work (status update + stock changes)
       await step.run('update-order-and-stock', async () => {
         return unitOfWork.execute(async (tx) => {
-          const updateOrderTask = orderRepository.updateOrderAsync(order.id, {
-            orderStatusId: newStatus,
-          });
-
-          const manageStockChangesTask = orderService.manageStockChangesAsync(
+          await orderService.manageStockChangesAsync(
             order,
             order.orderItems,
             order.paymentDetail.paymentTypeId,
@@ -57,9 +54,6 @@ export const processOrderStatusChange = (dependencies: {
             newStatus,
             tx,
           );
-
-          await Promise.all([updateOrderTask, manageStockChangesTask]);
-          return updateOrderTask;
         });
       });
 
