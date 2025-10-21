@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Decimal } from '@prisma/client/runtime/library';
+import { CartRepository } from 'libs/repository/src/services/cart/cart.repository';
+import { ClientService } from 'src/domain/service/client/client.service';
 
 import {
   deliveryMethodTranslations,
@@ -22,6 +24,8 @@ export const processOrderStatusChange = (dependencies: {
   billRepository: BillRepository;
   billItemRepository: BillItemRepository;
   unitOfWork: PrismaUnitOfWork;
+  clientService: ClientService;
+  cartRepository: CartRepository;
 }) => {
   return inngest.createFunction(
     { id: 'process-order-status-change' },
@@ -33,6 +37,8 @@ export const processOrderStatusChange = (dependencies: {
         billRepository,
         billItemRepository,
         unitOfWork,
+        clientService,
+        cartRepository,
       } = dependencies;
       const { orderId, newStatus, currentStatus } = event.data;
 
@@ -42,6 +48,20 @@ export const processOrderStatusChange = (dependencies: {
       });
 
       const order = orderFromRepo!;
+
+      //CONDITIONAL STEP - If status is changed to Pending, empty client cart
+      if (newStatus === OrderStatusId.Pending) {
+        await step.run('empty-client-cart', async () => {
+          const client = await clientService.findClientByIdAsync(
+            order.clientId,
+          );
+          if (!client) {
+            return { message: 'Client not found.' };
+          }
+          cartRepository.emptyCartAsync(client.user.id);
+        });
+      }
+
       // 🧩 STEP 2 — Perform unit of work (status update + stock changes)
       await step.run('update-order-and-stock', async () => {
         return unitOfWork.execute(async (tx) => {
