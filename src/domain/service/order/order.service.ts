@@ -43,6 +43,7 @@ import {
 
 import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
 import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
+import { CartService } from '../cart/cart.service';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
@@ -61,6 +62,7 @@ export class OrderService {
     private readonly mailingService: MailingService,
     private readonly billRepository: BillRepository,
     private readonly billItemRepository: BillItemRepository,
+    private readonly cartService: CartService,
   ) {}
 
   async createOrderAsync(orderCreationDto: OrderCreationDto) {
@@ -319,6 +321,15 @@ export class OrderService {
             },
           ],
         );
+        const client = await this.clientService.findClientByIdAsync(
+          order.clientId,
+        );
+        if (!client) {
+          throw new NotFoundException(
+            `Client with ID ${order.clientId} does not exist.`,
+          );
+        }
+        this.cartService.emptyCartAsync(client.userId);
         break;
       }
 

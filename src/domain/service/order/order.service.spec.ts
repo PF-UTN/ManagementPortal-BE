@@ -39,6 +39,7 @@ import {
 import { OrderService } from './order.service';
 import { DownloadOrderQuery } from '../../../controllers/order/query/download-order.query';
 import { SearchOrderQuery } from '../../../controllers/order/query/search-order.query';
+import { CartService } from '../cart/cart.service';
 import { ClientService } from '../client/client.service';
 import { StockService } from '../stock/stock.service';
 
@@ -56,6 +57,7 @@ describe('OrderService', () => {
   let mailingService: MailingService;
   let billRepository: BillRepository;
   let billItemRepository: BillItemRepository;
+  let cartService: CartService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -82,6 +84,7 @@ describe('OrderService', () => {
         { provide: MailingService, useValue: mockDeep(MailingService) },
         { provide: BillRepository, useValue: mockDeep(BillRepository) },
         { provide: BillItemRepository, useValue: mockDeep(BillItemRepository) },
+        { provide: CartService, useValue: mockDeep(CartService) },
       ],
     }).compile();
 
@@ -102,6 +105,7 @@ describe('OrderService', () => {
     mailingService = module.get<MailingService>(MailingService);
     billRepository = module.get<BillRepository>(BillRepository);
     billItemRepository = module.get<BillItemRepository>(BillItemRepository);
+    cartService = module.get<CartService>(CartService);
   });
 
   describe('createOrderAsync', () => {
@@ -628,6 +632,65 @@ describe('OrderService', () => {
     beforeEach(() => {
       jest.clearAllMocks();
     });
+    it('should call cartService.emptyCartAsync when status is Pending and client exists', async () => {
+      // Arrange
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValue(stockMock);
+      jest
+        .spyOn(stockService, 'updateStockByProductIdAsync')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(stockChangeRepository, 'createManyStockChangeAsync')
+        .mockResolvedValue(undefined);
+
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValue(clientMock);
+      const emptySpy = jest
+        .spyOn(cartService, 'emptyCartAsync')
+        .mockResolvedValue(undefined);
+
+      // Act
+      await service['manageStockChanges'](
+        orderMock,
+        [{ ...mockOrderItem, productId: 1, quantity: 2 }],
+        null,
+        null,
+        OrderStatusId.Pending,
+        txMock,
+      );
+
+      // Assert
+      expect(emptySpy).toHaveBeenCalledWith(clientMock.userId);
+    });
+
+    it('should throw NotFoundException if client is not found when status is Pending', async () => {
+      // Arrange
+      jest
+        .spyOn(stockService, 'findByProductIdAsync')
+        .mockResolvedValue(stockMock);
+      jest
+        .spyOn(stockService, 'updateStockByProductIdAsync')
+        .mockResolvedValue(undefined);
+      jest
+        .spyOn(stockChangeRepository, 'createManyStockChangeAsync')
+        .mockResolvedValue(undefined);
+
+      jest.spyOn(clientService, 'findClientByIdAsync').mockResolvedValue(null);
+
+      // Act / Assert
+      await expect(
+        service['manageStockChanges'](
+          orderMock,
+          [{ ...mockOrderItem, productId: 1, quantity: 2 }],
+          null,
+          null,
+          OrderStatusId.Pending,
+          txMock,
+        ),
+      ).rejects.toThrow(NotFoundException);
+    });
     it('should update stocks and register changes for valid items', async () => {
       // Arrange
       jest
@@ -726,6 +789,9 @@ describe('OrderService', () => {
       jest
         .spyOn(stockChangeRepository, 'createManyStockChangeAsync')
         .mockResolvedValue(undefined);
+      jest
+        .spyOn(clientService, 'findClientByIdAsync')
+        .mockResolvedValue(clientMock);
 
       // Act
       await service['manageStockChanges'](
