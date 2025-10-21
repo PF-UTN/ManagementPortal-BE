@@ -63,9 +63,11 @@ export class NotificationService {
 
   @Cron('0 0,12 * * *')
   async generateMaintenanceNotificationsAsync() {
-    const maintenancePlanItems =
-      await this.maintenancePlanItemRepository.findAllWithRelationsAsync();
-    const admins = await this.userRepository.findAdminsAsync();
+    const findAllWithRelationsTask =
+      this.maintenancePlanItemRepository.findAllWithRelationsAsync();
+    const findAdminsTask = this.userRepository.findAdminsAsync();
+
+    const maintenancePlanItems = await findAllWithRelationsTask;
 
     for (const maintenancePlanItem of maintenancePlanItems) {
       const { vehicle, maintenanceItem, kmInterval, timeInterval } =
@@ -124,17 +126,27 @@ export class NotificationService {
         message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} en la fecha ${nextDate!.toLocaleDateString()}.`;
       }
 
-      for (const admin of admins) {
-        const alreadyExists =
-          await this.notificationRepository.existsSimilarNotificationAsync(
-            admin.id,
-            message,
-          );
+      const admins = await findAdminsTask;
 
-        if (!alreadyExists) {
-          await this.notificationRepository.createAsync(admin.id, message);
-        }
+      const tasks = [];
+
+      for (const admin of admins) {
+        const task = (async () => {
+          const alreadyExists =
+            await this.notificationRepository.existsSimilarNotificationAsync(
+              admin.id,
+              message,
+            );
+
+          if (!alreadyExists) {
+            return this.notificationRepository.createAsync(admin.id, message);
+          }
+        })();
+
+        tasks.push(task);
       }
+
+      await Promise.all(tasks);
     }
   }
 }
