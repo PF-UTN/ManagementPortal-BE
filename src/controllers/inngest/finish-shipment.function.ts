@@ -20,6 +20,7 @@ import {
   VehicleUsageRepository,
 } from '../../../libs/repository/src';
 import { inngest } from '../../configuration';
+import { NotificationService } from '../../domain/service/notification/notification.service';
 import { OrderService } from '../../domain/service/order/order.service';
 
 export const processFinishShipment = (dependencies: {
@@ -30,6 +31,7 @@ export const processFinishShipment = (dependencies: {
   vehicleRepository: VehicleRepository;
   billRepository: BillRepository;
   billItemRepository: BillItemRepository;
+  notificationService: NotificationService;
   unitOfWork: PrismaUnitOfWork;
 }) => {
   return inngest.createFunction(
@@ -44,6 +46,7 @@ export const processFinishShipment = (dependencies: {
         vehicleRepository,
         billItemRepository,
         billRepository,
+        notificationService,
         unitOfWork,
       } = dependencies;
       const {
@@ -224,6 +227,11 @@ export const processFinishShipment = (dependencies: {
           };
         }),
       );
+
+      // 🧩 STEP 5 — Generate maintenance notifications
+      await step.run('generate-maintenance-notifications', async () => {
+        await notificationService.generateMaintenanceNotificationsAsync();
+      });
 
       return { results };
     },
