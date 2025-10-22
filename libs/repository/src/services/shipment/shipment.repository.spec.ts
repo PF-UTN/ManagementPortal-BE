@@ -396,4 +396,134 @@ describe('ShipmentRepository', () => {
       expect(result).toEqual(mockData);
     });
   });
+  describe('findReportDataByIdAsync', () => {
+    const mockReportData = {
+      ...shipment,
+      vehicle: {
+        licensePlate: 'ABC123',
+        brand: 'Mercedes',
+        model: 'Sprinter',
+      },
+      orders: [
+        {
+          id: 1,
+          deliveryMethod: { name: 'PickUpAtStore' },
+          client: {
+            address: {
+              street: 'Corrientes',
+              streetNumber: 1489,
+              town: {
+                name: 'Rosario',
+                province: {
+                  name: 'Santa Fe',
+                  country: { name: 'Argentina' },
+                },
+              },
+            },
+            user: {
+              firstName: 'Juan',
+              lastName: 'Pérez',
+              phone: '123456789',
+              email: 'juan@example.com',
+            },
+          },
+          orderItems: [
+            {
+              quantity: 2,
+              unitPrice: 100,
+              subtotalPrice: 200,
+              product: { name: 'Producto Test' },
+            },
+          ],
+        },
+      ],
+    };
+
+    it('should return shipment with all report data when exists', async () => {
+      // Arrange
+      const id = shipment.id;
+      jest
+        .spyOn(prismaService.shipment, 'findUnique')
+        .mockResolvedValueOnce(mockReportData);
+
+      // Act
+      const result = await repository.findReportDataByIdAsync(id);
+
+      // Assert
+      expect(result).toEqual(mockReportData);
+    });
+
+    it('should call prisma.shipment.findUnique with correct include structure', async () => {
+      // Arrange
+      const id = shipment.id;
+      jest
+        .spyOn(prismaService.shipment, 'findUnique')
+        .mockResolvedValueOnce(mockReportData);
+
+      // Act
+      await repository.findReportDataByIdAsync(id);
+
+      // Assert
+      expect(prismaService.shipment.findUnique).toHaveBeenCalledWith({
+        where: { id },
+        include: {
+          vehicle: {
+            select: {
+              licensePlate: true,
+              brand: true,
+              model: true,
+            },
+          },
+          orders: {
+            include: {
+              deliveryMethod: { select: { name: true } },
+              client: {
+                include: {
+                  address: {
+                    include: {
+                      town: {
+                        include: {
+                          province: { include: { country: true } },
+                        },
+                      },
+                    },
+                  },
+                  user: {
+                    select: {
+                      firstName: true,
+                      lastName: true,
+                      phone: true,
+                      email: true,
+                    },
+                  },
+                },
+              },
+              orderItems: {
+                select: {
+                  quantity: true,
+                  unitPrice: true,
+                  subtotalPrice: true,
+                  product: { select: { name: true } },
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should return null when shipment does not exist', async () => {
+      // Arrange
+      const id = 999;
+      jest
+        .spyOn(prismaService.shipment, 'findUnique')
+        .mockResolvedValueOnce(null);
+
+      // Act
+      const result = await repository.findReportDataByIdAsync(id);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
 });

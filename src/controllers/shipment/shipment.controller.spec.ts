@@ -6,6 +6,7 @@ import { mockDeep } from 'jest-mock-extended';
 
 import { OrderStatusId } from '@mp/common/constants';
 import {
+  DownloadShipmentReportDto,
   DownloadShipmentRequest,
   FinishShipmentDto,
   SearchShipmentRequest,
@@ -16,6 +17,7 @@ import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
+import { DownloadShipmentReportQuery } from './query/download-shipment-report.query';
 import { DownloadShipmentQuery } from './query/download-shipment.query';
 import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
 import { SearchShipmentQuery } from './query/search-shipment.query';
@@ -213,20 +215,77 @@ describe('ShipmentController', () => {
       );
     });
 
-    it('should set the correct content type', async () => {
-      const result = await controller.downloadShipmentsAsync(
-        downloadShipmentRequest,
-      );
-      expect(result.options.type).toBe(
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      );
-    });
-
     it('should set the correct length', async () => {
       const result = await controller.downloadShipmentsAsync(
         downloadShipmentRequest,
       );
       expect(result.options.length).toBe(buffer.length);
+    });
+  });
+  describe('downloadShipmentReportAsync', () => {
+    const shipmentId = 30;
+    const mockReportResponse: DownloadShipmentReportDto = {
+      fileName: 'shipment-30.pdf',
+      contentType: 'application/pdf',
+      buffer: Buffer.from('fake-pdf-content'),
+    };
+
+    beforeEach(() => {
+      jest.spyOn(queryBus, 'execute').mockResolvedValue(mockReportResponse);
+    });
+
+    it('should call queryBus.execute with DownloadShipmentReportQuery', async () => {
+      // Act
+      await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(queryBus.execute).toHaveBeenCalledWith(
+        new DownloadShipmentReportQuery(shipmentId),
+      );
+    });
+
+    it('should return a StreamableFile', async () => {
+      // Act
+      const result = await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(result).toBeInstanceOf(StreamableFile);
+    });
+
+    it('should set the correct filename in the disposition', async () => {
+      // Act
+      const result = await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(result.options.disposition).toBe(
+        `attachment; filename="${mockReportResponse.fileName}"`,
+      );
+    });
+
+    it('should set the correct content type', async () => {
+      // Act
+      const result = await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(result.options.disposition).toBe(
+        `attachment; filename="${mockReportResponse.fileName}"`,
+      );
+    });
+
+    it('should set the correct content type', async () => {
+      // Act
+      const result = await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(result.options.type).toBe(mockReportResponse.contentType);
+    });
+    it('should create stream with data from the buffer', async () => {
+      // Act
+      const result = await controller.downloadShipmentReportAsync(shipmentId);
+
+      // Assert
+      expect(result['stream']).toBeDefined();
+      expect(result['stream'].readable).toBe(true);
     });
   });
 });

@@ -10,3 +10,5 @@ export * from './search-shipment-return-data.dto';
 export * from './send-shipment.response';
 export * from './shipment-creation-data.dto';
 export * from './shipment-creation.dto';
+export * from './shipment-report.dto';
+export * from './shipment-download-report.dto';

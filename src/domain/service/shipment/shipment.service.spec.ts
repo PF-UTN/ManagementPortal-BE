@@ -14,6 +14,7 @@ import {
   SearchShipmentFiltersDto,
   ShipmentCreationDto,
 } from '@mp/common/dtos';
+import { ReportService } from '@mp/common/services';
 import {
   ShipmentRepository,
   OrderRepository,
@@ -32,6 +33,7 @@ describe('ShipmentService', () => {
   let vehicleRepository: VehicleRepository;
   let orderRepository: OrderRepository;
   let vehicleUsageRepository: VehicleUsageRepository;
+  let reportService: ReportService;
   let shipment: ReturnType<typeof mockDeep<Shipment>>;
 
   beforeEach(async () => {
@@ -58,6 +60,10 @@ describe('ShipmentService', () => {
           provide: GoogleMapsRoutingService,
           useValue: mockDeep(GoogleMapsRoutingService),
         },
+        {
+          provide: ReportService,
+          useValue: mockDeep(ReportService),
+        },
       ],
     }).compile();
 
@@ -67,6 +73,8 @@ describe('ShipmentService', () => {
     vehicleUsageRepository = module.get<VehicleUsageRepository>(
       VehicleUsageRepository,
     );
+
+    reportService = module.get<ReportService>(ReportService);
 
     service = module.get<ShipmentService>(ShipmentService);
 
@@ -1543,6 +1551,234 @@ describe('ShipmentService', () => {
         query.searchText,
         query.filters,
       );
+    });
+  });
+
+  describe('downloadReportAsync', () => {
+    it('should throw NotFoundException if shipment does not exist', async () => {
+      // Arrange
+      const shipmentId = 1;
+      jest
+        .spyOn(repository, 'findReportDataByIdAsync')
+        .mockResolvedValueOnce(null);
+
+      // Act & Assert
+      await expect(service.downloadReportAsync(shipmentId)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(repository.findReportDataByIdAsync).toHaveBeenCalledWith(
+        shipmentId,
+      );
+    });
+    it('should generate PDF report and return buffer with correct metadata', async () => {
+      // Arrange
+      const shipmentId = 30;
+      const mockShipmentData = {
+        id: shipmentId,
+        date: new Date('2025-01-15'),
+        estimatedKm: new Prisma.Decimal(25.5),
+        effectiveKm: new Prisma.Decimal(28.3),
+        finishedAt: new Date('2025-01-15T18:30:00'),
+        routeLink: 'https://maps.google.com/route/abc123',
+        vehicle: {
+          licensePlate: 'ABC123',
+          brand: 'Mercedes',
+          model: 'Sprinter',
+        },
+        orders: [
+          {
+            id: 1,
+            totalAmount: new Prisma.Decimal(804),
+            deliveryMethod: { name: 'HomeDelivery' },
+            client: {
+              user: {
+                firstName: 'Juan',
+                lastName: 'Pérez',
+                email: 'juan@example.com',
+                phone: '3414315832',
+              },
+              address: {
+                street: 'Corrientes',
+                streetNumber: 1489,
+                town: {
+                  name: 'Rosario',
+                  province: {
+                    name: 'Santa Fe',
+                    country: { name: 'Argentina' },
+                  },
+                },
+              },
+            },
+            orderItems: [
+              {
+                quantity: 2,
+                unitPrice: new Prisma.Decimal(100),
+                subtotalPrice: new Prisma.Decimal(200),
+                product: { name: 'Producto Test' },
+              },
+            ],
+          },
+        ],
+      };
+
+      const mockPdfBuffer = Buffer.from('fake-pdf-content');
+      const mockPdfDoc: any = {
+        on: jest.fn(function (
+          this: any,
+          event: string,
+          callback: (chunk?: Buffer) => void,
+        ) {
+          if (event === 'data') {
+            callback(mockPdfBuffer);
+          }
+          if (event === 'end') {
+            setTimeout(callback, 0);
+          }
+          return this;
+        }),
+        end: jest.fn(),
+      };
+
+      jest
+        .spyOn(repository, 'findReportDataByIdAsync')
+        .mockResolvedValueOnce(mockShipmentData as any);
+
+      jest
+        .spyOn(reportService, 'generateShipmentReport')
+        .mockReturnValueOnce(mockPdfDoc as any);
+
+      // Act
+      const result = await service.downloadReportAsync(shipmentId);
+
+      // Assert
+      expect(repository.findReportDataByIdAsync).toHaveBeenCalledWith(
+        shipmentId,
+      );
+      expect(reportService.generateShipmentReport).toHaveBeenCalledWith({
+        shipmentId: mockShipmentData.id,
+        date: mockShipmentData.date,
+        estimatedKm: 25.5,
+        effectiveKm: 28.3,
+        finishedAt: mockShipmentData.finishedAt,
+        routeLink: mockShipmentData.routeLink,
+        vehiclePlate: 'ABC123',
+        vehicleDescription: 'Mercedes Sprinter',
+        driverName: '-',
+        orders: [
+          {
+            orderId: 1,
+            clientName: 'Juan Pérez',
+            clientAddress: 'Corrientes 1489, Rosario, Santa Fe, Argentina',
+            clientPhone: '3414315832',
+            deliveryMethod: 'HomeDelivery',
+            totalAmount: 804,
+            items: [
+              {
+                productName: 'Producto Test',
+                quantity: 2,
+                unitPrice: 100,
+                subtotalPrice: 200,
+              },
+            ],
+          },
+        ],
+      });
+
+      expect(result).toEqual({
+        fileName: `shipment-${shipmentId}.pdf`,
+        contentType: 'application/pdf',
+        buffer: mockPdfBuffer,
+      });
+    });
+    it('should handle shipment without optional fields', async () => {
+      // Arrange
+      const shipmentId = 10;
+      const mockShipmentData = {
+        id: shipmentId,
+        date: new Date('2025-01-15'),
+        estimatedKm: null,
+        effectiveKm: null,
+        finishedAt: null,
+        routeLink: null,
+        vehicle: {
+          licensePlate: 'XYZ789',
+          brand: 'Ford',
+          model: 'Transit',
+        },
+        orders: [
+          {
+            id: 5,
+            totalAmount: new Prisma.Decimal(500),
+            deliveryMethod: { name: 'PickUpAtStore' },
+            client: {
+              user: {
+                firstName: null,
+                lastName: null,
+                email: 'test@example.com',
+                phone: null,
+              },
+              address: {
+                street: 'Calle',
+                streetNumber: 100,
+                town: {
+                  name: 'Ciudad',
+                  province: {
+                    name: 'Provincia',
+                    country: { name: 'País' },
+                  },
+                },
+              },
+            },
+            orderItems: [],
+          },
+        ],
+      };
+
+      const mockPdfBuffer = Buffer.from('pdf-minimal');
+      const mockPdfDoc: any = {
+        on: jest.fn(function (
+          this: any,
+          event: string,
+          callback: (chunk?: Buffer) => void,
+        ) {
+          if (event === 'data') callback(mockPdfBuffer);
+          if (event === 'end') setTimeout(callback, 0);
+          return this;
+        }),
+        end: jest.fn(),
+      };
+
+      jest
+        .spyOn(repository, 'findReportDataByIdAsync')
+        .mockResolvedValueOnce(mockShipmentData as any);
+
+      jest
+        .spyOn(reportService, 'generateShipmentReport')
+        .mockReturnValueOnce(mockPdfDoc as any);
+
+      // Act
+      const result = await service.downloadReportAsync(shipmentId);
+
+      // Assert
+      expect(reportService.generateShipmentReport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          estimatedKm: undefined,
+          effectiveKm: undefined,
+          finishedAt: undefined,
+          routeLink: undefined,
+          orders: [
+            expect.objectContaining({
+              clientName: 'test@example.com',
+              clientPhone: undefined,
+              items: [],
+            }),
+          ],
+        }),
+      );
+
+      expect(result.fileName).toBe(`shipment-${shipmentId}.pdf`);
+      expect(result.contentType).toBe('application/pdf');
+      expect(result.buffer).toEqual(mockPdfBuffer);
     });
   });
 });
