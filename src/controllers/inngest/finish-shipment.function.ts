@@ -255,11 +255,11 @@ export const processFinishShipment = (dependencies: {
       ]);
 
       // 🧩 STEP 7 — Generate notifications
-      await step.run('generate-maintenance-notifications', async () => {
-        const generateMaintenanceNotificationsTasks = [];
+      const notificationStepTasks = [];
 
-        for (const maintenancePlanItem of maintenancePlanItems) {
-          const generateMaintenanceNotificationTask = (async () => {
+      for (const maintenancePlanItem of maintenancePlanItems) {
+        notificationStepTasks.push(
+          step.run('generate-maintenance-notifications', async () => {
             const { vehicle, maintenanceItem, kmInterval, timeInterval } =
               maintenancePlanItem;
             const lastMaintenance = maintenancePlanItem.maintenances[0];
@@ -320,6 +320,8 @@ export const processFinishShipment = (dependencies: {
               message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} en la fecha ${nextDate!.toLocaleDateString()}.`;
             }
 
+            const generateMaintenanceNotificationsTasks = [];
+
             for (const admin of admins) {
               const generateMaintenanceNotificationTask = (async () => {
                 const alreadyExists =
@@ -338,17 +340,12 @@ export const processFinishShipment = (dependencies: {
               );
             }
 
-            await Promise.all(generateMaintenanceNotificationsTasks);
-          })();
+            return Promise.all(generateMaintenanceNotificationsTasks);
+          }),
+        );
+      }
 
-          generateMaintenanceNotificationsTasks.push(
-            generateMaintenanceNotificationTask,
-          );
-        }
-        await Promise.all(generateMaintenanceNotificationsTasks);
-      });
-
-      // 🧩 STEP 6 — Create notifications in database
+      await Promise.all(notificationStepTasks);
 
       return { results };
     },
