@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Prisma } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { addMonths, subMonths } from 'date-fns';
 
@@ -9,7 +8,6 @@ import {
   deliveryMethodTranslations,
   OrderStatusId,
   PaymentTypeTranslations,
-  ShipmentStatusId,
 } from '../../../libs/common/src/constants';
 import {
   BillItemRepository,
@@ -18,7 +16,6 @@ import {
   NotificationRepository,
   OrderRepository,
   PrismaUnitOfWork,
-  ShipmentRepository,
   UserRepository,
   VehicleRepository,
   VehicleUsageRepository,
@@ -29,7 +26,6 @@ import { OrderService } from '../../domain/service/order/order.service';
 export const processFinishShipment = (dependencies: {
   orderService: OrderService;
   orderRepository: OrderRepository;
-  shipmentRepository: ShipmentRepository;
   vehicleUsageRepository: VehicleUsageRepository;
   vehicleRepository: VehicleRepository;
   billRepository: BillRepository;
@@ -46,7 +42,6 @@ export const processFinishShipment = (dependencies: {
       const {
         orderService,
         orderRepository,
-        shipmentRepository,
         vehicleUsageRepository,
         vehicleRepository,
         billItemRepository,
@@ -56,12 +51,8 @@ export const processFinishShipment = (dependencies: {
         notificationRepository,
         unitOfWork,
       } = dependencies;
-      const {
-        shipment,
-        finishShipmentDto,
-        lastOdometer,
-        vehicleUsageCreationDataDto,
-      } = event.data;
+      const { shipment, finishShipmentDto, vehicleUsageCreationDataDto } =
+        event.data;
 
       // 🧩 STEP 1 - Map new order status
       const newOrderStatusEntries = (await step.run(
@@ -84,46 +75,22 @@ export const processFinishShipment = (dependencies: {
         },
       );
 
-      // 🧩 STEP 3 — Perform unit of work (status update + stock changes + shipment update + vehicle update + vehicleUsage creation)
-      await step.run('update-order-stock-and-shipment', async () => {
+      // 🧩 STEP 3 — Perform unit of work (stock update + vehicle update + vehicleUsage creation)
+      await step.run('update-stock-vehicle-and-create-vehicle-usage', async () => {
         return unitOfWork.execute(async (tx) => {
-          const orderUpdategenerateMaintenanceNotificationsTasks =
-            finishShipmentDto.orders.map((order: any) => {
-              const data: Prisma.OrderUncheckedUpdateInput = {
-                orderStatusId: order.orderStatusId,
-              };
+          const manageStockChangesTasks = shipment.orders.map((order: any) => {
+            const oldStatus = order.orderStatusId;
+            const newStatus = newOrderStatusMap.get(order.id);
 
-              if (order.orderStatusId === OrderStatusId.Pending) {
-                data.shipmentId = null;
-              }
-
-              return orderRepository.updateOrderAsync(order.orderId, data, tx);
-            });
-
-          const manageStockChangesgenerateMaintenanceNotificationsTasks =
-            shipment.orders.map((order: any) => {
-              const oldStatus = order.orderStatusId;
-              const newStatus = newOrderStatusMap.get(order.id);
-
-              return orderService.manageStockChangesAsync(
-                order,
-                order.orderItems,
-                order.paymentDetail.paymentTypeId,
-                oldStatus,
-                newStatus!,
-                tx,
-              );
-            });
-
-          const shipmentUpdateTask = shipmentRepository.updateShipmentAsync(
-            shipment.id,
-            {
-              statusId: ShipmentStatusId.Finished,
-              finishedAt: finishShipmentDto.finishedAt,
-              effectiveKm: finishShipmentDto.odometer - Number(lastOdometer),
-            },
-            tx,
-          );
+            return orderService.manageStockChangesAsync(
+              order,
+              order.orderItems,
+              order.paymentDetail.paymentTypeId,
+              oldStatus,
+              newStatus!,
+              tx,
+            );
+          });
 
           const vehicleUsageCreationTask =
             vehicleUsageRepository.createVehicleUsageAsync(
@@ -139,9 +106,7 @@ export const processFinishShipment = (dependencies: {
             );
 
           await Promise.all([
-            ...orderUpdategenerateMaintenanceNotificationsTasks,
-            ...manageStockChangesgenerateMaintenanceNotificationsTasks,
-            shipmentUpdateTask,
+            ...manageStockChangesTasks,
             vehicleUsageCreationTask,
             vehicleUpdateTask,
           ]);

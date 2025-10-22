@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import {
   DeliveryMethodId,
@@ -212,12 +213,34 @@ export class ShipmentService {
       kmUsed: finishShipmentDto.odometer - Number(lastOdometer),
     };
 
-    await inngest.send({
+    const orderUpdateTasks = finishShipmentDto.orders.map((order) => {
+      const data: Prisma.OrderUncheckedUpdateInput = {
+        orderStatusId: order.orderStatusId,
+      };
+
+      if (order.orderStatusId === OrderStatusId.Pending) {
+        data.shipmentId = null;
+      }
+
+      return this.orderRepository.updateOrderAsync(order.orderId, data);
+    });
+
+    const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+      shipment.id,
+      {
+        statusId: ShipmentStatusId.Finished,
+        finishedAt: finishShipmentDto.finishedAt,
+        effectiveKm: finishShipmentDto.odometer - Number(lastOdometer),
+      },
+    );
+
+    await Promise.all([orderUpdateTasks, shipmentUpdateTask]);
+
+    inngest.send({
       name: 'finish.shipment',
       data: {
         shipment,
         finishShipmentDto,
-        lastOdometer,
         vehicleUsageCreationDataDto,
       },
     });
