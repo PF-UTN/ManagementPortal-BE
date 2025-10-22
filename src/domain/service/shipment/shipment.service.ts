@@ -67,10 +67,24 @@ export class ShipmentService {
       orderIds: shipmentCreationDto.orderIds,
     };
 
-    await inngest.send({
+    const updateOrdersTask = this.orderRepository.updateManyOrderStatusAsync(
+      shipmentCreationDataDto.orderIds,
+      OrderStatusId.InPreparation,
+    );
+
+    const shipmentCreationTask = this.shipmentRepository.createShipmentAsync(
+      shipmentCreationDataDto,
+    );
+
+    const [, createdShipment] = await Promise.all([
+      updateOrdersTask,
+      shipmentCreationTask,
+    ]);
+
+    inngest.send({
       name: 'create.shipment',
       data: {
-        shipment: shipmentCreationDataDto,
+        shipment: createdShipment,
         newStatus: OrderStatusId.InPreparation,
       },
     });
