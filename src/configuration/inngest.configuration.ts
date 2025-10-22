@@ -66,8 +66,6 @@ export const IngestConfiguration = (app: INestApplication) => {
     }),
     processSendShipment({
       orderService,
-      orderRepository,
-      shipmentRepository,
       unitOfWork,
     }),
     processCreateShipment({

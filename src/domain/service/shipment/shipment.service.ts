@@ -119,7 +119,21 @@ export class ShipmentService {
       );
     }
 
-    await inngest.send({
+    const orderIds = shipment.orders.map((order) => order.id);
+
+    const updateOrderTask = this.orderRepository.updateManyOrderStatusAsync(
+      orderIds,
+      OrderStatusId.Shipped,
+    );
+
+    const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+      shipment.id,
+      { statusId: ShipmentStatusId.Shipped },
+    );
+
+    await Promise.all([updateOrderTask, shipmentUpdateTask]);
+
+    inngest.send({
       name: 'send.shipment',
       data: {
         shipment,
