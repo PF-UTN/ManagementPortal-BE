@@ -30,6 +30,7 @@ import {
   BillRepository,
   VehicleUsageRepository,
   NotificationRepository,
+  CartRepository,
 } from './services';
 import { PurchaseOrderRepository } from './services/purchase-order/purchase-order.repository';
 import { PurchaseOrderItemRepository } from './services/purchase-order-item/purchase-order-item.repository';
@@ -67,6 +68,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     BillItemRepository,
     VehicleUsageRepository,
     NotificationRepository,
+    CartRepository,
   ],
   exports: [
     UserRepository,
@@ -100,6 +102,7 @@ import { PurchaseOrderItemRepository } from './services/purchase-order-item/purc
     PrismaService,
     VehicleUsageRepository,
     NotificationRepository,
+    CartRepository,
   ],
 })
 export class RepositoryModule {}

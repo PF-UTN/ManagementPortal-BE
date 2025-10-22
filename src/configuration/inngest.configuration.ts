@@ -8,18 +8,22 @@ import { serve } from 'inngest/express';
 import {
   BillItemRepository,
   BillRepository,
+  MaintenancePlanItemRepository,
+  NotificationRepository,
   OrderRepository,
   PrismaUnitOfWork,
   ShipmentRepository,
+  UserRepository,
   VehicleRepository,
   VehicleUsageRepository,
+  CartRepository,
 } from '../../libs/repository/src';
 import { processCreateShipment } from '../controllers/inngest/create-shipment.function';
 import { processFinishShipment } from '../controllers/inngest/finish-shipment.function';
 import { processMercadoPagoWebhook } from '../controllers/inngest/mercadopago.function';
 import { processOrderStatusChange } from '../controllers/inngest/order-status.function';
 import { processSendShipment } from '../controllers/inngest/send-shipment.function';
-import { NotificationService } from '../domain/service/notification/notification.service';
+import { ClientService } from '../domain/service/client/client.service';
 import { OrderService } from '../domain/service/order/order.service';
 import { MercadoPagoWebhookService } from '../services/mercadopago-webhook.service';
 
@@ -37,8 +41,12 @@ export const IngestConfiguration = (app: INestApplication) => {
   const vehicleRepository = app.get(VehicleRepository);
   const billItemRepository = app.get(BillItemRepository);
   const billRepository = app.get(BillRepository);
-  const notificationService = app.get(NotificationService);
+  const maintenancePlanItemRepository = app.get(MaintenancePlanItemRepository);
+  const userRepository = app.get(UserRepository);
+  const notificationRepository = app.get(NotificationRepository);
   const unitOfWork = app.get(PrismaUnitOfWork);
+  const clientService = app.get(ClientService);
+  const cartRepository = app.get(CartRepository);
   const commandBus = app.get(CommandBus);
 
   const inngestFunctions = [
@@ -53,6 +61,8 @@ export const IngestConfiguration = (app: INestApplication) => {
       billItemRepository,
       billRepository,
       unitOfWork,
+      clientService,
+      cartRepository,
     }),
     processSendShipment({
       orderService,
@@ -74,7 +84,9 @@ export const IngestConfiguration = (app: INestApplication) => {
       vehicleRepository,
       billItemRepository,
       billRepository,
-      notificationService,
+      maintenancePlanItemRepository,
+      userRepository,
+      notificationRepository,
       unitOfWork,
     }),
   ];
