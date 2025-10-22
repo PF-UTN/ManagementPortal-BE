@@ -8,9 +8,12 @@ import { serve } from 'inngest/express';
 import {
   BillItemRepository,
   BillRepository,
+  MaintenancePlanItemRepository,
+  NotificationRepository,
   OrderRepository,
   PrismaUnitOfWork,
   ShipmentRepository,
+  UserRepository,
   VehicleRepository,
   VehicleUsageRepository,
   CartRepository,
@@ -21,7 +24,6 @@ import { processMercadoPagoWebhook } from '../controllers/inngest/mercadopago.fu
 import { processOrderStatusChange } from '../controllers/inngest/order-status.function';
 import { processSendShipment } from '../controllers/inngest/send-shipment.function';
 import { ClientService } from '../domain/service/client/client.service';
-import { NotificationService } from '../domain/service/notification/notification.service';
 import { OrderService } from '../domain/service/order/order.service';
 import { MercadoPagoWebhookService } from '../services/mercadopago-webhook.service';
 
@@ -39,7 +41,9 @@ export const IngestConfiguration = (app: INestApplication) => {
   const vehicleRepository = app.get(VehicleRepository);
   const billItemRepository = app.get(BillItemRepository);
   const billRepository = app.get(BillRepository);
-  const notificationService = app.get(NotificationService);
+  const maintenancePlanItemRepository = app.get(MaintenancePlanItemRepository);
+  const userRepository = app.get(UserRepository);
+  const notificationRepository = app.get(NotificationRepository);
   const unitOfWork = app.get(PrismaUnitOfWork);
   const clientService = app.get(ClientService);
   const cartRepository = app.get(CartRepository);
@@ -80,7 +84,9 @@ export const IngestConfiguration = (app: INestApplication) => {
       vehicleRepository,
       billItemRepository,
       billRepository,
-      notificationService,
+      maintenancePlanItemRepository,
+      userRepository,
+      notificationRepository,
       unitOfWork,
     }),
   ];
