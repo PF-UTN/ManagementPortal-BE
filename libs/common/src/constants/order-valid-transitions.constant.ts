@@ -10,6 +10,8 @@ const validTransitions: Record<OrderStatusId, OrderStatusId[]> = {
   [OrderStatusId.PaymentRejected]: [
     OrderStatusId.Cancelled,
     OrderStatusId.PaymentPending,
+    OrderStatusId.Pending,
+    OrderStatusId.InPreparation,
   ],
   [OrderStatusId.Pending]: [
     OrderStatusId.InPreparation,
