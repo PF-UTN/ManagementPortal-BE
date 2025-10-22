@@ -170,7 +170,11 @@ export class OrderService {
       );
     }
 
-    await inngest.send({
+    const updateOrderTask = this.orderRepository.updateOrderAsync(order.id, {
+      orderStatusId: newStatus,
+    });
+
+    const eventTask = inngest.send({
       name: 'order.status.change',
       data: {
         orderId: order.id,
@@ -178,6 +182,8 @@ export class OrderService {
         newStatus,
       },
     });
+
+    await Promise.all([updateOrderTask, eventTask]);
   }
 
   async validateOrderItemsAsync(productIds: number[]) {
