@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
-import { addMonths, subMonths } from 'date-fns';
 
 import {
   MaintenancePlanItemRepository,
   NotificationRepository,
   UserRepository,
 } from '@mp/repository';
+
+import { inngest } from '../../../configuration';
 
 @Injectable()
 export class NotificationService {
@@ -63,90 +64,8 @@ export class NotificationService {
 
   @Cron('0 0,12 * * *')
   async generateMaintenanceNotificationsAsync() {
-    const findAllWithRelationsTask =
-      this.maintenancePlanItemRepository.findAllWithRelationsAsync();
-    const findAdminsTask = this.userRepository.findAdminsAsync();
-
-    const maintenancePlanItems = await findAllWithRelationsTask;
-
-    for (const maintenancePlanItem of maintenancePlanItems) {
-      const { vehicle, maintenanceItem, kmInterval, timeInterval } =
-        maintenancePlanItem;
-      const lastMaintenance = maintenancePlanItem.maintenances[0];
-      const currentKm = vehicle.kmTraveled;
-      const currentDate = new Date();
-
-      const lastKm = lastMaintenance ? lastMaintenance.kmPerformed : 0;
-      const lastDate = lastMaintenance
-        ? lastMaintenance.date
-        : vehicle.createdAt;
-
-      let nextKm: number | null = null;
-      let nextDate: Date | null = null;
-      let kmThreshold: number | null = null;
-      let dateThreshold: Date | null = null;
-
-      if (kmInterval !== null) {
-        nextKm = lastKm + kmInterval;
-        kmThreshold = nextKm - kmInterval * 0.05;
-      }
-
-      if (timeInterval !== null) {
-        nextDate = addMonths(lastDate, timeInterval);
-        dateThreshold = subMonths(nextDate, timeInterval * 0.05);
-      }
-
-      let shouldNotify = false;
-
-      if (kmInterval !== null && nextKm !== null && kmThreshold !== null) {
-        if (currentKm >= kmThreshold) {
-          shouldNotify = true;
-        }
-      }
-
-      if (
-        timeInterval !== null &&
-        nextDate !== null &&
-        dateThreshold !== null
-      ) {
-        if (currentDate >= dateThreshold) {
-          shouldNotify = true;
-        }
-      }
-
-      if (!shouldNotify) continue;
-
-      let message: string;
-
-      if (kmInterval !== null && timeInterval !== null) {
-        message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} cuando se llegue a los ${nextKm} km o en la fecha ${nextDate!.toLocaleDateString()}.`;
-      } else if (kmInterval !== null) {
-        message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} cuando se llegue a los ${nextKm} km.`;
-      } else {
-        message = `Se debe realizar ${maintenanceItem.description} al vehículo ${vehicle.brand} ${vehicle.model} con patente ${vehicle.licensePlate} en la fecha ${nextDate!.toLocaleDateString()}.`;
-      }
-
-      const admins = await findAdminsTask;
-
-      const tasks = [];
-
-      for (const admin of admins) {
-        const task = (async () => {
-          const alreadyExists =
-            await this.notificationRepository.existsSimilarNotificationAsync(
-              admin.id,
-              message,
-            );
-
-          if (!alreadyExists) {
-            return this.notificationRepository.createAsync(admin.id, message);
-          }
-        })();
-
-        tasks.push(task);
-      }
-
-      await Promise.all(tasks);
-    }
+    await inngest.send({
+      name: 'generate.maintenance.notifications',
+    });
   }
 }

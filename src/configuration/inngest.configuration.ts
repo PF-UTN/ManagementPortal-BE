@@ -19,6 +19,7 @@ import {
 } from '../../libs/repository/src';
 import { processCreateShipment } from '../controllers/inngest/create-shipment.function';
 import { processFinishShipment } from '../controllers/inngest/finish-shipment.function';
+import { processGenerateMaintenanceNotificationsCronJob } from '../controllers/inngest/generate-maintenance-notifications.function';
 import { processMercadoPagoWebhook } from '../controllers/inngest/mercadopago.function';
 import { processOrderStatusChange } from '../controllers/inngest/order-status.function';
 import { processSendShipment } from '../controllers/inngest/send-shipment.function';
@@ -81,6 +82,11 @@ export const IngestConfiguration = (app: INestApplication) => {
       userRepository,
       notificationRepository,
       unitOfWork,
+    }),
+    processGenerateMaintenanceNotificationsCronJob({
+      maintenancePlanItemRepository,
+      userRepository,
+      notificationRepository,
     }),
   ];
 
