@@ -30,6 +30,7 @@ import { DateHelper, ExcelExportHelper } from '@mp/common/helpers';
 import { CreateShipmentCommand } from './command/create-shipment.command';
 import { FinishShipmentCommand } from './command/finish-shipment.command';
 import { SendShipmentCommand } from './command/send-shipment.command';
+import { DownloadShipmentReportQuery } from './query/download-shipment-report.query';
 import { DownloadShipmentQuery } from './query/download-shipment.query';
 import { GetShipmentByIdQuery } from './query/get-shipment-by-id.query';
 import { SearchShipmentQuery } from './query/search-shipment.query';
@@ -149,6 +150,33 @@ export class ShipmentController {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       length: buffer.length,
       disposition: `attachment; filename="${filename}"`,
+    });
+  }
+
+  @Get(':id/report')
+  @HttpCode(200)
+  @ApiBearerAuth()
+  @RequiredPermissions(PermissionCodes.Shipment.READ)
+  @ApiOperation({
+    summary: 'Download shipment report PDF',
+    description:
+      'Generates and downloads a PDF report for the shipment with the specified ID.',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Shipment ID',
+    type: Number,
+  })
+  async downloadShipmentReportAsync(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<StreamableFile> {
+    const { fileName, contentType, buffer } = await this.queryBus.execute(
+      new DownloadShipmentReportQuery(id),
+    );
+
+    return new StreamableFile(buffer, {
+      type: contentType,
+      disposition: `attachment; filename="${fileName}"`,
     });
   }
 }

@@ -324,4 +324,53 @@ export class ShipmentRepository {
     });
     return data;
   }
+
+  async findReportDataByIdAsync(id: number) {
+    return this.prisma.shipment.findUnique({
+      where: { id },
+      include: {
+        vehicle: {
+          select: {
+            licensePlate: true,
+            brand: true,
+            model: true,
+          },
+        },
+        orders: {
+          include: {
+            deliveryMethod: { select: { name: true } },
+            client: {
+              include: {
+                address: {
+                  include: {
+                    town: {
+                      include: {
+                        province: { include: { country: true } },
+                      },
+                    },
+                  },
+                },
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    phone: true,
+                    email: true,
+                  },
+                },
+              },
+            },
+            orderItems: {
+              select: {
+                quantity: true,
+                unitPrice: true,
+                subtotalPrice: true,
+                product: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
 }

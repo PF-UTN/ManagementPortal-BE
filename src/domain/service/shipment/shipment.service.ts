@@ -15,8 +15,10 @@ import {
   FinishShipmentDto,
   ShipmentCreationDataDto,
   ShipmentCreationDto,
+  ShipmentReportGenerationDataDto,
   VehicleUsageCreationDataDto,
 } from '@mp/common/dtos';
+import { ReportService } from '@mp/common/services';
 import {
   ShipmentRepository,
   VehicleRepository,
@@ -37,6 +39,7 @@ export class ShipmentService {
     private readonly orderRepository: OrderRepository,
     private readonly vehicleUsageRepository: VehicleUsageRepository,
     private readonly googleMapsRoutingService: GoogleMapsRoutingService,
+    private readonly reportService: ReportService,
   ) {}
 
   async createShipmentAsync(shipmentCreationDto: ShipmentCreationDto) {
@@ -311,5 +314,60 @@ export class ShipmentService {
       query.searchText,
       query.filters,
     );
+  }
+
+  async downloadReportAsync(id: number) {
+    const shipment = await this.shipmentRepository.findReportDataByIdAsync(id);
+
+    if (!shipment) {
+      throw new NotFoundException(`Shipment with id ${id} does not exists.`);
+    }
+
+    const dto: ShipmentReportGenerationDataDto = {
+      shipmentId: shipment.id,
+      date: shipment.date,
+      estimatedKm: shipment.estimatedKm
+        ? Number(shipment.estimatedKm)
+        : undefined,
+      effectiveKm: shipment.effectiveKm
+        ? Number(shipment.effectiveKm)
+        : undefined,
+      finishedAt: shipment.finishedAt ?? undefined,
+      routeLink: shipment.routeLink ?? undefined,
+      vehiclePlate: shipment.vehicle.licensePlate,
+      vehicleDescription: `${shipment.vehicle.brand} ${shipment.vehicle.model}`,
+      driverName: '-',
+      orders: shipment.orders.map((o) => ({
+        orderId: o.id,
+        clientName:
+          `${o.client.user.firstName ?? ''} ${o.client.user.lastName ?? ''}`.trim() ||
+          o.client.user.email,
+        clientAddress: `${o.client.address.street} ${o.client.address.streetNumber}, ${o.client.address.town.name}, ${o.client.address.town.province.name}, ${o.client.address.town.province.country.name}`,
+        clientPhone: o.client.user.phone ?? undefined,
+        deliveryMethod: o.deliveryMethod?.name ?? '',
+        totalAmount: Number(o.totalAmount ?? 0),
+        items: o.orderItems.map((it) => ({
+          productName: it.product.name,
+          quantity: it.quantity,
+          unitPrice: Number(it.unitPrice),
+          subtotalPrice: Number(it.subtotalPrice),
+        })),
+      })),
+    };
+
+    const pdfDoc = await this.reportService.generateShipmentReport(dto);
+
+    const chunks: Buffer[] = [];
+    pdfDoc.on('data', (chunk: Buffer) => chunks.push(chunk));
+    pdfDoc.end();
+
+    const buffer = await new Promise<Buffer>((resolve) => {
+      pdfDoc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
+    return {
+      fileName: `shipment-${shipment.id}.pdf`,
+      contentType: 'application/pdf',
+      buffer,
+    };
   }
 }
