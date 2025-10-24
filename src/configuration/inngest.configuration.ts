@@ -12,7 +12,6 @@ import {
   NotificationRepository,
   OrderRepository,
   PrismaUnitOfWork,
-  ShipmentRepository,
   UserRepository,
   VehicleRepository,
   VehicleUsageRepository,
@@ -36,7 +35,6 @@ export const IngestConfiguration = (app: INestApplication) => {
   const webhookService = app.get(MercadoPagoWebhookService);
   const orderService = app.get(OrderService);
   const orderRepository = app.get(OrderRepository);
-  const shipmentRepository = app.get(ShipmentRepository);
   const vehicleUsageRepository = app.get(VehicleUsageRepository);
   const vehicleRepository = app.get(VehicleRepository);
   const billItemRepository = app.get(BillItemRepository);
@@ -66,20 +64,15 @@ export const IngestConfiguration = (app: INestApplication) => {
     }),
     processSendShipment({
       orderService,
-      orderRepository,
-      shipmentRepository,
       unitOfWork,
     }),
     processCreateShipment({
       orderService,
       orderRepository,
-      shipmentRepository,
-      unitOfWork,
     }),
     processFinishShipment({
       orderService,
       orderRepository,
-      shipmentRepository,
       vehicleUsageRepository,
       vehicleRepository,
       billItemRepository,

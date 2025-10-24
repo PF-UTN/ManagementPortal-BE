@@ -12,6 +12,7 @@ import {
 import {
   FinishShipmentDto,
   SearchShipmentFiltersDto,
+  ShipmentCreationDataDto,
   ShipmentCreationDto,
 } from '@mp/common/dtos';
 import {
@@ -121,6 +122,64 @@ describe('ShipmentService', () => {
       await expect(
         service.createShipmentAsync(shipmentCreationDtoMock),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should call orderRepository.updateManyOrderStatusAsync with the correct data', async () => {
+      // Arrange
+      const shipmentCreationDtoMock: ShipmentCreationDto = {
+        date: shipment.date,
+        vehicleId: shipment.vehicleId,
+        orderIds: [1, 2, 3],
+      };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'createShipmentAsync')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      await service.createShipmentAsync(shipmentCreationDtoMock);
+
+      // Assert
+      expect(orderRepository.updateManyOrderStatusAsync).toHaveBeenCalledWith(
+        shipmentCreationDtoMock.orderIds,
+        OrderStatusId.InPreparation,
+      );
+    });
+
+    it('should call repository.createShipmentAsync with the correct data', async () => {
+      // Arrange
+      const shipmentCreationDtoMock: ShipmentCreationDto = {
+        date: shipment.date,
+        vehicleId: shipment.vehicleId,
+        orderIds: [1, 2, 3],
+      };
+
+      const shipmentCreationDataDtoMock: ShipmentCreationDataDto = {
+        date: shipmentCreationDtoMock.date,
+        statusId: ShipmentStatusId.Pending,
+        vehicleId: shipmentCreationDtoMock.vehicleId,
+        orderIds: shipmentCreationDtoMock.orderIds,
+      };
+
+      jest.spyOn(vehicleRepository, 'existsAsync').mockResolvedValueOnce(true);
+      jest
+        .spyOn(orderRepository, 'existsManyPendingUnassignedAsync')
+        .mockResolvedValueOnce(true);
+      jest
+        .spyOn(repository, 'createShipmentAsync')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      await service.createShipmentAsync(shipmentCreationDtoMock);
+
+      // Assert
+      expect(repository.createShipmentAsync).toHaveBeenCalledWith(
+        shipmentCreationDataDtoMock,
+      );
     });
   });
 
@@ -383,6 +442,300 @@ describe('ShipmentService', () => {
       await expect(service.sendShipmentAsync(shipmentId)).rejects.toThrow(
         BadRequestException,
       );
+    });
+
+    it('should call orderRepository.updateManyOrderStatusAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
+                  };
+                };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+                kmTraveled: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.statusId = ShipmentStatusId.Pending;
+      shipmentMock.orders = [
+        {
+          orderStatusId: OrderStatusId.Prepared,
+          client: {
+            id: 1,
+            companyName: 'test client',
+            addressId: 1,
+            taxCategoryId: 1,
+            user: {
+              email: 'test-client@test.com',
+            },
+            userId: 1,
+            address: {
+              id: 1,
+              street: 'Test Street',
+              streetNumber: 123,
+              townId: 1,
+              town: {
+                name: 'Test Town',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Test Country',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Test Province',
+                },
+                provinceId: 1,
+                zipCode: '1234',
+              },
+            },
+          },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
+          clientId: 1,
+          createdAt: mockDeep<Date>(new Date('2015-01-15')),
+          deliveryMethodId: DeliveryMethodId.HomeDelivery,
+          id: 1,
+          paymentDetailId: 1,
+          shipmentId: shipment.id,
+          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
+        },
+      ];
+
+      const orderIds = shipmentMock.orders.map((order) => order.id);
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+      jest
+        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
+        .mockResolvedValueOnce(shipmentMock.orders as any);
+      jest
+        .spyOn(repository, 'updateShipmentAsync')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      await service.sendShipmentAsync(shipmentId);
+
+      // Assert
+      expect(orderRepository.updateManyOrderStatusAsync).toHaveBeenCalledWith(
+        orderIds,
+        OrderStatusId.Shipped,
+      );
+    });
+
+    it('should call repository.sendShipmentAsync with the correct data', async () => {
+      // Arrange
+      const shipmentId = shipment.id;
+      const shipmentMock = mockDeep<
+        Prisma.ShipmentGetPayload<{
+          include: {
+            orders: {
+              include: {
+                client: {
+                  include: {
+                    address: {
+                      include: {
+                        town: {
+                          include: {
+                            province: {
+                              include: {
+                                country: true;
+                              };
+                            };
+                          };
+                        };
+                      };
+                    };
+                    user: {
+                      select: {
+                        email: true;
+                      };
+                    };
+                  };
+                };
+                orderStatus: {
+                  select: {
+                    id: true;
+                    name: true;
+                  };
+                };
+                orderItems: {
+                  select: {
+                    productId: true;
+                    quantity: true;
+                  };
+                };
+                paymentDetail: {
+                  select: {
+                    paymentTypeId: true;
+                  };
+                };
+              };
+            };
+            vehicle: {
+              select: {
+                id: true;
+                licensePlate: true;
+                brand: true;
+                model: true;
+                kmTraveled: true;
+              };
+            };
+            status: {
+              select: {
+                id: true;
+                name: true;
+              };
+            };
+          };
+        }>
+      >();
+
+      shipmentMock.id = shipmentId;
+      shipmentMock.statusId = ShipmentStatusId.Pending;
+      shipmentMock.orders = [
+        {
+          orderStatusId: OrderStatusId.Prepared,
+          client: {
+            id: 1,
+            companyName: 'test client',
+            addressId: 1,
+            taxCategoryId: 1,
+            user: {
+              email: 'test-client@test.com',
+            },
+            userId: 1,
+            address: {
+              id: 1,
+              street: 'Test Street',
+              streetNumber: 123,
+              townId: 1,
+              town: {
+                name: 'Test Town',
+                id: 1,
+                province: {
+                  country: {
+                    id: 1,
+                    name: 'Test Country',
+                  },
+                  countryId: 1,
+                  id: 1,
+                  name: 'Test Province',
+                },
+                provinceId: 1,
+                zipCode: '1234',
+              },
+            },
+          },
+          paymentDetail: {
+            paymentTypeId: 1,
+          },
+          orderItems: [
+            {
+              productId: 1,
+              quantity: 1,
+            },
+          ],
+          clientId: 1,
+          createdAt: mockDeep<Date>(new Date('2015-01-15')),
+          deliveryMethodId: DeliveryMethodId.HomeDelivery,
+          id: 1,
+          paymentDetailId: 1,
+          shipmentId: shipment.id,
+          totalAmount: mockDeep<Prisma.Decimal>(new Prisma.Decimal(200.5)),
+          orderStatus: {
+            id: OrderStatusId.Prepared,
+            name: 'Prepared',
+          },
+        },
+      ];
+
+      jest
+        .spyOn(repository, 'findByIdAsync')
+        .mockResolvedValueOnce(shipmentMock);
+      jest
+        .spyOn(orderRepository, 'findOrdersByShipmentIdAsync')
+        .mockResolvedValueOnce(shipmentMock.orders as any);
+      jest
+        .spyOn(repository, 'updateShipmentAsync')
+        .mockResolvedValueOnce(shipment);
+
+      // Act
+      await service.sendShipmentAsync(shipmentId);
+
+      // Assert
+      expect(repository.updateShipmentAsync).toHaveBeenCalledWith(shipmentId, {
+        statusId: ShipmentStatusId.Shipped,
+      });
     });
   });
 

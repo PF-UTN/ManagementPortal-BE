@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import {
   DeliveryMethodId,
@@ -67,10 +68,24 @@ export class ShipmentService {
       orderIds: shipmentCreationDto.orderIds,
     };
 
-    await inngest.send({
+    const updateOrdersTask = this.orderRepository.updateManyOrderStatusAsync(
+      shipmentCreationDataDto.orderIds,
+      OrderStatusId.InPreparation,
+    );
+
+    const shipmentCreationTask = this.shipmentRepository.createShipmentAsync(
+      shipmentCreationDataDto,
+    );
+
+    const [, createdShipment] = await Promise.all([
+      updateOrdersTask,
+      shipmentCreationTask,
+    ]);
+
+    inngest.send({
       name: 'create.shipment',
       data: {
-        shipment: shipmentCreationDataDto,
+        shipment: createdShipment,
         newStatus: OrderStatusId.InPreparation,
       },
     });
@@ -105,7 +120,21 @@ export class ShipmentService {
       );
     }
 
-    await inngest.send({
+    const orderIds = shipment.orders.map((order) => order.id);
+
+    const updateOrderTask = this.orderRepository.updateManyOrderStatusAsync(
+      orderIds,
+      OrderStatusId.Shipped,
+    );
+
+    const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+      shipment.id,
+      { statusId: ShipmentStatusId.Shipped },
+    );
+
+    await Promise.all([updateOrderTask, shipmentUpdateTask]);
+
+    inngest.send({
       name: 'send.shipment',
       data: {
         shipment,
@@ -184,12 +213,34 @@ export class ShipmentService {
       kmUsed: finishShipmentDto.odometer - Number(lastOdometer),
     };
 
-    await inngest.send({
+    const orderUpdateTasks = finishShipmentDto.orders.map((order) => {
+      const data: Prisma.OrderUncheckedUpdateInput = {
+        orderStatusId: order.orderStatusId,
+      };
+
+      if (order.orderStatusId === OrderStatusId.Pending) {
+        data.shipmentId = null;
+      }
+
+      return this.orderRepository.updateOrderAsync(order.orderId, data);
+    });
+
+    const shipmentUpdateTask = this.shipmentRepository.updateShipmentAsync(
+      shipment.id,
+      {
+        statusId: ShipmentStatusId.Finished,
+        finishedAt: finishShipmentDto.finishedAt,
+        effectiveKm: finishShipmentDto.odometer - Number(lastOdometer),
+      },
+    );
+
+    await Promise.all([orderUpdateTasks, shipmentUpdateTask]);
+
+    inngest.send({
       name: 'finish.shipment',
       data: {
         shipment,
         finishShipmentDto,
-        lastOdometer,
         vehicleUsageCreationDataDto,
       },
     });
