@@ -18,15 +18,35 @@ export class GoogleMapsRoutingService {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
-    const credentials = JSON.parse(
-      Buffer.from(
-        configService.get('GOOGLE_CREDENTIALS_BASE64')!,
-        'base64',
-      ).toString('utf8'),
-    );
-    this.routeOptimizationclient = new RouteOptimizationClient({
-      credentials: credentials,
-    });
+    const base64 =
+      this.configService.get<string>('GOOGLE_CREDENTIALS_BASE64') ??
+      process.env.GOOGLE_CREDENTIALS_BASE64;
+    const json =
+      this.configService.get<string>('GOOGLE_CREDENTIALS_JSON') ??
+      process.env.GOOGLE_CREDENTIALS_JSON;
+
+    // Si no hay credenciales, no pasar `credentials` para permitir ADC (Application Default Credentials)
+    if (!base64 && !json) {
+      this.routeOptimizationclient = new RouteOptimizationClient();
+      return;
+    }
+
+    // Si hay credenciales, intentar parsearlas (acepta base64 o JSON crudo)
+    try {
+      const raw = (base64 ?? json)!.trim();
+      const jsonString = raw.startsWith('{')
+        ? raw
+        : Buffer.from(raw, 'base64').toString('utf8');
+      const credentials = JSON.parse(jsonString);
+      this.routeOptimizationclient = new RouteOptimizationClient({
+        credentials,
+      });
+    } catch (err) {
+      throw new Error(
+        'Invalid Google credentials (GOOGLE_CREDENTIALS_BASE64 o GOOGLE_CREDENTIALS_JSON): ' +
+          (err as Error).message,
+      );
+    }
   }
 
   async geocodeAsync(address: string): Promise<{ lat: number; lng: number }> {

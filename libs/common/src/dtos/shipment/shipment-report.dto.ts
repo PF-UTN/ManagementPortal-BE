@@ -11,6 +11,7 @@ export type ShipmentOrderDto = {
   clientAddress: string;
   clientPhone?: string;
   deliveryMethod: string;
+  paymentMethod: number;
   totalAmount: number;
   items?: ShipmentOrderItemDto[];
 };

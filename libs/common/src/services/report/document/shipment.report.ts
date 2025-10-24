@@ -2,7 +2,7 @@ import type { TDocumentDefinitions, Content } from 'pdfmake/interfaces';
 
 import { ShipmentReportGenerationDataDto } from '@mp/common/dtos';
 
-import { DOG_URL } from '../../../constants';
+import { DOG_URL, PaymentTypeEnum } from '../../../constants';
 import { urlToBase64 } from '../../../helpers';
 
 export const shipmentReport = async (
@@ -52,12 +52,30 @@ export const shipmentReport = async (
     margin: [0, 0, 0, 10],
   };
 
+  const getPaymentMethodLabel = (paymentMethodId?: number): string => {
+    if (!paymentMethodId) return '-';
+
+    switch (paymentMethodId) {
+      case PaymentTypeEnum.CreditDebitCard:
+        return 'Tarjeta';
+      case PaymentTypeEnum.UponDelivery:
+        return 'Efectivo';
+      default:
+        return '-';
+    }
+  };
+
+  const isCashPayment = (paymentMethodId?: number): boolean => {
+    return paymentMethodId === PaymentTypeEnum.UponDelivery;
+  };
+
   const ordersTableHeader = [
     { text: 'Pedido', color: 'white', bold: true, alignment: 'center' },
     { text: 'Cliente', color: 'white', bold: true },
     { text: 'Dirección', color: 'white', bold: true },
     { text: 'Teléfono', color: 'white', bold: true, alignment: 'center' },
     { text: 'Entrega', color: 'white', bold: true, alignment: 'center' },
+    { text: 'Pago', color: 'white', bold: true, alignment: 'center' },
     { text: 'Total', color: 'white', bold: true, alignment: 'right' },
   ];
 
@@ -67,6 +85,12 @@ export const shipmentReport = async (
     o.clientAddress,
     { text: o.clientPhone ?? '-', alignment: 'center' },
     { text: o.deliveryMethod, alignment: 'center' },
+    {
+      text: getPaymentMethodLabel(o.paymentMethod),
+      alignment: 'center',
+      bold: isCashPayment(o.paymentMethod),
+      color: isCashPayment(o.paymentMethod) ? '#d32f2f' : undefined,
+    },
     { text: `$ ${o.totalAmount.toFixed(2)}`, alignment: 'right' },
   ]);
 
@@ -77,7 +101,7 @@ export const shipmentReport = async (
       vLineColor: () => '#ddd',
     },
     table: {
-      widths: ['auto', '*', '*', 'auto', 'auto', 'auto'],
+      widths: ['auto', '*', '*', 'auto', 'auto', 'auto', 'auto'],
       headerRows: 1,
       body: [ordersTableHeader, ...ordersRows],
     },
@@ -98,6 +122,9 @@ export const shipmentReport = async (
       },
     ]);
 
+    const isPaymentUponDelivery = isCashPayment(o.paymentMethod);
+    const isPaidWithCard = o.paymentMethod === PaymentTypeEnum.CreditDebitCard;
+
     return {
       stack: [
         {
@@ -113,6 +140,23 @@ export const shipmentReport = async (
           fontSize: 10,
           margin: [0, 0, 0, 4],
         },
+        isPaymentUponDelivery
+          ? {
+              text: 'COBRAR AL MOMENTO DE LA ENTREGA',
+              fontSize: 11,
+              bold: true,
+              color: '#d32f2f',
+              margin: [0, 0, 0, 6],
+            }
+          : isPaidWithCard
+            ? {
+                text: 'PAGADO',
+                fontSize: 11,
+                bold: true,
+                color: '#2e7d32',
+                margin: [0, 0, 0, 6],
+              }
+            : { text: '' },
         {
           layout: 'lightHorizontalLines',
           table: {
@@ -129,11 +173,17 @@ export const shipmentReport = async (
               [
                 { text: '', colSpan: 2 },
                 {},
-                { text: 'TOTAL', bold: true, alignment: 'right' },
+                {
+                  text: isPaymentUponDelivery ? 'TOTAL A COBRAR' : 'TOTAL',
+                  bold: true,
+                  alignment: 'right',
+                  color: isPaymentUponDelivery ? '#d32f2f' : undefined,
+                },
                 {
                   text: `$ ${o.totalAmount.toFixed(2)}`,
                   bold: true,
                   alignment: 'right',
+                  color: isPaymentUponDelivery ? '#d32f2f' : undefined,
                 },
               ],
             ],

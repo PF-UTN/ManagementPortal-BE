@@ -7,6 +7,7 @@ import { mockDeep } from 'jest-mock-extended';
 import {
   DeliveryMethodId,
   OrderStatusId,
+  PaymentTypeEnum,
   ShipmentStatusId,
 } from '@mp/common/constants';
 import {
@@ -1590,6 +1591,11 @@ describe('ShipmentService', () => {
             id: 1,
             totalAmount: new Prisma.Decimal(804),
             deliveryMethod: { name: 'HomeDelivery' },
+            paymentDetail: {
+              paymentType: {
+                id: PaymentTypeEnum.UponDelivery,
+              },
+            },
             client: {
               user: {
                 firstName: 'Juan',
@@ -1671,6 +1677,7 @@ describe('ShipmentService', () => {
             clientAddress: 'Corrientes 1489, Rosario, Santa Fe, Argentina',
             clientPhone: '3414315832',
             deliveryMethod: 'HomeDelivery',
+            paymentMethod: PaymentTypeEnum.UponDelivery,
             totalAmount: 804,
             items: [
               {
@@ -1710,6 +1717,7 @@ describe('ShipmentService', () => {
             id: 5,
             totalAmount: new Prisma.Decimal(500),
             deliveryMethod: { name: 'PickUpAtStore' },
+            paymentMethod: undefined,
             client: {
               user: {
                 firstName: null,
@@ -1770,7 +1778,108 @@ describe('ShipmentService', () => {
             expect.objectContaining({
               clientName: 'test@example.com',
               clientPhone: undefined,
+              paymentMethod: undefined,
               items: [],
+            }),
+          ],
+        }),
+      );
+
+      expect(result.fileName).toBe(`shipment-${shipmentId}.pdf`);
+      expect(result.contentType).toBe('application/pdf');
+      expect(result.buffer).toEqual(mockPdfBuffer);
+    });
+
+    it('should map payment method ID correctly for card payments', async () => {
+      // Arrange
+      const shipmentId = 40;
+      const mockShipmentData = {
+        id: shipmentId,
+        date: new Date('2025-01-15'),
+        estimatedKm: null,
+        effectiveKm: null,
+        finishedAt: null,
+        routeLink: null,
+        vehicle: {
+          licensePlate: 'DEF456',
+          brand: 'Toyota',
+          model: 'Hilux',
+        },
+        orders: [
+          {
+            id: 7,
+            totalAmount: new Prisma.Decimal(1200),
+            deliveryMethod: { name: 'HomeDelivery' },
+            paymentDetail: {
+              paymentType: {
+                id: PaymentTypeEnum.CreditDebitCard,
+              },
+            },
+            client: {
+              user: {
+                firstName: 'María',
+                lastName: 'González',
+                email: 'maria@example.com',
+                phone: '3411234567',
+              },
+              address: {
+                street: 'San Martín',
+                streetNumber: 500,
+                town: {
+                  name: 'Rosario',
+                  province: {
+                    name: 'Santa Fe',
+                    country: { name: 'Argentina' },
+                  },
+                },
+              },
+            },
+            orderItems: [
+              {
+                quantity: 1,
+                unitPrice: new Prisma.Decimal(1200),
+                subtotalPrice: new Prisma.Decimal(1200),
+                product: { name: 'Producto Premium' },
+              },
+            ],
+          },
+        ],
+      };
+
+      const mockPdfBuffer = Buffer.from('pdf-card-payment');
+      const mockPdfDoc: any = {
+        on: jest.fn(function (
+          this: any,
+          event: string,
+          callback: (chunk?: Buffer) => void,
+        ) {
+          if (event === 'data') callback(mockPdfBuffer);
+          if (event === 'end') setTimeout(callback, 0);
+          return this;
+        }),
+        end: jest.fn(),
+      };
+
+      jest
+        .spyOn(repository, 'findReportDataByIdAsync')
+        .mockResolvedValueOnce(mockShipmentData as any);
+
+      jest
+        .spyOn(reportService, 'generateShipmentReport')
+        .mockReturnValueOnce(mockPdfDoc as any);
+
+      // Act
+      const result = await service.downloadReportAsync(shipmentId);
+
+      // Assert
+      expect(reportService.generateShipmentReport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orders: [
+            expect.objectContaining({
+              orderId: 7,
+              clientName: 'María González',
+              paymentMethod: PaymentTypeEnum.CreditDebitCard,
+              totalAmount: 1200,
             }),
           ],
         }),

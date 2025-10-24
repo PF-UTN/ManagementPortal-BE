@@ -3,6 +3,7 @@ import { Shipment } from '@prisma/client';
 import { endOfDay, parseISO } from 'date-fns';
 import { mockDeep } from 'jest-mock-extended';
 
+import { PaymentTypeEnum } from '@mp/common/constants';
 import { ShipmentCreationDataDto } from '@mp/common/dtos';
 
 import { PrismaService } from '../prisma.service';
@@ -408,6 +409,11 @@ describe('ShipmentRepository', () => {
         {
           id: 1,
           deliveryMethod: { name: 'PickUpAtStore' },
+          paymentDetail: {
+            paymentType: {
+              id: PaymentTypeEnum.UponDelivery,
+            },
+          },
           client: {
             address: {
               street: 'Corrientes',
@@ -477,6 +483,15 @@ describe('ShipmentRepository', () => {
           orders: {
             include: {
               deliveryMethod: { select: { name: true } },
+              paymentDetail: {
+                select: {
+                  paymentType: {
+                    select: {
+                      id: true,
+                    },
+                  },
+                },
+              },
               client: {
                 include: {
                   address: {
@@ -511,7 +526,6 @@ describe('ShipmentRepository', () => {
         },
       });
     });
-
     it('should return null when shipment does not exist', async () => {
       // Arrange
       const id = 999;
