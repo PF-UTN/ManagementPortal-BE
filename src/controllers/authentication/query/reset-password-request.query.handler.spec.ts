@@ -78,7 +78,7 @@ describe('ResetPasswordRequestQueryHandler', () => {
       const token = 'mocked-token';
       authenticationServiceMock.requestPasswordResetAsync.mockResolvedValue(token);
       const frontendBaseUrl = configService.get<string>('FRONTEND_BASE_URL');
-      const url = `${frontendBaseUrl}/reset-password/${token}`;
+      const url = `${frontendBaseUrl}/autenticacion/restablecimiento-clave/${token}`;
 
       const query = new ResetPasswordRequestQuery(resetPasswordRequestDto);
 
