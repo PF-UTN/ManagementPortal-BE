@@ -1,5 +1,6 @@
 import { ContentColumns, Content, Table } from 'pdfmake/interfaces';
 
+import { PaymentTypeEnum } from '@mp/common/constants';
 import { ShipmentReportGenerationDataDto } from '@mp/common/dtos';
 
 import { shipmentReport } from './shipment.report';
@@ -28,6 +29,7 @@ describe('shipmentReport', () => {
         clientAddress: 'Corrientes 1489, Rosario, Santa Fe, Argentina',
         clientPhone: '3414567890',
         deliveryMethod: 'HomeDelivery',
+        paymentMethod: PaymentTypeEnum.UponDelivery,
         totalAmount: 804.0,
         items: [
           {
@@ -50,6 +52,7 @@ describe('shipmentReport', () => {
         clientAddress: 'San Martín 500, Rosario, Santa Fe, Argentina',
         clientPhone: '3414123456',
         deliveryMethod: 'PickUpAtStore',
+        paymentMethod: PaymentTypeEnum.CreditDebitCard,
         totalAmount: 500.0,
         items: [
           {
@@ -169,12 +172,25 @@ describe('shipmentReport', () => {
       'Corrientes 1489, Rosario, Santa Fe, Argentina',
     );
     expect(ordersTable.table.body[1][5]).toEqual({
+      text: 'Efectivo',
+      alignment: 'center',
+      bold: true,
+      color: '#d32f2f',
+    });
+    // Columna de total (índice 6)
+    expect(ordersTable.table.body[1][6]).toEqual({
       text: '$ 804.00',
       alignment: 'right',
     });
 
     expect(ordersTable.table.body[2][1]).toBe('María González');
     expect(ordersTable.table.body[2][5]).toEqual({
+      text: 'Tarjeta',
+      alignment: 'center',
+      bold: false,
+      color: undefined,
+    });
+    expect(ordersTable.table.body[2][6]).toEqual({
       text: '$ 500.00',
       alignment: 'right',
     });
@@ -193,9 +209,59 @@ describe('shipmentReport', () => {
     const firstOrderDetail = detailsPerOrder[0] as { stack: Array<unknown> };
     expect(firstOrderDetail.stack).toBeDefined();
 
-    const orderTable = firstOrderDetail.stack[2] as { table: Table };
+    const orderTable = firstOrderDetail.stack[3] as { table: Table };
     expect(orderTable.table.body[1][1]).toBe('Producto A');
     expect(orderTable.table.body[2][1]).toBe('Producto B');
+  });
+
+  it('should display payment warning for cash payments', async () => {
+    // Act
+    const doc = await shipmentReport(mockShipment);
+
+    // Assert
+    const contentArr = doc.content as Content[];
+    const firstOrderDetail = contentArr[3] as { stack: Array<unknown> };
+
+    // El mensaje de cobrar está en índice 2
+    const paymentWarning = firstOrderDetail.stack[2] as {
+      text: string;
+      color: string;
+    };
+    expect(paymentWarning.text).toBe('COBRAR AL MOMENTO DE LA ENTREGA');
+    expect(paymentWarning.color).toBe('#d32f2f');
+  });
+
+  it('should display paid status for card payments', async () => {
+    // Act
+    const doc = await shipmentReport(mockShipment);
+
+    // Assert
+    const contentArr = doc.content as Content[];
+    const secondOrderDetail = contentArr[4] as { stack: Array<unknown> };
+
+    // El mensaje de pagado está en índice 2
+    const paidStatus = secondOrderDetail.stack[2] as {
+      text: string;
+      color: string;
+    };
+    expect(paidStatus.text).toBe('PAGADO');
+    expect(paidStatus.color).toBe('#2e7d32');
+  });
+
+  it('should show "TOTAL A COBRAR" for cash payments', async () => {
+    // Act
+    const doc = await shipmentReport(mockShipment);
+
+    // Assert
+    const contentArr = doc.content as Content[];
+    const firstOrderDetail = contentArr[3] as { stack: Array<unknown> };
+    const orderTable = firstOrderDetail.stack[3] as { table: Table };
+
+    const totalRow = orderTable.table.body[orderTable.table.body.length - 1];
+    const totalLabel = totalRow[2] as { text: string; color?: string };
+
+    expect(totalLabel.text).toBe('TOTAL A COBRAR');
+    expect(totalLabel.color).toBe('#d32f2f');
   });
 
   it('should include QR section when routeLink is provided', async () => {
@@ -258,7 +324,7 @@ describe('shipmentReport', () => {
     // Assert
     const contentArr = doc.content as Content[];
     const orderDetail = contentArr[3] as { stack: Array<unknown> };
-    const orderTable = orderDetail.stack[2] as { table: Table };
+    const orderTable = orderDetail.stack[3] as { table: Table };
 
     // Solo el header más la fila de TOTAL
     expect(orderTable.table.body.length).toBe(2);
@@ -277,6 +343,7 @@ describe('shipmentReport', () => {
           clientName: 'Test Client',
           clientAddress: 'Test Address',
           deliveryMethod: 'Test',
+          paymentMethod: PaymentTypeEnum.UponDelivery,
           totalAmount: 100,
           items: [],
         },

@@ -339,6 +339,15 @@ export class ShipmentRepository {
         orders: {
           include: {
             deliveryMethod: { select: { name: true } },
+            paymentDetail: {
+              select: {
+                paymentType: {
+                  select: {
+                    id: true,
+                  },
+                },
+              },
+            },
             client: {
               include: {
                 address: {

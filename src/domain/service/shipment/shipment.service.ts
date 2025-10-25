@@ -345,6 +345,7 @@ export class ShipmentService {
         clientAddress: `${o.client.address.street} ${o.client.address.streetNumber}, ${o.client.address.town.name}, ${o.client.address.town.province.name}, ${o.client.address.town.province.country.name}`,
         clientPhone: o.client.user.phone ?? undefined,
         deliveryMethod: o.deliveryMethod?.name ?? '',
+        paymentMethod: o.paymentDetail?.paymentType?.id ?? undefined,
         totalAmount: Number(o.totalAmount ?? 0),
         items: o.orderItems.map((it) => ({
           productName: it.product.name,
