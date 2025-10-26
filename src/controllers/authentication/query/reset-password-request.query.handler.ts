@@ -26,7 +26,7 @@ export class ResetPasswordRequestQueryHandler
     }
 
     const frontendBaseUrl = this.configService.get<string>('FRONTEND_BASE_URL');
-    const url = frontendBaseUrl + '/reset-password/' + token;
+    const url = frontendBaseUrl + '/autenticacion/restablecimiento-clave/' + token;
 
     await this.mailingService.sendPasswordResetEmailAsync(
       query.resetPasswordRequestDto.email,
