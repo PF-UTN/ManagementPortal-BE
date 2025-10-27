@@ -15,10 +15,7 @@ export const countryProvinceTownPostDeployAsync = async () => {
   const provinceData: Province[] = [
     { id: 101, name: 'Santa Fe', countryId: 1 },
     { id: 102, name: 'Buenos Aires', countryId: 1 },
-    { id: 201, name: 'São Paulo', countryId: 2 },
-    { id: 202, name: 'Rio de Janeiro', countryId: 2 },
-    { id: 301, name: 'Santiago', countryId: 3 },
-    { id: 401, name: 'Montevideo', countryId: 4 },
+    { id: 103, name: 'Córdoba', countryId: 1 },
   ];
 
   await mergeTableData('Province', provinceData);
@@ -27,11 +24,20 @@ export const countryProvinceTownPostDeployAsync = async () => {
     { id: 101001, name: 'Rosario', zipCode: '2000', provinceId: 101 },
     { id: 101002, name: 'Santa Fe', zipCode: '3000', provinceId: 101 },
     { id: 102001, name: 'Buenos Aires', zipCode: '1000', provinceId: 102 },
-    { id: 102002, name: 'Mar del Plata', zipCode: '7600', provinceId: 102 },
-    { id: 201001, name: 'São Paulo', zipCode: '01000', provinceId: 201 },
-    { id: 202001, name: 'Rio de Janeiro', zipCode: '20000', provinceId: 202 },
-    { id: 301001, name: 'Santiago', zipCode: '8320000', provinceId: 301 },
-    { id: 401001, name: 'Montevideo', zipCode: '11000', provinceId: 401 },
+    { id: 102002, name: 'Mercedes', zipCode: '6600', provinceId: 102 },
+    { id: 102003, name: 'Salto', zipCode: '2741', provinceId: 102 },
+    { id: 102004, name: 'Villa Ramallo', zipCode: '2914', provinceId: 102 },
+    { id: 102005, name: 'Ramallo', zipCode: '2915', provinceId: 102 },
+    { id: 102006, name: 'San Pedro', zipCode: '2930', provinceId: 102 },
+    {
+      id: 102007,
+      name: 'San Nicolás de los Arroyos',
+      zipCode: '2900',
+      provinceId: 102,
+    },
+    { id: 102008, name: 'La Violeta', zipCode: '2751', provinceId: 102 },
+    { id: 102009, name: 'Perez Millán', zipCode: '2933', provinceId: 102 },
+    { id: 103001, name: 'Guatimozín', zipCode: '2627', provinceId: 103 },
   ];
 
   await mergeTableData('Town', townData);
